@@ -10,6 +10,7 @@ import (
 type ieTypeNum byte
 
 const (
+	imsiNum     ieTypeNum = 1
 	recoveryNum ieTypeNum = 3
 )
 
