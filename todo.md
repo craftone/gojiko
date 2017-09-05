@@ -2,7 +2,7 @@
 
 - ~~ECHO Request/Response の Marshal/Unmarshal を実装~~ @ 2017/09/03
 - CSreq/res の Marshal/Unmarshal を実装
-  + IMSI
+  + ~~IMSI~~
   + MSISDN
   + MEI
   + ULI
@@ -17,7 +17,7 @@
   + Maximum APN Restriction
   + APN-AMBR
   + EBI
-  
+
 
 - Monitor を実装
 - PPGW/gojiko でパケットのやり取りを実装

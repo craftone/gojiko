@@ -58,10 +58,13 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 
 	var msg IE
 	var err error
+	body := buf[4 : 4+msgSize]
 
 	switch h.typeNum {
 	case recoveryNum:
-		msg, err = unmarshalRecovery(h, buf[4:4+msgSize])
+		msg, err = unmarshalRecovery(h, body)
+	case imsiNum:
+		msg, err = unmarshalImsi(h, body)
 	default:
 		return nil, buf, fmt.Errorf("Unknown message type : %d", h.typeNum)
 	}

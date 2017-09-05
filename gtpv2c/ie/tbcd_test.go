@@ -58,3 +58,31 @@ func Test_tbcd_String(t *testing.T) {
 		})
 	}
 }
+
+func Test_unmarshalTbcd(t *testing.T) {
+	type args struct {
+		buf []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{"", args{[]byte{0xf1}}, "1", false},
+		{"", args{[]byte{0x10}}, "01", false},
+		{"", args{[]byte{0x1a}}, "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := unmarshalTbcd(tt.args.buf)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("unmarshalTbcd() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("unmarshalTbcd() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -1,6 +1,7 @@
 package ie
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -37,4 +38,23 @@ func (t tbcd) String() string {
 		res = append(res, val2+byte('0'))
 	}
 	return string(res)
+}
+
+func unmarshalTbcd(buf []byte) (string, error) {
+	res := make([]byte, 0, len(buf)*2)
+	for _, b := range buf {
+		val1 := b & 0xf
+		if val1 > 9 {
+			return "", errors.New("Invalid tbcd binary")
+		}
+		res = append(res, val1+byte('0'))
+		val2 := b >> 4
+		if val2 == 0xf {
+			break
+		} else if val2 > 9 {
+			return "", errors.New("Invalid tbcd binary")
+		}
+		res = append(res, val2+byte('0'))
+	}
+	return string(res), nil
 }
