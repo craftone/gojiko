@@ -4,11 +4,11 @@ import "log"
 import "errors"
 
 type Recovery struct {
-	header *header
-	Value  byte
+	*header
+	Value byte
 }
 
-func NewRecovery(value byte, instance byte) *Recovery {
+func NewRecovery(instance byte, value byte) *Recovery {
 	return &Recovery{
 		header: newHeader(recoveryNum, 5, instance),
 		Value:  value,
@@ -28,5 +28,5 @@ func unmarshalRecovery(h header, buf []byte) (*Recovery, error) {
 	if len(buf) != 1 {
 		return nil, errors.New("Invalid binary")
 	}
-	return NewRecovery(buf[0], h.instance), nil
+	return NewRecovery(h.instance, buf[0]), nil
 }

@@ -5,12 +5,12 @@ import (
 )
 
 type Imsi struct {
-	header *header
-	Value  string
-	tbcd   tbcd
+	*header
+	Value string
+	tbcd  tbcd
 }
 
-func NewImsi(value string, instance byte) *Imsi {
+func NewImsi(instance byte, value string) *Imsi {
 	if len(value) < 6 || len(value) > 15 {
 		log.Fatal("Number of IMSI digits must be from 6 to 15")
 	}
@@ -39,5 +39,5 @@ func unmarshalImsi(h header, buf []byte) (*Imsi, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewImsi(s, h.instance), nil
+	return NewImsi(h.instance, s), nil
 }

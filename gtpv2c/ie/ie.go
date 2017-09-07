@@ -11,6 +11,7 @@ type ieTypeNum byte
 
 const (
 	imsiNum     ieTypeNum = 1
+	causeNum    ieTypeNum = 2
 	recoveryNum ieTypeNum = 3
 )
 
@@ -43,6 +44,14 @@ func (h *header) marshal(body []byte) []byte {
 	return res
 }
 
+func (h *header) getTypeNum() ieTypeNum {
+	return h.typeNum
+}
+
+func (h *header) getInstance() byte {
+	return h.instance
+}
+
 func Unmarshal(buf []byte) (IE, []byte, error) {
 	if len(buf) < 4 {
 		return nil, buf, errors.New("It needs at least 4 bytes")
@@ -61,10 +70,12 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 	body := buf[4 : 4+msgSize]
 
 	switch h.typeNum {
-	case recoveryNum:
-		msg, err = unmarshalRecovery(h, body)
 	case imsiNum:
 		msg, err = unmarshalImsi(h, body)
+	case causeNum:
+		msg, err = unmarshalCause(h, body)
+	case recoveryNum:
+		msg, err = unmarshalRecovery(h, body)
 	default:
 		return nil, buf, fmt.Errorf("Unknown message type : %d", h.typeNum)
 	}
