@@ -5,7 +5,7 @@ import (
 )
 
 type Imsi struct {
-	*header
+	header
 	Value string
 	tbcd  tbcd
 }

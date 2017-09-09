@@ -6,7 +6,7 @@ import (
 )
 
 type Cause struct {
-	*header
+	header
 	Value       byte
 	Pce         bool
 	Bce         bool

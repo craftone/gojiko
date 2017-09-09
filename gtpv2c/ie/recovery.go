@@ -4,7 +4,7 @@ import "log"
 import "errors"
 
 type Recovery struct {
-	*header
+	header
 	Value byte
 }
 

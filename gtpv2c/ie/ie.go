@@ -13,6 +13,7 @@ const (
 	imsiNum     ieTypeNum = 1
 	causeNum    ieTypeNum = 2
 	recoveryNum ieTypeNum = 3
+	apnNum      ieTypeNum = 71
 )
 
 type header struct {
@@ -21,11 +22,11 @@ type header struct {
 	instance byte
 }
 
-func newHeader(typeNum ieTypeNum, length uint16, instance byte) *header {
+func newHeader(typeNum ieTypeNum, length uint16, instance byte) header {
 	if instance > 0xf {
 		log.Fatal("instance must be a 4bit number")
 	}
-	return &header{typeNum, length, instance}
+	return header{typeNum, length, instance}
 }
 
 type IE interface {
@@ -76,6 +77,8 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 		msg, err = unmarshalCause(h, body)
 	case recoveryNum:
 		msg, err = unmarshalRecovery(h, body)
+	case apnNum:
+		msg, err = unmarshalApn(h, body)
 	default:
 		return nil, buf, fmt.Errorf("Unknown message type : %d", h.typeNum)
 	}

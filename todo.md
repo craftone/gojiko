@@ -3,6 +3,8 @@
 - ~~ECHO Request/Response の Marshal/Unmarshal を実装~~ @ 2017/09/03
 - CSreq/res の Marshal/Unmarshal を実装
   + ~~IMSI~~
+  + ~~Cause~~
+  + APN
   + MSISDN
   + MEI
   + ULI
@@ -10,7 +12,6 @@
   + RAT Type
   + Indication Flag
   + Sender F-TEID for control plane  ins.0
-  + APN
   + Selection Mode
   + PDN Type
   + PDN Address Allocation (PAA)
