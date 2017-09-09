@@ -5,7 +5,7 @@
   + ~~IMSI~~
   + ~~Cause~~
   + ~~APN~~
-  + MSISDN
+  + ~~MSISDN~~
   + MEI
   + ULI
   + Serving Network

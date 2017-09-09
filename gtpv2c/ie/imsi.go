@@ -5,34 +5,19 @@ import (
 )
 
 type Imsi struct {
-	header
-	Value string
-	tbcd  tbcd
+	tbcdIE
 }
 
 func NewImsi(instance byte, value string) (*Imsi, error) {
-	if len(value) < 6 || len(value) > 15 {
-		log.Fatal("Number of IMSI digits must be from 6 to 15")
-	}
-	tbcd, err := parseTBCD(value)
-	if err != nil {
-		log.Fatal("Invalid imsi")
-	}
-
-	header, err := newHeader(imsiNum, uint16(len(value)), instance)
+	tbcdIE, err := newTbcdIE(imsiNum, 0, instance, value, 6, 15)
 	if err != nil {
 		return nil, err
 	}
-
-	return &Imsi{
-		header: header,
-		Value:  value,
-		tbcd:   tbcd,
-	}, nil
+	return &Imsi{tbcdIE}, nil
 }
 
 func (i *Imsi) Marshal() []byte {
-	return i.header.marshal(i.tbcd)
+	return i.tbcdIE.marshal()
 }
 
 func unmarshalImsi(h header, buf []byte) (*Imsi, error) {
