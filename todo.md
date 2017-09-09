@@ -6,7 +6,7 @@
   + ~~Cause~~
   + ~~APN~~
   + ~~MSISDN~~
-  + MEI
+  + ~~MEI~~
   + ULI
   + Serving Network
   + RAT Type

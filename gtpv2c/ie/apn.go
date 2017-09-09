@@ -5,14 +5,18 @@ import (
 	"fmt"
 )
 
+// Apn struct expresses APN IE
 type Apn struct {
 	stringIE
 }
 
-const APN_MAX_LEN = 100
+// ApnMaxLen is maxmum number of digits of APN
+const ApnMaxLen = 100
 
+// IsValidAPN determines whether the specific string is valid as an APN.
+// All APN must match the following regexp : ^[0-9a-zA-Z-][0-9a-zA-Z-\.]+[0-0a-zA-Z-]$
 func IsValidAPN(s string) bool {
-	if len(s) < 1 || len(s) > APN_MAX_LEN {
+	if len(s) < 1 || len(s) > ApnMaxLen {
 		return false
 	}
 
@@ -32,7 +36,7 @@ func NewApn(instance byte, value string) (*Apn, error) {
 	if !IsValidAPN(value) {
 		return nil, fmt.Errorf("Invalid string for APN : %s", value)
 	}
-	sie, err := newStringIE(apnNum, uint16(4+len(value)), instance, value, 1, APN_MAX_LEN)
+	sie, err := newStringIE(apnNum, uint16(4+len(value)), instance, value, 1, ApnMaxLen)
 	if err != nil {
 		return nil, err
 	}

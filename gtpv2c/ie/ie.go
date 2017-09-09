@@ -13,6 +13,7 @@ const (
 	causeNum    ieTypeNum = 2
 	recoveryNum ieTypeNum = 3
 	apnNum      ieTypeNum = 71
+	meiNum      ieTypeNum = 75
 	msisdnNum   ieTypeNum = 76
 )
 
@@ -71,6 +72,8 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 		msg, err = unmarshalRecovery(h, body)
 	case apnNum:
 		msg, err = unmarshalApn(h, body)
+	case meiNum:
+		msg, err = unmarshalMei(h, body)
 	case msisdnNum:
 		msg, err = unmarshalMsisdn(h, body)
 	default:

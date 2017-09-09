@@ -10,7 +10,7 @@ type tbcdIE struct {
 	tbcd  tbcd
 }
 
-func newTbcdIE(typeNum ieTypeNum, length uint16, instance byte, value string, minLen, maxLen int) (tbcdIE, error) {
+func newTbcdIE(typeNum ieTypeNum, addLen uint16, instance byte, value string, minLen, maxLen int) (tbcdIE, error) {
 	if len(value) < minLen || len(value) > maxLen {
 		return tbcdIE{}, fmt.Errorf("Number of digits must be from %d to %d", minLen, maxLen)
 	}
@@ -19,7 +19,7 @@ func newTbcdIE(typeNum ieTypeNum, length uint16, instance byte, value string, mi
 		return tbcdIE{}, err
 	}
 
-	header, err := newHeader(typeNum, length, instance)
+	header, err := newHeader(typeNum, uint16(len(tbcd))+addLen, instance)
 	if err != nil {
 		return tbcdIE{}, err
 	}
