@@ -14,19 +14,25 @@ type Cause struct {
 	OffendingIe *header
 }
 
-func NewCause(instance byte, value byte, pce, bce, cs bool, offendingIe *header) *Cause {
+func NewCause(instance byte, value byte, pce, bce, cs bool, offendingIe *header) (*Cause, error) {
 	length := 2
 	if offendingIe != nil {
 		length = 6
 	}
+
+	header, err := newHeader(causeNum, uint16(length), instance)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Cause{
-		header:      newHeader(causeNum, uint16(length), instance),
+		header:      header,
 		Value:       value,
 		Pce:         pce,
 		Bce:         bce,
 		Cs:          cs,
 		OffendingIe: offendingIe,
-	}
+	}, nil
 }
 
 func (c *Cause) Marshal() []byte {
@@ -63,5 +69,9 @@ func unmarshalCause(h header, buf []byte) (*Cause, error) {
 			instance: buf[5],
 		}
 	}
-	return NewCause(h.instance, value, pce, bce, cs, offendingIeHeader), nil
+	cause, err := NewCause(h.instance, value, pce, bce, cs, offendingIeHeader)
+	if err != nil {
+		return nil, err
+	}
+	return cause, nil
 }

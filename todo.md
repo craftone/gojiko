@@ -4,7 +4,7 @@
 - CSreq/res の Marshal/Unmarshal を実装
   + ~~IMSI~~
   + ~~Cause~~
-  + APN
+  + ~~APN~~
   + MSISDN
   + MEI
   + ULI

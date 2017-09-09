@@ -10,7 +10,7 @@ type Imsi struct {
 	tbcd  tbcd
 }
 
-func NewImsi(instance byte, value string) *Imsi {
+func NewImsi(instance byte, value string) (*Imsi, error) {
 	if len(value) < 6 || len(value) > 15 {
 		log.Fatal("Number of IMSI digits must be from 6 to 15")
 	}
@@ -19,11 +19,16 @@ func NewImsi(instance byte, value string) *Imsi {
 		log.Fatal("Invalid imsi")
 	}
 
+	header, err := newHeader(imsiNum, uint16(len(value)), instance)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Imsi{
-		header: newHeader(imsiNum, uint16(len(value)), instance),
+		header: header,
 		Value:  value,
 		tbcd:   tbcd,
-	}
+	}, nil
 }
 
 func (i *Imsi) Marshal() []byte {
@@ -39,5 +44,9 @@ func unmarshalImsi(h header, buf []byte) (*Imsi, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewImsi(h.instance, s), nil
+	imsi, err := NewImsi(h.instance, s)
+	if err != nil {
+		return nil, err
+	}
+	return imsi, nil
 }

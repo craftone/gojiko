@@ -8,11 +8,15 @@ type Recovery struct {
 	Value byte
 }
 
-func NewRecovery(instance byte, value byte) *Recovery {
-	return &Recovery{
-		header: newHeader(recoveryNum, 5, instance),
-		Value:  value,
+func NewRecovery(instance byte, value byte) (*Recovery, error) {
+	header, err := newHeader(recoveryNum, 5, instance)
+	if err != nil {
+		return nil, err
 	}
+	return &Recovery{
+		header: header,
+		Value:  value,
+	}, nil
 }
 
 func (r *Recovery) Marshal() []byte {
@@ -28,5 +32,10 @@ func unmarshalRecovery(h header, buf []byte) (*Recovery, error) {
 	if len(buf) != 1 {
 		return nil, errors.New("Invalid binary")
 	}
-	return NewRecovery(h.instance, buf[0]), nil
+
+	rec, err := NewRecovery(h.instance, buf[0])
+	if err != nil {
+		return nil, err
+	}
+	return rec, nil
 }

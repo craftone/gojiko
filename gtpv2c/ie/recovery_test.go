@@ -6,23 +6,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRecovery_new(t *testing.T) {
-	rec := NewRecovery(0, 1)
+func TestNewRecovery(t *testing.T) {
+	rec, _ := NewRecovery(0, 1)
 	assert.Equal(t, recoveryNum, rec.header.typeNum)
 	assert.Equal(t, byte(1), rec.Value)
+
+	_, err := NewRecovery(0x0f, 1)
+	assert.Nil(t, err)
+
+	_, err = NewRecovery(0x10, 1)
+	assert.Error(t, err)
+	_, err = NewRecovery(0xff, 1)
+	assert.Error(t, err)
 }
 
 func TestRecovery_marshal(t *testing.T) {
-	var rec []byte
-	rec = NewRecovery(0, 0).Marshal()
-	assert.Equal(t, []byte{3, 0, 1, 0, 0}, rec)
+	rec, _ := NewRecovery(0, 0)
+	recBin := rec.Marshal()
+	assert.Equal(t, []byte{3, 0, 1, 0, 0}, recBin)
 
-	rec = NewRecovery(0xf, 255).Marshal()
-	assert.Equal(t, []byte{3, 0, 1, 0xf, 255}, rec)
+	rec, _ = NewRecovery(0xf, 255)
+	recBin = rec.Marshal()
+	assert.Equal(t, []byte{3, 0, 1, 0xf, 255}, recBin)
 }
 
 func TestUnmarshal_recovery(t *testing.T) {
-	recBin := NewRecovery(0, 255).Marshal()
+	recOrg, _ := NewRecovery(0, 255)
+	recBin := recOrg.Marshal()
 	msg, tail, err := Unmarshal(recBin)
 	rec := msg.(*Recovery)
 	assert.Equal(t, byte(255), rec.Value)
@@ -32,7 +42,8 @@ func TestUnmarshal_recovery(t *testing.T) {
 }
 
 func TestUnmarshal_recoveryWithTail(t *testing.T) {
-	recBin := NewRecovery(0, 255).Marshal()
+	recOrg, _ := NewRecovery(0, 255)
+	recBin := recOrg.Marshal()
 	recBin = append(recBin, recBin...)
 	msg, tail, err := Unmarshal(recBin)
 	rec := msg.(*Recovery)

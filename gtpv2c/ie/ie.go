@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"log"
 )
 
 type ieTypeNum byte
@@ -22,11 +21,11 @@ type header struct {
 	instance byte
 }
 
-func newHeader(typeNum ieTypeNum, length uint16, instance byte) header {
+func newHeader(typeNum ieTypeNum, length uint16, instance byte) (header, error) {
 	if instance > 0xf {
-		log.Fatal("instance must be a 4bit number")
+		return header{}, fmt.Errorf("instance must be a 4bit number")
 	}
-	return header{typeNum, length, instance}
+	return header{typeNum, length, instance}, nil
 }
 
 type IE interface {
@@ -43,14 +42,6 @@ func (h *header) marshal(body []byte) []byte {
 	// copy body
 	copy(res[4:], body)
 	return res
-}
-
-func (h *header) getTypeNum() ieTypeNum {
-	return h.typeNum
-}
-
-func (h *header) getInstance() byte {
-	return h.instance
 }
 
 func Unmarshal(buf []byte) (IE, []byte, error) {
