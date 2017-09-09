@@ -32,7 +32,7 @@ func NewApn(instance byte, value string) (*Apn, error) {
 	if !IsValidAPN(value) {
 		return nil, fmt.Errorf("Invalid string for APN : %s", value)
 	}
-	sie, err := newStringIE(apnNum, 0, instance, value, 1, APN_MAX_LEN)
+	sie, err := newStringIE(apnNum, uint16(4+len(value)), instance, value, 1, APN_MAX_LEN)
 	if err != nil {
 		return nil, err
 	}
