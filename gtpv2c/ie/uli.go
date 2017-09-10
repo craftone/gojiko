@@ -230,7 +230,6 @@ func NewUli(instance byte, uliArg UliArg) (*Uli, error) {
 
 func (r *Uli) Marshal() []byte {
 	body := make([]byte, r.length)
-	body[0] = setBit(body[0], 5, r.Lai != nil)
 
 	offset := 1
 	if r.Cgi != nil {
@@ -270,7 +269,7 @@ func (r *Uli) Marshal() []byte {
 		offset += 4
 	}
 	if r.Lai != nil {
-		body[0] = setBit(body[0], 3, true)
+		body[0] = setBit(body[0], 5, true)
 		offset += r.Lai.mccMnc.copyTo(body[offset:])
 		binary.BigEndian.PutUint16(body[offset:], r.Lai.Lac)
 		offset += 2

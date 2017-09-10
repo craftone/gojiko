@@ -10,7 +10,7 @@
   + ~~ULI~~
   + ~~Serving Network~~
   + ~~RAT Type~~
-  + Indication Flag
+  + ~~Indication Flag~~
   + Sender F-TEID for control plane  ins.0
   + Selection Mode
   + PDN Type
