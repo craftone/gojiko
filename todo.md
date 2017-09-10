@@ -8,8 +8,8 @@
   + ~~MSISDN~~
   + ~~MEI~~
   + ~~ULI~~
-  + Serving Network
-  + RAT Type
+  + ~~Serving Network~~
+  + ~~RAT Type~~
   + Indication Flag
   + Sender F-TEID for control plane  ins.0
   + Selection Mode

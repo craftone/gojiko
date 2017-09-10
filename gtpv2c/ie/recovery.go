@@ -9,7 +9,7 @@ type Recovery struct {
 }
 
 func NewRecovery(instance byte, value byte) (*Recovery, error) {
-	header, err := newHeader(recoveryNum, 5, instance)
+	header, err := newHeader(recoveryNum, 1, instance)
 	if err != nil {
 		return nil, err
 	}
