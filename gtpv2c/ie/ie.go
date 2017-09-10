@@ -15,6 +15,7 @@ const (
 	apnNum      ieTypeNum = 71
 	meiNum      ieTypeNum = 75
 	msisdnNum   ieTypeNum = 76
+	uliNum      ieTypeNum = 86
 )
 
 type header struct {
@@ -76,6 +77,8 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 		msg, err = unmarshalMei(h, body)
 	case msisdnNum:
 		msg, err = unmarshalMsisdn(h, body)
+	case uliNum:
+		msg, err = unmarshalUli(h, body)
 	default:
 		return nil, buf, fmt.Errorf("Unknown message type : %d", h.typeNum)
 	}

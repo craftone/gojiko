@@ -7,7 +7,7 @@
   + ~~APN~~
   + ~~MSISDN~~
   + ~~MEI~~
-  + ULI
+  + ~~ULI~~
   + Serving Network
   + RAT Type
   + Indication Flag
