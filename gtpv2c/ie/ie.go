@@ -19,6 +19,8 @@ const (
 	ratTypeNum        ieTypeNum = 82
 	servingNetworkNum ieTypeNum = 83
 	uliNum            ieTypeNum = 86
+	fteidNum          ieTypeNum = 87
+	selectionModeNum  ieTypeNum = 128
 )
 
 type header struct {
@@ -88,6 +90,10 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 		msg, err = unmarshalServingNetwork(h, body)
 	case uliNum:
 		msg, err = unmarshalUli(h, body)
+	case fteidNum:
+		msg, err = unmarshalFteid(h, body)
+	case selectionModeNum:
+		msg, err = unmarshalSelectionMode(h, body)
 	default:
 		return nil, buf, fmt.Errorf("Unknown message type : %d", h.typeNum)
 	}
