@@ -16,10 +16,12 @@ const (
 	meiNum            ieTypeNum = 75
 	msisdnNum         ieTypeNum = 76
 	indicationNum     ieTypeNum = 77
+	paaNum            ieTypeNum = 79
 	ratTypeNum        ieTypeNum = 82
 	servingNetworkNum ieTypeNum = 83
 	uliNum            ieTypeNum = 86
 	fteidNum          ieTypeNum = 87
+	pdnTypeNum        ieTypeNum = 99
 	selectionModeNum  ieTypeNum = 128
 )
 
@@ -84,6 +86,8 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 		msg, err = unmarshalMsisdn(h, body)
 	case indicationNum:
 		msg, err = unmarshalIndication(h, body)
+	case paaNum:
+		msg, err = unmarshalPaa(h, body)
 	case ratTypeNum:
 		msg, err = unmarshalRatType(h, body)
 	case servingNetworkNum:
@@ -92,6 +96,8 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 		msg, err = unmarshalUli(h, body)
 	case fteidNum:
 		msg, err = unmarshalFteid(h, body)
+	case pdnTypeNum:
+		msg, err = unmarshalPdnType(h, body)
 	case selectionModeNum:
 		msg, err = unmarshalSelectionMode(h, body)
 	default:

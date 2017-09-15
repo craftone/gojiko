@@ -11,13 +11,16 @@
   + ~~Serving Network~~
   + ~~RAT Type~~
   + ~~Indication Flag~~
-  + ~~Sender F-TEID for control plane  ins.0~~
-  + Selection Mode
-  + PDN Type
-  + PDN Address Allocation (PAA)
-  + Maximum APN Restriction
+  + ~~F-TEID~~
+  + ~~Selection Mode~~
+  + ~~PDN Type~~
+  + ~~PDN Address Allocation (PAA)~~
+  + APN Restriction
   + APN-AMBR
   + EBI
+  + PCO
+  + Bearer Context
+  
 
 
 - Monitor を実装
