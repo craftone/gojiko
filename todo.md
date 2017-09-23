@@ -15,12 +15,12 @@
   + ~~Selection Mode~~
   + ~~PDN Type~~
   + ~~PDN Address Allocation (PAA)~~
-  + APN Restriction
-  + APN-AMBR
-  + EBI
+  + ~~APN Restriction~~
+  + ~~APN-AMBR~~
+  + ~~EBI~~
   + PCO
   + Bearer Context
-  
+
 
 
 - Monitor を実装

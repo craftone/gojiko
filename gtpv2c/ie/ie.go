@@ -13,6 +13,8 @@ const (
 	causeNum          ieTypeNum = 2
 	recoveryNum       ieTypeNum = 3
 	apnNum            ieTypeNum = 71
+	ambrNum           ieTypeNum = 72
+	ebiNum            ieTypeNum = 73
 	meiNum            ieTypeNum = 75
 	msisdnNum         ieTypeNum = 76
 	indicationNum     ieTypeNum = 77
@@ -22,6 +24,7 @@ const (
 	uliNum            ieTypeNum = 86
 	fteidNum          ieTypeNum = 87
 	pdnTypeNum        ieTypeNum = 99
+	apnRestrictionNum ieTypeNum = 127
 	selectionModeNum  ieTypeNum = 128
 )
 
@@ -80,6 +83,10 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 		msg, err = unmarshalRecovery(h, body)
 	case apnNum:
 		msg, err = unmarshalApn(h, body)
+	case ambrNum:
+		msg, err = unmarshalAmbr(h, body)
+	case ebiNum:
+		msg, err = unmarshalEbi(h, body)
 	case meiNum:
 		msg, err = unmarshalMei(h, body)
 	case msisdnNum:
@@ -98,6 +105,8 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 		msg, err = unmarshalFteid(h, body)
 	case pdnTypeNum:
 		msg, err = unmarshalPdnType(h, body)
+	case apnRestrictionNum:
+		msg, err = unmarshalApnRestriction(h, body)
 	case selectionModeNum:
 		msg, err = unmarshalSelectionMode(h, body)
 	default:
