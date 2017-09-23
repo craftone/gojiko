@@ -18,9 +18,9 @@ const (
 )
 
 type Pco struct {
-	ConfigProto byte
-	*DnsServerV4
-	*DnsServerV6
+	ConfigProto  byte
+	DnsServerV4s []*DnsServerV4
+	DnsServerV6s []*DnsServerV6
 }
 
 type header struct {
@@ -46,13 +46,17 @@ func (h *header) marshal(body []byte) []byte {
 func (p Pco) Marshal() []byte {
 	res := make([]byte, 1, 255)
 	res[0] = byte(0x80 + p.ConfigProto)
-	if p.DnsServerV4 != nil {
-		b := p.DnsServerV4.marshal()
-		res = append(res, b...)
+	for _, dnsServerV4 := range p.DnsServerV4s {
+		if dnsServerV4 != nil {
+			b := dnsServerV4.marshal()
+			res = append(res, b...)
+		}
 	}
-	if p.DnsServerV6 != nil {
-		b := p.DnsServerV6.marshal()
-		res = append(res, b...)
+	for _, dnsServerV6 := range p.DnsServerV6s {
+		if dnsServerV6 != nil {
+			b := dnsServerV6.marshal()
+			res = append(res, b...)
+		}
 	}
 
 	return res
@@ -89,15 +93,15 @@ func Unmarshal(buf []byte) (Pco, []byte, error) {
 		case dnsServerV4Num:
 			dnsServerV4, err := unmarshalDnsServerV4(h, body)
 			if err != nil {
-				return Pco{}, buf, fmt.Errorf("Invalid DnsServerV4 binary %v", err)
+				return Pco{}, buf, fmt.Errorf("Invalid DnsServerV4 binary : %v", err)
 			}
-			res.DnsServerV4 = dnsServerV4
+			res.DnsServerV4s = append(res.DnsServerV4s, dnsServerV4)
 		case dnsServerV6Num:
 			dnsServerV6, err := unmarshalDnsServerV6(h, body)
 			if err != nil {
-				return Pco{}, buf, fmt.Errorf("Invalid DnsServerV6 binary %v", err)
+				return Pco{}, buf, fmt.Errorf("Invalid DnsServerV6 binary : %v", err)
 			}
-			res.DnsServerV6 = dnsServerV6
+			res.DnsServerV6s = append(res.DnsServerV6s, dnsServerV6)
 		}
 	}
 	return res, buf[offset:], nil
