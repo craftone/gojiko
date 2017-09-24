@@ -2,7 +2,6 @@ package pco
 
 import (
 	"fmt"
-	"log"
 	"net"
 )
 
@@ -23,17 +22,14 @@ func NewDnsServerV4(ipv4 net.IP) *DnsServerV4 {
 }
 
 func (d *DnsServerV4) marshal() []byte {
-	if d.value == nil {
-		return []byte{}
+	var body []byte
+	if d.value != nil {
+		body = d.value.To4()
 	}
-	return d.header.marshal(d.value.To4())
+	return d.header.marshal(body)
 }
 
-func unmarshalDnsServerV4(h header, buf []byte) (*DnsServerV4, error) {
-	if h.typeNum != dnsServerV4Num {
-		log.Fatal("Invalud type")
-	}
-
+func unmarshalDnsServerV4(buf []byte) (*DnsServerV4, error) {
 	if len(buf) == 0 {
 		return NewDnsServerV4(nil), nil
 	}

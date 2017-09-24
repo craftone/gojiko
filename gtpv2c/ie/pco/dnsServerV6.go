@@ -2,7 +2,6 @@ package pco
 
 import (
 	"fmt"
-	"log"
 	"net"
 )
 
@@ -23,17 +22,14 @@ func NewDnsServerV6(ipv6 net.IP) *DnsServerV6 {
 }
 
 func (d *DnsServerV6) marshal() []byte {
-	if d.value == nil {
-		return []byte{}
+	var body []byte
+	if d.value != nil {
+		body = d.value.To16()
 	}
-	return d.header.marshal(d.value.To16())
+	return d.header.marshal(body)
 }
 
-func unmarshalDnsServerV6(h header, buf []byte) (*DnsServerV6, error) {
-	if h.typeNum != dnsServerV6Num {
-		log.Fatal("Invalud type")
-	}
-
+func unmarshalDnsServerV6(buf []byte) (*DnsServerV6, error) {
 	if len(buf) == 0 {
 		return NewDnsServerV6(nil), nil
 	}
