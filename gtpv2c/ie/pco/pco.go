@@ -19,6 +19,7 @@ const (
 
 type pco struct {
 	ConfigProto byte
+	Ipcp        *Ipcp
 }
 
 type PcoMsToNetwork struct {
@@ -64,10 +65,14 @@ func (p PcoNetworkToMs) Marshal() []byte {
 }
 
 func (p pco) marshal(body []byte) []byte {
-	res := make([]byte, 1+len(body))
+	res := make([]byte, 1, 1+16+len(body))
 	res[0] = byte(0x80 + p.ConfigProto)
+	if p.Ipcp != nil {
+		ipcpBin := p.Ipcp.marshal()
+		res = append(res, ipcpBin...)
+	}
 	// copy body
-	copy(res[1:], body)
+	res = append(res, body...)
 	return res
 }
 
@@ -103,6 +108,12 @@ func UnmarshalMsToNetowrk(buf []byte) (PcoMsToNetwork, []byte, error) {
 	res := PcoMsToNetwork{pco: pco}
 	err = unmarshalContainer(tail, func(h header, body []byte) error {
 		switch h.typeNum {
+		case ipcpNum:
+			ipcp, err := unmarshalIpcp(body)
+			if err != nil {
+				return err
+			}
+			res.Ipcp = ipcp
 		case dnsServerV4Num:
 			res.DnsServerV4Req = true
 		case dnsServerV6Num:
@@ -125,6 +136,12 @@ func UnmarshalNetowrkToMs(buf []byte) (PcoNetworkToMs, []byte, error) {
 	res := PcoNetworkToMs{pco: pco}
 	unmarshalContainer(tail, func(h header, body []byte) error {
 		switch h.typeNum {
+		case ipcpNum:
+			ipcp, err := unmarshalIpcp(body)
+			if err != nil {
+				return err
+			}
+			res.Ipcp = ipcp
 		case dnsServerV4Num:
 			dnsServerV4, err := unmarshalDnsServerV4(body)
 			if err != nil {

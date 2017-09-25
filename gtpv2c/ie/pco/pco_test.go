@@ -2,7 +2,6 @@ package pco
 
 import (
 	"net"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,6 +32,28 @@ func TestPcoMsToNetwork_Marshal(t *testing.T) {
 	}
 	pBin = p.Marshal()
 	assert.Equal(t, []byte{0x80, 0x00, 0x0d, 0, 0x00, 0x03, 0}, pBin)
+
+	// IPCP only
+	p = PcoMsToNetwork{
+		pco: pco{
+			Ipcp: NewIpcp(configureRequest, 0, net.IPv4(0, 0, 0, 0), net.IPv4(0, 0, 0, 0)),
+		},
+	}
+	pBin = p.Marshal()
+	assert.Equal(t, []byte{
+		0x80,       // PCO octet 3
+		0x80, 0x21, // IPCP 8021H
+		0x10,     // Length : 16
+		1,        // Code : Configure-Request
+		0,        // Identifier : 0
+		00, 0x0c, // Length: 12
+		0x81,       // Option : 129 Primary DNS
+		6,          // Length : 6
+		0, 0, 0, 0, // 0.0.0.0
+		0x83,       // Option : 131 Secondary DNS
+		6,          // Length : 6
+		0, 0, 0, 0, // 0.0.0.0
+	}, pBin)
 }
 
 func TestPcoNetworkToMs_Marshal(t *testing.T) {
@@ -82,33 +103,29 @@ func TestPcoNetworkToMs_Marshal(t *testing.T) {
 		0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0x68,
 	}, pBin)
-}
 
-func Test_pco_marshal(t *testing.T) {
-	type fields struct {
-		ConfigProto byte
+	// IPCP only
+	p = PcoNetworkToMs{
+		pco: pco{
+			Ipcp: NewIpcp(configureRequest, 0, net.IPv4(1, 2, 3, 4), net.IPv4(5, 6, 7, 8)),
+		},
 	}
-	type args struct {
-		body []byte
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   []byte
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := pco{
-				ConfigProto: tt.fields.ConfigProto,
-			}
-			if got := p.marshal(tt.args.body); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("pco.marshal() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	pBin = p.Marshal()
+	assert.Equal(t, []byte{
+		0x80,       // PCO octet 3
+		0x80, 0x21, // IPCP 8021H
+		0x10,     // Length : 16
+		1,        // Code : Configure-Request
+		0,        // Identifier : 0
+		00, 0x0c, // Length: 12
+		0x81,       // Option : 129 Primary DNS
+		6,          // Length : 6
+		1, 2, 3, 4, // 1.2.3.4
+		0x83,       // Option : 131 Secondary DNS
+		6,          // Length : 6
+		5, 6, 7, 8, // 5.6.7.8
+	}, pBin)
+
 }
 
 func TestUnmarshalMsToNetowrk(t *testing.T) {
@@ -146,6 +163,21 @@ func TestUnmarshalMsToNetowrk(t *testing.T) {
 	p, tail, err = UnmarshalMsToNetowrk(pBin)
 	assert.Equal(t, true, p.DnsServerV4Req)
 	assert.Equal(t, true, p.DnsServerV6Req)
+	assert.Equal(t, []byte{}, tail)
+	assert.Nil(t, err)
+
+	// IPCP only
+	p = PcoMsToNetwork{
+		pco: pco{
+			Ipcp: NewIpcp(configureRequest, 0, net.IPv4(0, 0, 0, 0), net.IPv4(0, 0, 0, 0)),
+		},
+	}
+	pBin = p.Marshal()
+	p, tail, err = UnmarshalMsToNetowrk(pBin)
+	assert.Equal(t, false, p.DnsServerV4Req)
+	assert.Equal(t, false, p.DnsServerV6Req)
+	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), p.Ipcp.priDns)
+	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), p.Ipcp.secDns)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }
@@ -201,6 +233,21 @@ func TestUnmarshalNetowrkToMs(t *testing.T) {
 	p, tail, err = UnmarshalNetowrkToMs(pBin)
 	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), p.DnsServerV4s[0].value)
 	assert.Equal(t, net.ParseIP("2001:db8::68"), p.DnsServerV6s[0].value)
+	assert.Equal(t, []byte{}, tail)
+	assert.Nil(t, err)
+
+	// IPCP only
+	p = PcoNetworkToMs{
+		pco: pco{
+			Ipcp: NewIpcp(configureRequest, 0, net.IPv4(0, 0, 0, 0), net.IPv4(0, 0, 0, 0)),
+		},
+	}
+	pBin = p.Marshal()
+	p, tail, err = UnmarshalNetowrkToMs(pBin)
+	assert.Nil(t, p.DnsServerV4s)
+	assert.Nil(t, p.DnsServerV6s)
+	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), p.Ipcp.priDns)
+	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), p.Ipcp.secDns)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }
