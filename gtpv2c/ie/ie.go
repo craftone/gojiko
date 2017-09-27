@@ -6,6 +6,13 @@ import (
 	"fmt"
 )
 
+type IEDir byte
+
+const (
+	MsToNetwork IEDir = iota
+	NetworkToMs
+)
+
 type ieTypeNum byte
 
 const (
@@ -18,6 +25,7 @@ const (
 	meiNum            ieTypeNum = 75
 	msisdnNum         ieTypeNum = 76
 	indicationNum     ieTypeNum = 77
+	pcoNum            ieTypeNum = 78
 	paaNum            ieTypeNum = 79
 	ratTypeNum        ieTypeNum = 82
 	servingNetworkNum ieTypeNum = 83
@@ -57,7 +65,7 @@ func (h *header) marshal(body []byte) []byte {
 	return res
 }
 
-func Unmarshal(buf []byte) (IE, []byte, error) {
+func Unmarshal(buf []byte, dir IEDir) (IE, []byte, error) {
 	if len(buf) < 4 {
 		return nil, buf, errors.New("It needs at least 4 bytes")
 	}
@@ -93,6 +101,12 @@ func Unmarshal(buf []byte) (IE, []byte, error) {
 		msg, err = unmarshalMsisdn(h, body)
 	case indicationNum:
 		msg, err = unmarshalIndication(h, body)
+	case pcoNum:
+		if dir == MsToNetwork {
+			msg, err = unmarshalPcoMsToNetwork(h, body)
+		} else if dir == NetworkToMs {
+			msg, err = unmarshalPcoNetworkToMs(h, body)
+		}
 	case paaNum:
 		msg, err = unmarshalPaa(h, body)
 	case ratTypeNum:

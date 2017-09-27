@@ -39,7 +39,7 @@ func TestCause_Marshal(t *testing.T) {
 func TestUnmarshal_cause(t *testing.T) {
 	causeOrg, _ := NewCause(1, 2, true, false, true, nil)
 	causeBin := causeOrg.Marshal()
-	msg, tail, err := Unmarshal(causeBin)
+	msg, tail, err := Unmarshal(causeBin, MsToNetwork)
 	cause := msg.(*Cause)
 	assert.Equal(t, byte(1), cause.instance)
 	assert.Equal(t, byte(2), cause.Value)
@@ -52,7 +52,7 @@ func TestUnmarshal_cause(t *testing.T) {
 
 	causeOffOrg, _ := NewCause(1, 2, true, false, true, &header{2, 0, 3})
 	causeOffBin := causeOffOrg.Marshal()
-	msg, tail, err = Unmarshal(causeOffBin)
+	msg, tail, err = Unmarshal(causeOffBin, MsToNetwork)
 	cause = msg.(*Cause)
 	assert.Equal(t, byte(1), cause.instance)
 	assert.Equal(t, byte(2), cause.Value)

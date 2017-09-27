@@ -40,7 +40,7 @@ func Testmsisdn_Marshal(t *testing.T) {
 func TestUnmarshal_msisdn(t *testing.T) {
 	msisdnOrg, _ := NewMsisdn(1, "819012345678")
 	msisdnBin := msisdnOrg.Marshal()
-	msg, tail, err := Unmarshal(msisdnBin)
+	msg, tail, err := Unmarshal(msisdnBin, MsToNetwork)
 	msisdn := msg.(*Msisdn)
 	assert.Equal(t, "819012345678", msisdn.Value)
 	assert.Equal(t, byte(1), msisdn.instance)
@@ -52,7 +52,7 @@ func TestUnmarshal_msisdnWithTail(t *testing.T) {
 	msisdnOrg, _ := NewMsisdn(1, "819012345678")
 	msisdnBin := msisdnOrg.Marshal()
 	msisdnBin = append(msisdnBin, msisdnBin...)
-	msg, tail, err := Unmarshal(msisdnBin)
+	msg, tail, err := Unmarshal(msisdnBin, MsToNetwork)
 	msisdn := msg.(*Msisdn)
 	assert.Equal(t, "819012345678", msisdn.Value)
 	assert.Equal(t, byte(1), msisdn.instance)

@@ -65,7 +65,7 @@ func TestPaa_marshal(t *testing.T) {
 func TestUnmarshal_Paa(t *testing.T) {
 	paa, _ := NewPaa(0, PdnTypeIPv4, net.IPv4(1, 2, 3, 4), nil)
 	paaBin := paa.Marshal()
-	msg, tail, err := Unmarshal(paaBin)
+	msg, tail, err := Unmarshal(paaBin, MsToNetwork)
 	paa = msg.(*Paa)
 	assert.Equal(t, byte(0), paa.instance)
 	assert.Equal(t, PdnTypeIPv4, paa.Value)
@@ -76,7 +76,7 @@ func TestUnmarshal_Paa(t *testing.T) {
 
 	paa, _ = NewPaa(1, PdnTypeIPv6, nil, net.ParseIP("2001:db8::68"))
 	paaBin = paa.Marshal()
-	msg, tail, err = Unmarshal(paaBin)
+	msg, tail, err = Unmarshal(paaBin, MsToNetwork)
 	paa = msg.(*Paa)
 	assert.Equal(t, byte(1), paa.instance)
 	assert.Equal(t, PdnTypeIPv6, paa.Value)
@@ -87,7 +87,7 @@ func TestUnmarshal_Paa(t *testing.T) {
 
 	paa, _ = NewPaa(2, PdnTypeIPv4v6, net.IPv4(1, 2, 3, 4), net.ParseIP("2001:db8::68"))
 	paaBin = paa.Marshal()
-	msg, tail, err = Unmarshal(paaBin)
+	msg, tail, err = Unmarshal(paaBin, MsToNetwork)
 	paa = msg.(*Paa)
 	assert.Equal(t, byte(2), paa.instance)
 	assert.Equal(t, PdnTypeIPv4v6, paa.Value)

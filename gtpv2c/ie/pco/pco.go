@@ -9,12 +9,13 @@ import (
 type pcoTypeNum uint16
 
 const (
-	dnsServerV6Num pcoTypeNum = 0x0003
-	dnsServerV4Num pcoTypeNum = 0x000D
-	ipcpNum        pcoTypeNum = 0x8021
-	lcpNum         pcoTypeNum = 0xC021
-	papNum         pcoTypeNum = 0xC023
-	chapNum        pcoTypeNum = 0xC223
+	dnsServerV6Num      pcoTypeNum = 0x0003
+	ipAllocViaNasSigNum pcoTypeNum = 0x000A
+	dnsServerV4Num      pcoTypeNum = 0x000D
+	ipcpNum             pcoTypeNum = 0x8021
+	lcpNum              pcoTypeNum = 0xC021
+	papNum              pcoTypeNum = 0xC023
+	chapNum             pcoTypeNum = 0xC223
 )
 
 type pco struct {
@@ -22,40 +23,62 @@ type pco struct {
 	Ipcp        *Ipcp
 }
 
-type PcoMsToNetwork struct {
+type MsToNetwork struct {
 	pco
-	DnsServerV4Req bool
-	DnsServerV6Req bool
+	DNSServerV4Req   bool
+	DNSServerV6Req   bool
+	IPAllocViaNasSig bool
 }
 
-type PcoNetworkToMs struct {
+type NetworkToMs struct {
 	pco
-	DnsServerV4s []*DnsServerV4
-	DnsServerV6s []*DnsServerV6
+	DNSServerV4s []*DNSServerV4
+	DNSServerV6s []*DNSServerV6
 }
 
-func (p PcoMsToNetwork) Marshal() []byte {
+func NewMsToNetwork(ipcp *Ipcp, dnsServerV4Req, dnsServerV6Req, ipAllocViaNasSig bool) *MsToNetwork {
+	return &MsToNetwork{
+		pco{Ipcp: ipcp},
+		dnsServerV4Req,
+		dnsServerV6Req,
+		ipAllocViaNasSig,
+	}
+}
+
+func NewNetworkToMs(ipcp *Ipcp, dnsServerV4s []*DNSServerV4, dnsServerV6s []*DNSServerV6) *NetworkToMs {
+	return &NetworkToMs{
+		pco{Ipcp: ipcp},
+		dnsServerV4s,
+		dnsServerV6s,
+	}
+}
+
+func (p MsToNetwork) Marshal() []byte {
 	res := make([]byte, 0, 6)
-	if p.DnsServerV4Req {
-		b := NewDnsServerV4(nil).marshal()
+	if p.DNSServerV4Req {
+		b := NewDNSServerV4(nil).marshal()
 		res = append(res, b...)
 	}
-	if p.DnsServerV6Req {
-		b := NewDnsServerV6(nil).marshal()
+	if p.DNSServerV6Req {
+		b := NewDNSServerV6(nil).marshal()
+		res = append(res, b...)
+	}
+	if p.IPAllocViaNasSig {
+		b := NewIPAllocViaNasSignalling().marshal()
 		res = append(res, b...)
 	}
 	return p.pco.marshal(res)
 }
 
-func (p PcoNetworkToMs) Marshal() []byte {
+func (p NetworkToMs) Marshal() []byte {
 	res := make([]byte, 0, 128)
-	for _, dnsServerV4 := range p.DnsServerV4s {
+	for _, dnsServerV4 := range p.DNSServerV4s {
 		if dnsServerV4 != nil {
 			b := dnsServerV4.marshal()
 			res = append(res, b...)
 		}
 	}
-	for _, dnsServerV6 := range p.DnsServerV6s {
+	for _, dnsServerV6 := range p.DNSServerV6s {
 		if dnsServerV6 != nil {
 			b := dnsServerV6.marshal()
 			res = append(res, b...)
@@ -99,13 +122,13 @@ func unmarshalContainer(buf []byte, f func(header, []byte) error) error {
 	return nil
 }
 
-func UnmarshalMsToNetowrk(buf []byte) (PcoMsToNetwork, []byte, error) {
+func UnmarshalMsToNetowrk(buf []byte) (*MsToNetwork, []byte, error) {
 	pco, tail, err := unmarshal(buf)
 	if err != nil {
-		return PcoMsToNetwork{}, buf, err
+		return &MsToNetwork{}, buf, err
 	}
 
-	res := PcoMsToNetwork{pco: pco}
+	res := &MsToNetwork{pco: pco}
 	err = unmarshalContainer(tail, func(h header, body []byte) error {
 		switch h.typeNum {
 		case ipcpNum:
@@ -115,9 +138,11 @@ func UnmarshalMsToNetowrk(buf []byte) (PcoMsToNetwork, []byte, error) {
 			}
 			res.Ipcp = ipcp
 		case dnsServerV4Num:
-			res.DnsServerV4Req = true
+			res.DNSServerV4Req = true
 		case dnsServerV6Num:
-			res.DnsServerV6Req = true
+			res.DNSServerV6Req = true
+		case ipAllocViaNasSigNum:
+			res.IPAllocViaNasSig = true
 		}
 		return nil
 	})
@@ -127,13 +152,13 @@ func UnmarshalMsToNetowrk(buf []byte) (PcoMsToNetwork, []byte, error) {
 	return res, []byte{}, nil
 }
 
-func UnmarshalNetowrkToMs(buf []byte) (PcoNetworkToMs, []byte, error) {
+func UnmarshalNetowrkToMs(buf []byte) (*NetworkToMs, []byte, error) {
 	pco, tail, err := unmarshal(buf)
 	if err != nil {
-		return PcoNetworkToMs{}, buf, err
+		return &NetworkToMs{}, buf, err
 	}
 
-	res := PcoNetworkToMs{pco: pco}
+	res := &NetworkToMs{pco: pco}
 	unmarshalContainer(tail, func(h header, body []byte) error {
 		switch h.typeNum {
 		case ipcpNum:
@@ -143,17 +168,17 @@ func UnmarshalNetowrkToMs(buf []byte) (PcoNetworkToMs, []byte, error) {
 			}
 			res.Ipcp = ipcp
 		case dnsServerV4Num:
-			dnsServerV4, err := unmarshalDnsServerV4(body)
+			dnsServerV4, err := unmarshalDNSServerV4(body)
 			if err != nil {
 				return err
 			}
-			res.DnsServerV4s = append(res.DnsServerV4s, dnsServerV4)
+			res.DNSServerV4s = append(res.DNSServerV4s, dnsServerV4)
 		case dnsServerV6Num:
-			dnsServerV6, err := unmarshalDnsServerV6(body)
+			dnsServerV6, err := unmarshalDNSServerV6(body)
 			if err != nil {
 				return err
 			}
-			res.DnsServerV6s = append(res.DnsServerV6s, dnsServerV6)
+			res.DNSServerV6s = append(res.DNSServerV6s, dnsServerV6)
 		}
 		return nil
 	})

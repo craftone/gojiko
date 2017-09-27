@@ -25,7 +25,7 @@ func TestFteid_Marshal(t *testing.T) {
 func TestUnmarshal_fteid(t *testing.T) {
 	fteid, _ := NewFteid(1, net.IPv4(1, 2, 3, 4), nil, 6, 0x0006c6ea)
 	fteidBin := fteid.Marshal()
-	msg, tail, err := Unmarshal(fteidBin)
+	msg, tail, err := Unmarshal(fteidBin, MsToNetwork)
 	fteid = msg.(*Fteid)
 	assert.Equal(t, fteidNum, fteid.typeNum)
 	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), fteid.Ipv4)

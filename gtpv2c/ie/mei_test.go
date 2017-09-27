@@ -35,7 +35,7 @@ func TestMei_Marshal(t *testing.T) {
 func TestUnmarshal_mei(t *testing.T) {
 	meiOrg, _ := NewMei(1, "0123456789012345")
 	meiBin := meiOrg.Marshal()
-	msg, tail, err := Unmarshal(meiBin)
+	msg, tail, err := Unmarshal(meiBin, MsToNetwork)
 	mei := msg.(*Mei)
 	assert.Equal(t, "0123456789012345", mei.Value)
 	assert.Equal(t, byte(1), mei.instance)
@@ -47,7 +47,7 @@ func TestUnmarshal_meiWithTail(t *testing.T) {
 	meiOrg, _ := NewMei(1, "0123456789012345")
 	meiBin := meiOrg.Marshal()
 	meiBin = append(meiBin, meiBin...)
-	msg, tail, err := Unmarshal(meiBin)
+	msg, tail, err := Unmarshal(meiBin, MsToNetwork)
 	mei := msg.(*Mei)
 	assert.Equal(t, "0123456789012345", mei.Value)
 	assert.Equal(t, byte(1), mei.instance)
