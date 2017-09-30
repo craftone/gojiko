@@ -23,7 +23,7 @@
   + ~~PCO - 000AH (IP address allocation via NAS signalling)~~
   + ~~PCO - 8021H (IPCP)~~
   + ~~Bearer Context - Bearer QoS~~
-  + Bearer Context - Charging ID
+  + ~~Bearer Context - Charging ID~~
   + Bearer Context
 
 

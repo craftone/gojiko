@@ -32,6 +32,7 @@ const (
 	servingNetworkNum ieTypeNum = 83
 	uliNum            ieTypeNum = 86
 	fteidNum          ieTypeNum = 87
+	chargingIDNum     ieTypeNum = 94
 	pdnTypeNum        ieTypeNum = 99
 	apnRestrictionNum ieTypeNum = 127
 	selectionModeNum  ieTypeNum = 128
@@ -74,7 +75,7 @@ func Unmarshal(buf []byte, dir IEDir) (IE, []byte, error) {
 	h.typeNum = ieTypeNum(buf[0])
 	h.length = binary.BigEndian.Uint16(buf[1:3])
 	msgSize := int(h.length)
-	if len(buf) < msgSize {
+	if len(buf) < msgSize+4 {
 		return nil, buf, fmt.Errorf("It is too short for the length : %d", h.length)
 	}
 	h.instance = buf[3] & 0xf
@@ -120,6 +121,8 @@ func Unmarshal(buf []byte, dir IEDir) (IE, []byte, error) {
 		msg, err = unmarshalUli(h, body)
 	case fteidNum:
 		msg, err = unmarshalFteid(h, body)
+	case chargingIDNum:
+		msg, err = unmarshalChargingID(h, body)
 	case pdnTypeNum:
 		msg, err = unmarshalPdnType(h, body)
 	case apnRestrictionNum:
