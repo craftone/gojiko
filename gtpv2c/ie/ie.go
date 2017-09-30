@@ -27,6 +27,7 @@ const (
 	indicationNum     ieTypeNum = 77
 	pcoNum            ieTypeNum = 78
 	paaNum            ieTypeNum = 79
+	bearerQoSNum      ieTypeNum = 80
 	ratTypeNum        ieTypeNum = 82
 	servingNetworkNum ieTypeNum = 83
 	uliNum            ieTypeNum = 86
@@ -109,6 +110,8 @@ func Unmarshal(buf []byte, dir IEDir) (IE, []byte, error) {
 		}
 	case paaNum:
 		msg, err = unmarshalPaa(h, body)
+	case bearerQoSNum:
+		msg, err = unmarshalBearerQoS(h, body)
 	case ratTypeNum:
 		msg, err = unmarshalRatType(h, body)
 	case servingNetworkNum:

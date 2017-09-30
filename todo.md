@@ -20,11 +20,11 @@
   + ~~EBI~~
   + ~~PCO - 0003H (DNS Server IPv6 Address Request)~~
   + ~~PCO - 000DH (DNS Server IPv4 Address Request)~~
-  + PCO - 000AH (IP address allocation via NAS signalling)
-  + PCO - 8021H (IPCP)
-
+  + ~~PCO - 000AH (IP address allocation via NAS signalling)~~
+  + ~~PCO - 8021H (IPCP)~~
+  + ~~Bearer Context - Bearer QoS~~
+  + Bearer Context - Charging ID
   + Bearer Context
-
 
 
 - Monitor を実装
