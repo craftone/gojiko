@@ -21,10 +21,9 @@ type BearerContextToBeCreatedWithinCSReqArg struct {
 	SgwDataFteid *Fteid
 }
 
-func NewBearerContextToBeCreatedWithinCSReq(instance byte, bcTBCwCSReqArg BearerContextToBeCreatedWithinCSReqArg) (*BearerContextToBeCreatedWithinCSReq, error) {
-	// Enforce instance number 0 since BearerContectToBeCreatedWithinCSReq's
-	// instance shoub be 0.
-	instance = 0
+func NewBearerContextToBeCreatedWithinCSReq(bcTBCwCSReqArg BearerContextToBeCreatedWithinCSReqArg) (*BearerContextToBeCreatedWithinCSReq, error) {
+	// BearerContectToBeCreatedWithinCSReq's instance number shoub be 0.
+	instance := byte(0)
 
 	bcArg := BearerContextArg{
 		Ebi:          bcTBCwCSReqArg.Ebi,
@@ -55,6 +54,10 @@ func unmarshalBearerContextToBeCreatedWithinCSReq(h header, buf []byte) (*Bearer
 		log.Fatal("Invalud type")
 	}
 
+	if h.instance != 0 {
+		log.Fatalf("BearerContectToBeCreatedWithinCSReq's instance number shoub be 0 but %v", h.instance)
+	}
+
 	bcTBCwCSReqArg := BearerContextToBeCreatedWithinCSReqArg{}
 	for len(buf) > 0 {
 		msg, tail, err := Unmarshal(buf, CreateSessionRequest)
@@ -79,7 +82,7 @@ func unmarshalBearerContextToBeCreatedWithinCSReq(h header, buf []byte) (*Bearer
 		}
 	}
 
-	bc, err := NewBearerContextToBeCreatedWithinCSReq(h.instance, bcTBCwCSReqArg)
+	bc, err := NewBearerContextToBeCreatedWithinCSReq(bcTBCwCSReqArg)
 	if err != nil {
 		return nil, err
 	}

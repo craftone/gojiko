@@ -26,23 +26,23 @@ func TestNewBearerContextToBeCreatedWithinCSReq(t *testing.T) {
 		BearerQoS:    bearerQoS,
 		SgwDataFteid: sgwDataFteid,
 	}
-	bcTBCwCSReq, err := NewBearerContextToBeCreatedWithinCSReq(0, bcTBCwCSReqArg)
+	bcTBCwCSReq, err := NewBearerContextToBeCreatedWithinCSReq(bcTBCwCSReqArg)
 
 	assert.Equal(t, bearerContextNum, bcTBCwCSReq.typeNum)
 	assert.Nil(t, err)
 
 	bcTBCwCSReqArg.Ebi = nil
-	_, err = NewBearerContextToBeCreatedWithinCSReq(0, bcTBCwCSReqArg)
+	_, err = NewBearerContextToBeCreatedWithinCSReq(bcTBCwCSReqArg)
 	assert.Error(t, err)
 
 	bcTBCwCSReqArg.Ebi = ebi
 	bcTBCwCSReqArg.BearerQoS = nil
-	_, err = NewBearerContextToBeCreatedWithinCSReq(0, bcTBCwCSReqArg)
+	_, err = NewBearerContextToBeCreatedWithinCSReq(bcTBCwCSReqArg)
 	assert.Error(t, err)
 
 	bcTBCwCSReqArg.BearerQoS = bearerQoS
 	bcTBCwCSReqArg.SgwDataFteid = nil
-	_, err = NewBearerContextToBeCreatedWithinCSReq(0, bcTBCwCSReqArg)
+	_, err = NewBearerContextToBeCreatedWithinCSReq(bcTBCwCSReqArg)
 	assert.Error(t, err)
 }
 
@@ -65,7 +65,7 @@ func TestBearerContextToBeCreatedWithinCSReq_Marshal(t *testing.T) {
 		BearerQoS:    bearerQoS,
 		SgwDataFteid: sgwDataFteid,
 	}
-	bcTBCwCSReq, _ := NewBearerContextToBeCreatedWithinCSReq(0, bcTBCwCSReqArg)
+	bcTBCwCSReq, _ := NewBearerContextToBeCreatedWithinCSReq(bcTBCwCSReqArg)
 	bcTBCwCSReqBin := bcTBCwCSReq.Marshal()
 
 	assert.Equal(t, []byte{
@@ -95,7 +95,7 @@ func TestUnmarshal_BearerContextToBeCreatedWithinCSReq(t *testing.T) {
 		BearerQoS:    bearerQoS,
 		SgwDataFteid: sgwDataFteid,
 	}
-	bcTBCwCSReq, _ := NewBearerContextToBeCreatedWithinCSReq(0, bcTBCwCSReqArg)
+	bcTBCwCSReq, _ := NewBearerContextToBeCreatedWithinCSReq(bcTBCwCSReqArg)
 	bcTBCwCSReqBin := bcTBCwCSReq.Marshal()
 
 	msg, tail, err := Unmarshal(bcTBCwCSReqBin, CreateSessionRequest)
