@@ -34,7 +34,7 @@ func TestUnmarshal_PcoMsToNetwork(t *testing.T) {
 	msToNet := pco.NewMsToNetwork(ipcp, true, false, true)
 	pcoMsToNetwork, _ := NewPcoMsToNetwork(0, msToNet)
 	pcoMsToNetworkBin := pcoMsToNetwork.Marshal()
-	msg, tail, err := Unmarshal(pcoMsToNetworkBin, MsToNetwork)
+	msg, tail, err := Unmarshal(pcoMsToNetworkBin, CreateSessionRequest)
 	pcoMsToNetwork = msg.(*PcoMsToNetwork)
 	assert.Equal(t, byte(0), pcoMsToNetwork.instance)
 	assert.Equal(t, pco.ConfigureRequest, pcoMsToNetwork.Ipcp.Code)

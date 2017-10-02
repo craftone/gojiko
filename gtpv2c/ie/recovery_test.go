@@ -33,7 +33,7 @@ func TestRecovery_marshal(t *testing.T) {
 func TestUnmarshal_recovery(t *testing.T) {
 	recOrg, _ := NewRecovery(0, 255)
 	recBin := recOrg.Marshal()
-	msg, tail, err := Unmarshal(recBin, MsToNetwork)
+	msg, tail, err := Unmarshal(recBin, CreateSessionRequest)
 	rec := msg.(*Recovery)
 	assert.Equal(t, byte(255), rec.Value)
 	assert.Equal(t, byte(0), rec.header.instance)
@@ -45,7 +45,7 @@ func TestUnmarshal_recoveryWithTail(t *testing.T) {
 	recOrg, _ := NewRecovery(0, 255)
 	recBin := recOrg.Marshal()
 	recBin = append(recBin, recBin...)
-	msg, tail, err := Unmarshal(recBin, MsToNetwork)
+	msg, tail, err := Unmarshal(recBin, CreateSessionRequest)
 	rec := msg.(*Recovery)
 	assert.Equal(t, byte(255), rec.Value)
 	assert.Equal(t, byte(0), rec.header.instance)

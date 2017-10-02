@@ -40,7 +40,7 @@ func TestImsi_Marshal(t *testing.T) {
 func TestUnmarshal_imsi(t *testing.T) {
 	imsiOrg, _ := NewImsi(1, "819012345678")
 	imsiBin := imsiOrg.Marshal()
-	msg, tail, err := Unmarshal(imsiBin, MsToNetwork)
+	msg, tail, err := Unmarshal(imsiBin, CreateSessionRequest)
 	imsi := msg.(*Imsi)
 	assert.Equal(t, "819012345678", imsi.Value)
 	assert.Equal(t, byte(1), imsi.instance)
@@ -52,7 +52,7 @@ func TestUnmarshal_imsiWithTail(t *testing.T) {
 	imsiOrg, _ := NewImsi(1, "819012345678")
 	imsiBin := imsiOrg.Marshal()
 	imsiBin = append(imsiBin, imsiBin...)
-	msg, tail, err := Unmarshal(imsiBin, MsToNetwork)
+	msg, tail, err := Unmarshal(imsiBin, CreateSessionRequest)
 	imsi := msg.(*Imsi)
 	assert.Equal(t, "819012345678", imsi.Value)
 	assert.Equal(t, byte(1), imsi.instance)

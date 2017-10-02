@@ -46,7 +46,7 @@ func TestUnmarshal_indication(t *testing.T) {
 	}
 	idc, _ := NewIndication(1, ida)
 	idcBin := idc.Marshal()
-	msg, tail, err := Unmarshal(idcBin, MsToNetwork)
+	msg, tail, err := Unmarshal(idcBin, CreateSessionRequest)
 	idc = msg.(*Indication)
 	assert.Equal(t, ida, idc.IndicationArg)
 	assert.Equal(t, []byte{}, tail)

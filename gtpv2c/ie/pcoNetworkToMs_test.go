@@ -44,7 +44,7 @@ func TestUnmarshal_PcoNetworkToMs(t *testing.T) {
 	netToMs := pco.NewNetworkToMs(ipcp, dnsServerV4s, dnsServerV6s)
 	pcoNetworkToMs, _ := NewPcoNetworkToMs(0, netToMs)
 	pcoNetworkToMsBin := pcoNetworkToMs.Marshal()
-	msg, tail, err := Unmarshal(pcoNetworkToMsBin, NetworkToMs)
+	msg, tail, err := Unmarshal(pcoNetworkToMsBin, CreateSessionResponse)
 	pcoNetworkToMs = msg.(*PcoNetworkToMs)
 	assert.Equal(t, byte(0), pcoNetworkToMs.instance)
 	assert.Equal(t, pco.ConfigureNack, pcoNetworkToMs.Ipcp.Code)

@@ -27,7 +27,7 @@ func TestApn_Marshal(t *testing.T) {
 func TestUnmarshal_apn(t *testing.T) {
 	apnOrg, _ := NewApn(1, "example.com")
 	apnBin := apnOrg.Marshal()
-	msg, tail, err := Unmarshal(apnBin, MsToNetwork)
+	msg, tail, err := Unmarshal(apnBin, CreateSessionRequest)
 	apn := msg.(*Apn)
 	assert.Equal(t, byte(1), apn.instance)
 	assert.Equal(t, "example.com", apn.Value)

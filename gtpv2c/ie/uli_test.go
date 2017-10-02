@@ -46,7 +46,7 @@ func TestUnmarshal_uli(t *testing.T) {
 	}
 	uli, _ := NewUli(1, uliArg)
 	uliBin := uli.Marshal()
-	msg, tail, err := Unmarshal(uliBin, MsToNetwork)
+	msg, tail, err := Unmarshal(uliBin, CreateSessionRequest)
 	uli = msg.(*Uli)
 	assert.Equal(t, byte(1), uli.instance)
 	assert.Equal(t, "440", uli.Ecgi.Mcc)

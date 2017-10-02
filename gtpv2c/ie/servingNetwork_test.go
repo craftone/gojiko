@@ -25,7 +25,7 @@ func TestServingNetwork_Marshal(t *testing.T) {
 func TestUnmarshal_servingNetwork(t *testing.T) {
 	sn, _ := NewServingNetwork(1, "440", "10")
 	snBin := sn.Marshal()
-	msg, tail, err := Unmarshal(snBin, MsToNetwork)
+	msg, tail, err := Unmarshal(snBin, CreateSessionRequest)
 	sn = msg.(*ServingNetwork)
 	assert.Equal(t, byte(1), sn.instance)
 	assert.Equal(t, "440", sn.Mcc)

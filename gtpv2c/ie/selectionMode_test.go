@@ -28,7 +28,7 @@ func TestSelectionMode_marshal(t *testing.T) {
 func TestUnmarshal_selectionMode(t *testing.T) {
 	sm, _ := NewSelectionMode(0, 1)
 	smBin := sm.Marshal()
-	msg, tail, err := Unmarshal(smBin, MsToNetwork)
+	msg, tail, err := Unmarshal(smBin, CreateSessionRequest)
 	sm = msg.(*SelectionMode)
 	assert.Equal(t, byte(0), sm.header.instance)
 	assert.Equal(t, byte(1), sm.Value)

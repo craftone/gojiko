@@ -13,6 +13,27 @@ const (
 	NetworkToMs
 )
 
+type MsgType byte
+
+const (
+	EchoRequest MsgType = iota
+	EchoResponse
+	VersionNotSupportedIndication
+	CreateSessionRequest
+	CreateSessionResponse
+)
+
+func msgType2IEDir(t MsgType) (IEDir, error) {
+	res := MsToNetwork
+	switch t {
+	case EchoRequest, CreateSessionRequest:
+		return MsToNetwork, nil
+	case EchoResponse, CreateSessionResponse:
+		return NetworkToMs, nil
+	}
+	return res, fmt.Errorf("Unkown Message Type : %v", t)
+}
+
 type ieTypeNum byte
 
 const (
@@ -32,6 +53,7 @@ const (
 	servingNetworkNum ieTypeNum = 83
 	uliNum            ieTypeNum = 86
 	fteidNum          ieTypeNum = 87
+	bearerContextNum  ieTypeNum = 93
 	chargingIDNum     ieTypeNum = 94
 	pdnTypeNum        ieTypeNum = 99
 	apnRestrictionNum ieTypeNum = 127
@@ -67,7 +89,7 @@ func (h *header) marshal(body []byte) []byte {
 	return res
 }
 
-func Unmarshal(buf []byte, dir IEDir) (IE, []byte, error) {
+func Unmarshal(buf []byte, msgType MsgType) (IE, []byte, error) {
 	if len(buf) < 4 {
 		return nil, buf, errors.New("It needs at least 4 bytes")
 	}
@@ -104,6 +126,10 @@ func Unmarshal(buf []byte, dir IEDir) (IE, []byte, error) {
 	case indicationNum:
 		msg, err = unmarshalIndication(h, body)
 	case pcoNum:
+		dir, err := msgType2IEDir(msgType)
+		if err != nil {
+			return nil, buf, err
+		}
 		if dir == MsToNetwork {
 			msg, err = unmarshalPcoMsToNetwork(h, body)
 		} else if dir == NetworkToMs {
@@ -121,6 +147,12 @@ func Unmarshal(buf []byte, dir IEDir) (IE, []byte, error) {
 		msg, err = unmarshalUli(h, body)
 	case fteidNum:
 		msg, err = unmarshalFteid(h, body)
+	case bearerContextNum:
+		if msgType == CreateSessionRequest && h.instance == 0 {
+			msg, err = unmarshalBearerContextToBeCreatedWithinCSReq(h, body)
+		} else {
+			return nil, buf, fmt.Errorf("Unknown Bearar Context : %v", buf)
+		}
 	case chargingIDNum:
 		msg, err = unmarshalChargingID(h, body)
 	case pdnTypeNum:
@@ -130,7 +162,7 @@ func Unmarshal(buf []byte, dir IEDir) (IE, []byte, error) {
 	case selectionModeNum:
 		msg, err = unmarshalSelectionMode(h, body)
 	default:
-		return nil, buf, fmt.Errorf("Unknown message type : %d", h.typeNum)
+		return nil, buf, fmt.Errorf("Unknown IE type : %d", h.typeNum)
 	}
 	if err != nil {
 		return nil, buf, err

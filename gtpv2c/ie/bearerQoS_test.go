@@ -71,7 +71,7 @@ func TestUnmarshal_BearerQoS(t *testing.T) {
 		DownlinkGBR: 0,
 	})
 	bearerQoSBin := bearerQoS.Marshal()
-	msg, tail, err := Unmarshal(bearerQoSBin, MsToNetwork)
+	msg, tail, err := Unmarshal(bearerQoSBin, CreateSessionRequest)
 	bearerQoS = msg.(*BearerQoS)
 	assert.Equal(t, bearerQoSNum, bearerQoS.typeNum)
 	assert.Equal(t, true, bearerQoS.Pci)

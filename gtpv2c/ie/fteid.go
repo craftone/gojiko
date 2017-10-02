@@ -18,6 +18,13 @@ type Fteid struct {
 
 type IfType byte
 
+const (
+	S5S8SgwGtpUIf IfType = 4
+	S5S8PgwGtpUIf IfType = 5
+	S5S8SgwGtpCIf IfType = 6
+	S5S8PgwGtpCIf IfType = 7
+)
+
 func NewFteid(instance byte, ipv4, ipv6 net.IP, ifType IfType, value uint32) (*Fteid, error) {
 	if ipv4 != nil {
 		ipv4 = ipv4.To4()

@@ -35,7 +35,7 @@ func TestEbi_mebishal(t *testing.T) {
 func TestUnmebishal_Ebi(t *testing.T) {
 	ebiOrg, _ := NewEbi(0, 5)
 	ebiBin := ebiOrg.Marshal()
-	msg, tail, err := Unmarshal(ebiBin, MsToNetwork)
+	msg, tail, err := Unmarshal(ebiBin, CreateSessionRequest)
 	ebi := msg.(*Ebi)
 	assert.Equal(t, byte(5), ebi.Value)
 	assert.Equal(t, byte(0), ebi.header.instance)

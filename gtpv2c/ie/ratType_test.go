@@ -33,7 +33,7 @@ func TestRatType_marshal(t *testing.T) {
 func TestUnmarshal_RatType(t *testing.T) {
 	rtOrg, _ := NewRatType(0, 255)
 	rtBin := rtOrg.Marshal()
-	msg, tail, err := Unmarshal(rtBin, MsToNetwork)
+	msg, tail, err := Unmarshal(rtBin, CreateSessionRequest)
 	rt := msg.(*RatType)
 	assert.Equal(t, byte(255), rt.Value)
 	assert.Equal(t, byte(0), rt.header.instance)

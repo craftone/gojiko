@@ -35,7 +35,7 @@ func TestPdnType_marshal(t *testing.T) {
 func TestUnmarshal_pdnType(t *testing.T) {
 	pt, _ := NewPdnType(0, PdnTypeIPv4)
 	ptBin := pt.Marshal()
-	msg, tail, err := Unmarshal(ptBin, MsToNetwork)
+	msg, tail, err := Unmarshal(ptBin, CreateSessionRequest)
 	pt = msg.(*PdnType)
 	assert.Equal(t, byte(0), pt.instance)
 	assert.Equal(t, PdnTypeIPv4, pt.Value)

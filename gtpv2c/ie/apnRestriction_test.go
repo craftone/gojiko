@@ -21,7 +21,7 @@ func TestApnRestriction_marshal(t *testing.T) {
 func TestUnmarshal_ApnRestriction(t *testing.T) {
 	arOrg, _ := NewApnRestriction(0, 255)
 	arBin := arOrg.Marshal()
-	msg, tail, err := Unmarshal(arBin, MsToNetwork)
+	msg, tail, err := Unmarshal(arBin, CreateSessionRequest)
 	ar := msg.(*ApnRestriction)
 	assert.Equal(t, byte(255), ar.Value)
 	assert.Equal(t, byte(0), ar.header.instance)

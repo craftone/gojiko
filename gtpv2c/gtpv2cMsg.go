@@ -7,12 +7,12 @@ import (
 	"log"
 )
 
-type messageType byte
+type MessageTypeNum byte
 
 const (
-	echoRequest                   messageType = 1
-	echoResponse                  messageType = 2
-	versionNotSupportedIndication messageType = 3
+	EchoRequestNum                   MessageTypeNum = 1
+	EchoResponseNum                  MessageTypeNum = 2
+	VersionNotSupportedIndicationNum MessageTypeNum = 3
 )
 
 type GtpV2cMsg interface {
