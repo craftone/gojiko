@@ -7,12 +7,12 @@ import (
 	"log"
 )
 
-type MessageTypeNum byte
+type messageTypeNum byte
 
 const (
-	EchoRequestNum                   MessageTypeNum = 1
-	EchoResponseNum                  MessageTypeNum = 2
-	VersionNotSupportedIndicationNum MessageTypeNum = 3
+	echoRequestNum                   messageTypeNum = 1
+	echoResponseNum                  messageTypeNum = 2
+	versionNotSupportedIndicationNum messageTypeNum = 3
 )
 
 type GtpV2cMsg interface {
@@ -21,7 +21,7 @@ type GtpV2cMsg interface {
 
 type header struct {
 	version          byte
-	messageType      messageType
+	messageType      messageTypeNum
 	piggybackingFlag bool
 	teidFlag         bool
 	length           uint16
@@ -29,11 +29,11 @@ type header struct {
 	seqNum           uint32
 }
 
-func newHeader(messageType messageType, piggybakingFlag, teidFlag bool, teid, seqNum uint32) *header {
+func newHeader(messageType messageTypeNum, piggybakingFlag, teidFlag bool, teid, seqNum uint32) header {
 	if seqNum > 0xffffff {
 		log.Fatal("GTPv2-C's sequence number must be unit24")
 	}
-	return &header{
+	return header{
 		version:          2,
 		messageType:      messageType,
 		piggybackingFlag: piggybakingFlag,
@@ -88,7 +88,7 @@ func (h *header) marshal(body []byte) []byte {
 
 func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 	if len(buf) < 8 {
-		return nil, buf, errors.New("It needs at least 8 bytes")
+		return nil, buf, fmt.Errorf("It needs at least 8 bytes : %v", buf)
 	}
 	h := header{}
 	h.version = buf[0] >> 5
@@ -97,7 +97,7 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 	}
 	h.piggybackingFlag = (buf[0]&0x10 == 1)
 	h.teidFlag = (buf[0]&0x40 == 1)
-	h.messageType = messageType(buf[1])
+	h.messageType = messageTypeNum(buf[1])
 	h.length = binary.BigEndian.Uint16(buf[2:4])
 	msgSize := int(h.length) + 4
 	if len(buf) < msgSize {
@@ -116,15 +116,19 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 
 	var msg GtpV2cMsg
 	var err error
+	body := buf[idx:msgSize]
+	tail := buf[msgSize:]
 
 	switch h.messageType {
-	case echoRequest:
-		msg, err = unmarshalEchoRequest(h, buf[idx:msgSize])
+	case echoRequestNum:
+		msg, err = unmarshalEchoRequest(h, body)
+	case echoResponseNum:
+		msg, err = unmarshalEchoResponse(h, body)
 	default:
 		return nil, buf, fmt.Errorf("Unkown message type : %d", h.messageType)
 	}
 	if err != nil {
 		return nil, buf, err
 	}
-	return msg, buf[msgSize:], nil
+	return msg, tail, nil
 }

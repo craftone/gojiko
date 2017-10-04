@@ -7,8 +7,8 @@ import (
 )
 
 type echo struct {
-	header   *header
-	recovery *ie.Recovery
+	header
+	Recovery *ie.Recovery
 }
 
 type EchoRequest struct {
@@ -19,39 +19,60 @@ type EchoResponse struct {
 	echo
 }
 
-func newEcho(messageType messageType, seqNum uint32, recovery byte) echo {
+func newEcho(messageType messageTypeNum, seqNum uint32, recoveryValue byte) (echo, error) {
+	rec, err := ie.NewRecovery(0, recoveryValue)
+	if err != nil {
+		return echo{}, err
+	}
 	return echo{
 		newHeader(messageType, false, false, 0, seqNum),
-		ie.NewRecovery(recovery, 0),
-	}
+		rec,
+	}, nil
 }
 
-func NewEchoRequest(seqNum uint32, recovery byte) *EchoRequest {
-	return &EchoRequest{
-		newEcho(echoRequest, seqNum, recovery),
+func NewEchoRequest(seqNum uint32, recoveryValue byte) (*EchoRequest, error) {
+	echo, err := newEcho(echoRequestNum, seqNum, recoveryValue)
+	if err != nil {
+		return nil, err
 	}
+	return &EchoRequest{echo}, nil
 }
 
-func NewEchoResponse(seqNum uint32, recovery byte) *EchoRequest {
-	return &EchoRequest{
-		newEcho(echoResponse, seqNum, recovery),
+func NewEchoResponse(seqNum uint32, recoveryValue byte) (*EchoResponse, error) {
+	echo, err := newEcho(echoResponseNum, seqNum, recoveryValue)
+	if err != nil {
+		return nil, err
 	}
+	return &EchoResponse{echo}, nil
 }
 
-func (e *echo) Marshal() []byte {
-	body := e.recovery.Marshal()
+func (e echo) Marshal() []byte {
+	body := e.Recovery.Marshal()
 	return e.header.marshal(body)
 }
 
 func unmarshalEchoRequest(h header, buf []byte) (*EchoRequest, error) {
-	if h.messageType != echoRequest {
+	if h.messageType != echoRequestNum {
 		log.Fatal("Invalud messageType")
 	}
 
-	anIe, _, err := ie.Unmarshal(buf)
+	anIe, _, err := ie.Unmarshal(buf, ie.EchoRequest)
 	if err != nil {
 		return nil, err
 	}
 	rec := anIe.(*ie.Recovery)
-	return NewEchoRequest(h.seqNum, rec.Value), nil
+	return NewEchoRequest(h.seqNum, rec.Value)
+}
+
+func unmarshalEchoResponse(h header, buf []byte) (*EchoResponse, error) {
+	if h.messageType != echoResponseNum {
+		log.Fatal("Invalud messageType")
+	}
+
+	anIe, _, err := ie.Unmarshal(buf, ie.EchoResponse)
+	if err != nil {
+		return nil, err
+	}
+	rec := anIe.(*ie.Recovery)
+	return NewEchoResponse(h.seqNum, rec.Value)
 }
