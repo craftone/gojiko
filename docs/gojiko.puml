@@ -1,0 +1,87 @@
+@startuml
+
+class APN_Repo {
+  CreateAPN(name) (*APN, error)
+  DeleteAPN(name) error
+  SelectAPN(name) *APN
+}
+class APN {
+  name String
+  CreateVPGW(IPaddr, ListenPort) (*VPGW, error)
+  DeleteVPGW(IPaddr) error
+  SelectVPGW(IPaddr) *VPGW
+}
+class VPGW {
+  IPaddr
+  ListenPort // shall be 2123
+  Recovery byte
+  Sessions [FTEID]chan
+  CreateSession()
+  DeleteSession()
+  CreateFlow(FTEID) FlowID
+}
+class ECHO_C_Mgr <<GoRoutine>>
+note left
+  定期的に
+  ECHO Reqを
+  送信
+end note
+
+class ECHO_U_Mgr <<GoRoutine>>
+
+class Session <<GoRoutine>> {
+  ControlF-TEID
+  S5S8U_F-TEID
+  Pgw2Session chan
+  CSGW2Session chan
+}
+note right
+  リトライ制御は
+  ここで実施
+end note
+class Flow <<GoRoutine>>
+
+class DSGW <<main>> <<singleton>> {
+  IPAddr
+  ListenPort
+  SourcePort
+  Recovery byte
+  sendMsg()
+}
+class DSGWSender <<GoRoutine>>
+class DSGWReceiver <<GoRoutine>>
+
+class CSGW <<main>> <<singleton>> {
+  IPAddr
+  ListenPort
+  SourcePort
+  Recovery byte
+  sendMsg()
+  getFTEID() FTEID
+}
+class CSGWSender <<GoRoutine>>
+class CSGWReceiver <<GoRoutine>>
+
+APN_Repo .> APN : CRUD
+APN *-- "*" VPGW
+
+VPGW *-- ECHO_C_Mgr
+VPGW *-- ECHO_U_Mgr
+
+VPGW *- "*" Session
+
+Session *-- "*" Flow
+
+Session ..> CSGW : sendMsg()\ngetFTEID()
+ECHO_C_Mgr ..> CSGW : sendMsg()
+Flow ..> DSGW
+ECHO_U_Mgr ..> DSGW
+
+CSGW *-- CSGWSender
+CSGW *-- CSGWReceiver
+DSGW *-- DSGWSender
+DSGW *-- DSGWReceiver
+
+CSGWReceiver ..> Session : received packet
+
+@enduml
