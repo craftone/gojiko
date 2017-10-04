@@ -150,6 +150,8 @@ func Unmarshal(buf []byte, msgType MsgType) (IE, []byte, error) {
 	case bearerContextNum:
 		if msgType == CreateSessionRequest && h.instance == 0 {
 			msg, err = unmarshalBearerContextToBeCreatedWithinCSReq(h, body)
+		} else if msgType == CreateSessionResponse && h.instance == 0 {
+			msg, err = unmarshalBearerContextCreatedWithinCSRes(h, body)
 		} else {
 			return nil, buf, fmt.Errorf("Unknown Bearar Context : %v", buf)
 		}

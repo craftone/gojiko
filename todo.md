@@ -24,7 +24,11 @@
   + ~~PCO - 8021H (IPCP)~~
   + ~~Bearer Context - Bearer QoS~~
   + ~~Bearer Context - Charging ID~~
-  + Bearer Context
+  + ~~Bearer Context~~
+    + ~~Bearer Context to be created within Create Session Request~~
+    + ~~Bearer Context created within Create Session Response~~
+  + CSreq
+  + CSres
 
 
 - Monitor を実装

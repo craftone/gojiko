@@ -7,9 +7,9 @@ import (
 )
 
 func TestNewCause(t *testing.T) {
-	cause, err := NewCause(0, 1, true, false, true, nil)
+	cause, err := NewCause(0, CauseRequestAccepted, true, false, true, nil)
 	assert.Equal(t, causeNum, cause.header.typeNum)
-	assert.Equal(t, byte(1), cause.Value)
+	assert.Equal(t, CauseRequestAccepted, cause.Value)
 	assert.Equal(t, true, cause.Pce)
 	assert.Equal(t, false, cause.Bce)
 	assert.Equal(t, true, cause.Cs)
@@ -17,8 +17,8 @@ func TestNewCause(t *testing.T) {
 	assert.Nil(t, err)
 
 	offendingIe := &header{2, 0, 3}
-	cause, _ = NewCause(1, 2, false, true, false, offendingIe)
-	assert.Equal(t, byte(2), cause.Value)
+	cause, _ = NewCause(1, CauseNoResourcesAvailable, false, true, false, offendingIe)
+	assert.Equal(t, CauseNoResourcesAvailable, cause.Value)
 	assert.Equal(t, false, cause.Pce)
 	assert.Equal(t, true, cause.Bce)
 	assert.Equal(t, false, cause.Cs)
@@ -27,9 +27,9 @@ func TestNewCause(t *testing.T) {
 }
 
 func TestCause_Marshal(t *testing.T) {
-	cause, _ := NewCause(1, 2, true, false, true, nil)
+	cause, _ := NewCause(1, CauseNoResourcesAvailable, true, false, true, nil)
 	causeBin := cause.Marshal()
-	assert.Equal(t, []byte{2, 0, 2, 1, 2, 5}, causeBin)
+	assert.Equal(t, []byte{2, 0, 2, 1, 73, 5}, causeBin)
 
 	causeOff, _ := NewCause(1, 2, true, true, true, &header{2, 0, 3})
 	causeOffBin := causeOff.Marshal()
@@ -37,12 +37,12 @@ func TestCause_Marshal(t *testing.T) {
 }
 
 func TestUnmarshal_cause(t *testing.T) {
-	causeOrg, _ := NewCause(1, 2, true, false, true, nil)
+	causeOrg, _ := NewCause(1, CauseNoResourcesAvailable, true, false, true, nil)
 	causeBin := causeOrg.Marshal()
 	msg, tail, err := Unmarshal(causeBin, CreateSessionRequest)
 	cause := msg.(*Cause)
 	assert.Equal(t, byte(1), cause.instance)
-	assert.Equal(t, byte(2), cause.Value)
+	assert.Equal(t, CauseNoResourcesAvailable, cause.Value)
 	assert.Equal(t, true, cause.Pce)
 	assert.Equal(t, false, cause.Bce)
 	assert.Equal(t, true, cause.Cs)
@@ -50,12 +50,12 @@ func TestUnmarshal_cause(t *testing.T) {
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 
-	causeOffOrg, _ := NewCause(1, 2, true, false, true, &header{2, 0, 3})
+	causeOffOrg, _ := NewCause(1, CauseNoResourcesAvailable, true, false, true, &header{2, 0, 3})
 	causeOffBin := causeOffOrg.Marshal()
 	msg, tail, err = Unmarshal(causeOffBin, CreateSessionRequest)
 	cause = msg.(*Cause)
 	assert.Equal(t, byte(1), cause.instance)
-	assert.Equal(t, byte(2), cause.Value)
+	assert.Equal(t, CauseNoResourcesAvailable, cause.Value)
 	assert.Equal(t, true, cause.Pce)
 	assert.Equal(t, false, cause.Bce)
 	assert.Equal(t, true, cause.Cs)

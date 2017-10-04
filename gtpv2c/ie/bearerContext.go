@@ -11,6 +11,9 @@ type BearerContextArg struct {
 	Ebi          *Ebi
 	BearerQoS    *BearerQoS
 	SgwDataFteid *Fteid
+	Cause        *Cause
+	PgwDataFteid *Fteid
+	ChargingID   *ChargingID
 }
 
 func NewBearerContext(instance byte, bcArg BearerContextArg) (*BearerContext, error) {
@@ -41,6 +44,15 @@ func (b *BearerContext) Marshal() []byte {
 	}
 	if b.SgwDataFteid != nil {
 		body = append(body, b.SgwDataFteid.Marshal()...)
+	}
+	if b.Cause != nil {
+		body = append(body, b.Cause.Marshal()...)
+	}
+	if b.PgwDataFteid != nil {
+		body = append(body, b.PgwDataFteid.Marshal()...)
+	}
+	if b.ChargingID != nil {
+		body = append(body, b.ChargingID.Marshal()...)
 	}
 	return b.header.marshal(body)
 }
