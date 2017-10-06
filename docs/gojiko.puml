@@ -1,87 +1,145 @@
 @startuml
 
-class APN_Repo {
-  CreateAPN(name) (*APN, error)
-  DeleteAPN(name) error
-  SelectAPN(name) *APN
+'''''''''''''''''''
+' APN part
+'''''''''''''''''''
+
+class ApnRepo {
+  Apns [name]*Apn
+  Create(name) (*Apn, error)
+  Delete(name) error
+  Select(name) *Apn
 }
-class APN {
+class Apn {
   name String
-  CreateVPGW(IPaddr, ListenPort) (*VPGW, error)
-  DeleteVPGW(IPaddr) error
-  SelectVPGW(IPaddr) *VPGW
+  Pgws []*Pgw
 }
-class VPGW {
+
+ApnRepo .> Apn : CRUD
+Apn *-- "*" PgwCtrl
+
+'''''''''''''''''''
+' S/PGW part
+'''''''''''''''''''
+
+class AbsSpgw {
   IPaddr
   ListenPort // shall be 2123
+  SourcePort // shall be 2123
   Recovery byte
-  Sessions [FTEID]chan
-  CreateSession()
-  DeleteSession()
+  NextTeid() TEID
+}
+
+class PgwRepo {
+  Create(Apn, IPaddr, ListenPort, Recovery) *Pgw
+  Search(IPaddr, ListenPort) *Pgw
+  Delete(Pgw)
+}
+
+class PgwCtrl {
+  DeleteBearer()
+  sendMsg()
+  createSession()
+  deleteSession()
+}
+AbsSpgw <|-- PgwCtrl
+
+class PgwData {
   CreateFlow(FTEID) FlowID
 }
-class ECHO_C_Mgr <<GoRoutine>>
+AbsSpgw <|-- PgwData
+PgwCtrl *-- PgwData
+
+class PgwCtrlReceiver <<GoRoutine>>
+PgwCtrl *-- PgwCtrlReceiver
+
+class PgwCtrlSender <<GoRoutine>>
+PgwCtrl *-- PgwCtrlSender
+
+
+PgwRepo ..> PgwCtrl
+PgwCtrl *-- PgwEchoCMgr
+PgwData *-- PgwEchoUMgr
+
+class PgwEchoCMgr <<GoRoutine>>
 note left
   定期的に
   ECHO Reqを
   送信
 end note
 
-class ECHO_U_Mgr <<GoRoutine>>
+class PgwDataSender <<GoRoutine>>
+class PgwDataReceiver <<GoRoutine>>
 
-class Session <<GoRoutine>> {
-  ControlF-TEID
-  S5S8U_F-TEID
-  Pgw2Session chan
-  CSGW2Session chan
+PgwData *-- PgwDataSender
+PgwData *-- PgwDataReceiver
+
+
+class PgwEchoUMgr <<GoRoutine>>
+
+PgwCtrlReceiver ..> PgwEchoCMgr : received packet
+
+'''''''''''''''''''
+' SGW part
+'''''''''''''''''''
+
+class SgwCtrl {
+  sendMsg()
+  CreateSession(Apn, IMSI, etc.) SessionID
+}
+
+class SgwData {
+  sendMsg()
+}
+SgwCtrl *-- SgwData
+
+AbsSpgw <|-- SgwCtrl
+AbsSpgw <|-- SgwData
+
+class SgwDataSender <<GoRoutine>>
+class SgwDataReceiver <<GoRoutine>>
+
+SgwCtrl *-- SgwCtrlSender
+SgwCtrl *-- SgwCtrlReceiver
+
+
+class SgwCtrlSender <<GoRoutine>>
+class SgwCtrlReceiver <<GoRoutine>>
+
+SgwData *-- SgwDataSender
+SgwData *-- SgwDataReceiver
+
+class SgwEchoCMgr <<GoRoutine>>
+class SgwEchoUMgr <<GoRoutine>>
+
+SgwCtrl *-- SgwEchoCMgr
+SgwData *-- SgwEchoUMgr
+
+'''''''''''''''''''
+' GtpSession part
+'''''''''''''''''''
+
+class GtpSession <<GoRoutine>> {
+  PgwCtrlFteid FTEID
+  PgwDataFteid FTEID
+  SgwCFteid FTEID
+  SgwUFeession chan
 }
 note right
   リトライ制御は
   ここで実施
 end note
+
 class Flow <<GoRoutine>>
 
-class DSGW <<main>> <<singleton>> {
-  IPAddr
-  ListenPort
-  SourcePort
-  Recovery byte
-  sendMsg()
-}
-class DSGWSender <<GoRoutine>>
-class DSGWReceiver <<GoRoutine>>
 
-class CSGW <<main>> <<singleton>> {
-  IPAddr
-  ListenPort
-  SourcePort
-  Recovery byte
-  sendMsg()
-  getFTEID() FTEID
-}
-class CSGWSender <<GoRoutine>>
-class CSGWReceiver <<GoRoutine>>
+GtpSession *-- "*" Flow
 
-APN_Repo .> APN : CRUD
-APN *-- "*" VPGW
+GtpSession ..> SgwCtrl : sendMsg()
+Flow ..> SgwData
 
-VPGW *-- ECHO_C_Mgr
-VPGW *-- ECHO_U_Mgr
 
-VPGW *- "*" Session
-
-Session *-- "*" Flow
-
-Session ..> CSGW : sendMsg()\ngetFTEID()
-ECHO_C_Mgr ..> CSGW : sendMsg()
-Flow ..> DSGW
-ECHO_U_Mgr ..> DSGW
-
-CSGW *-- CSGWSender
-CSGW *-- CSGWReceiver
-DSGW *-- DSGWSender
-DSGW *-- DSGWReceiver
-
-CSGWReceiver ..> Session : received packet
+SgwCtrlReceiver ..> GtpSession : received packet
+PgwCtrlReceiver ..> GtpSession : received packet
 
 @enduml
