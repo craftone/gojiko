@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+
+	"github.com/craftone/gojiko/gtp"
 )
 
 type messageTypeNum byte
@@ -25,11 +27,11 @@ type header struct {
 	piggybackingFlag bool
 	teidFlag         bool
 	length           uint16
-	teid             uint32
+	teid             gtp.Teid
 	seqNum           uint32
 }
 
-func newHeader(messageType messageTypeNum, piggybakingFlag, teidFlag bool, teid, seqNum uint32) header {
+func newHeader(messageType messageTypeNum, piggybakingFlag, teidFlag bool, teid gtp.Teid, seqNum uint32) header {
 	if seqNum > 0xffffff {
 		log.Fatal("GTPv2-C's sequence number must be unit24")
 	}
@@ -71,7 +73,7 @@ func (h *header) marshal(body []byte) []byte {
 
 	// TEID
 	if h.teidFlag {
-		binary.BigEndian.PutUint32(res[addr:addr+4], h.teid)
+		binary.BigEndian.PutUint32(res[addr:addr+4], uint32(h.teid))
 		addr += 4
 	}
 
@@ -108,7 +110,7 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 		if len(buf) < 12 {
 			return nil, buf, errors.New("It needs at least 12 bytes")
 		}
-		h.teid = binary.BigEndian.Uint32(buf[idx : idx+4])
+		h.teid = gtp.Teid(binary.BigEndian.Uint32(buf[idx : idx+4]))
 		idx += 4
 	}
 	h.seqNum = uint32(buf[idx])<<16 + uint32(buf[idx+1])<<8 + uint32(buf[idx+2])

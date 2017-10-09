@@ -3,6 +3,8 @@ package gtpv2c
 import (
 	"testing"
 
+	"github.com/craftone/gojiko/gtp"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +15,7 @@ func TestNewEchoRequest(t *testing.T) {
 	assert.Equal(t, false, er.teidFlag)
 	assert.Equal(t, echoRequestNum, er.messageType)
 	assert.Equal(t, uint32(1), er.seqNum)
-	assert.Equal(t, uint32(0), er.teid)
+	assert.Equal(t, gtp.Teid(0), er.teid)
 	assert.Equal(t, byte(2), er.Recovery.Value)
 	assert.NoError(t, err)
 }
@@ -33,7 +35,7 @@ func TestNewEchoResponse(t *testing.T) {
 	assert.Equal(t, false, er.teidFlag)
 	assert.Equal(t, echoResponseNum, er.messageType)
 	assert.Equal(t, uint32(1), er.seqNum)
-	assert.Equal(t, uint32(0), er.teid)
+	assert.Equal(t, gtp.Teid(0), er.teid)
 	assert.Equal(t, byte(2), er.Recovery.Value)
 	assert.NoError(t, err)
 }
