@@ -30,6 +30,7 @@
   + CSreq
   + CSres
 
+- gtpv2cのTEIDをgtp.Teidに変更
 
 - Monitor を実装
 - PPGW/gojiko でパケットのやり取りを実装

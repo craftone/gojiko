@@ -1,0 +1,149 @@
+@startuml
+
+'''''''''''''''''''
+' APN part
+'''''''''''''''''''
+
+class ApnRepo {
+  Apns [name]*Apn
+  Create(name) (*Apn, error)
+  Delete(name) error
+  Select(name) *Apn
+}
+class Apn {
+  name String
+  Pgws []*Pgw
+}
+
+ApnRepo .> Apn : CRUD
+Apn *-- "*" PgwCtrl
+
+'''''''''''''''''''
+' S/PGW part
+'''''''''''''''''''
+
+class AbsSpgw {
+  IPaddr
+  ListenPort // shall be 2123
+  SourcePort // shall be 2123
+  Recovery byte
+}
+
+class AbsRealSpgw {
+  NextTeid() TEID
+}
+AbsSpgw <|-- AbsRealSpgw
+
+class PgwRepo {
+  Create(Apn, IPaddr, ListenPort, Recovery) *Pgw
+  Search(IPaddr, ListenPort) *Pgw
+  Delete(Pgw)
+}
+
+class PgwCtrl {
+  DeleteBearer()
+  sendMsg()
+  createSession()
+  deleteSession()
+}
+AbsSpgw <|-- PgwCtrl
+
+class PgwData {
+  CreateFlow(FTEID) FlowID
+}
+AbsSpgw <|-- PgwData
+PgwCtrl *-- PgwData
+
+class PgwCtrlReceiver <<GoRoutine>>
+PgwCtrl *-- PgwCtrlReceiver
+
+class PgwCtrlSender <<GoRoutine>>
+PgwCtrl *-- PgwCtrlSender
+
+
+PgwRepo ..> PgwCtrl
+PgwCtrl *-- PgwEchoCMgr
+PgwData *-- PgwEchoUMgr
+
+class PgwEchoCMgr <<GoRoutine>>
+note left
+  定期的に
+  ECHO Reqを
+  送信
+end note
+
+class PgwDataSender <<GoRoutine>>
+class PgwDataReceiver <<GoRoutine>>
+
+PgwData *-- PgwDataSender
+PgwData *-- PgwDataReceiver
+
+
+class PgwEchoUMgr <<GoRoutine>>
+
+PgwCtrlReceiver ..> PgwEchoCMgr : received packet
+
+'''''''''''''''''''
+' SGW part
+'''''''''''''''''''
+
+class SgwCtrl {
+  sendMsg()
+  CreateSession(Apn, IMSI, etc.) SessionID
+}
+
+class SgwData {
+  sendMsg()
+}
+SgwCtrl *-- SgwData
+
+AbsSpgw <|-- SgwCtrl
+AbsSpgw <|-- SgwData
+
+class SgwDataSender <<GoRoutine>>
+class SgwDataReceiver <<GoRoutine>>
+
+SgwCtrl *-- SgwCtrlSender
+SgwCtrl *-- SgwCtrlReceiver
+
+
+class SgwCtrlSender <<GoRoutine>>
+class SgwCtrlReceiver <<GoRoutine>>
+
+SgwData *-- SgwDataSender
+SgwData *-- SgwDataReceiver
+
+class SgwEchoCMgr <<GoRoutine>>
+class SgwEchoUMgr <<GoRoutine>>
+
+SgwCtrl *-- SgwEchoCMgr
+SgwData *-- SgwEchoUMgr
+
+'''''''''''''''''''
+' GtpSession part
+'''''''''''''''''''
+
+class GtpSession <<GoRoutine>> {
+  PgwCtrlFteid FTEID
+  PgwDataFteid FTEID
+  SgwCFteid FTEID
+  SgwUFeession chan
+}
+note right
+  リトライ制御は
+  ここで実施
+end note
+
+class Flow <<GoRoutine>>
+
+
+GtpSession *-- "*" Flow
+
+GtpSession ..> SgwCtrl : sendMsg()
+Flow ..> SgwData
+
+
+SgwCtrlReceiver ..> GtpSession : received packet
+PgwCtrlReceiver ..> GtpSession : received packet
+
+@enduml

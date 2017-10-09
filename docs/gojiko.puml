@@ -1,91 +1,76 @@
 @startuml
 
 '''''''''''''''''''
-' APN part
-'''''''''''''''''''
-
-class ApnRepo {
-  Apns [name]*Apn
-  Create(name) (*Apn, error)
-  Delete(name) error
-  Select(name) *Apn
-}
-class Apn {
-  name String
-  Pgws []*Pgw
-}
-
-ApnRepo .> Apn : CRUD
-Apn *-- "*" PgwCtrl
-
-'''''''''''''''''''
 ' S/PGW part
 '''''''''''''''''''
 
-class AbsSpgw {
-  IPaddr
-  ListenPort // shall be 2123
-  SourcePort // shall be 2123
+class AbsSPgw {
+  UDPAddr
   Recovery byte
+
+  fromReceiver chan []byte
+  toSender chan []byte
+  opSPgwMap map[UDPAddr]OpSPgw
+  opSPgwSessionCnt map[UDPAddr]int
+
   NextTeid() TEID
 }
-
-class PgwRepo {
-  Create(Apn, IPaddr, ListenPort, Recovery) *Pgw
-  Search(IPaddr, ListenPort) *Pgw
-  Delete(Pgw)
-}
-
-class PgwCtrl {
-  DeleteBearer()
-  sendMsg()
-  createSession()
-  deleteSession()
-}
-AbsSpgw <|-- PgwCtrl
-
-class PgwData {
-  CreateFlow(FTEID) FlowID
-}
-AbsSpgw <|-- PgwData
-PgwCtrl *-- PgwData
-
-class PgwCtrlReceiver <<GoRoutine>>
-PgwCtrl *-- PgwCtrlReceiver
-
-class PgwCtrlSender <<GoRoutine>>
-PgwCtrl *-- PgwCtrlSender
-
-
-PgwRepo ..> PgwCtrl
-PgwCtrl *-- PgwEchoCMgr
-PgwData *-- PgwEchoUMgr
-
-class PgwEchoCMgr <<GoRoutine>>
 note left
-  定期的に
-  ECHO Reqを
-  送信
+  ・複数のAPNで
+    同一IPアドレスが
+    使われない前提
 end note
 
-class PgwDataSender <<GoRoutine>>
-class PgwDataReceiver <<GoRoutine>>
 
-PgwData *-- PgwDataSender
-PgwData *-- PgwDataReceiver
+'''''''''''''''''''''''
+' Opposite S/PGW Part
+'''''''''''''''''''''''
+
+class OpSpgwsRepo {
+  map[UDPAddr]*AbsSPgw
+  CountUp(UDPAddr, Recovery)
+  CountDown(UDPAddr, Recovery)
+  Find(UDPAddr) *AbsSPgw
+  Delete(UDPAddr)
+}
+
+class OpSpgwCtrl {
+  opSpgwData *OpSpgwData
+}
+AbsSPgw <|-- OpSpgwCtrl
+
+class OpSpgwCtrlEchoMgr <<GoRoutine>> {
+  spgwCtrlSendChan
+  spgwCtrlRecvChan
+}
+OpSpgwCtrl *-- OpSpgwCtrlEchoMgr
+
+class OpSpgwData {
+  opSpgwCtrl *OpSpgwCtrl
+}
+AbsSPgw <|-- OpSpgwData
+OpSpgwCtrl *-- OpSpgwData
+
+class OpSpgwDataEchoMgr <<GoRoutine>> {
+  spgwDataSendChan
+  spgwDataRecvChan
+}
+OpSpgwData *-- OpSpgwDataEchoMgr
+
+OpSpgwsRepo ..> OpSpgwCtrl : CRUD
+OpSpgwsRepo ..> OpSpgwData : CRUD
 
 
-class PgwEchoUMgr <<GoRoutine>>
 
-PgwCtrlReceiver ..> PgwEchoCMgr : received packet
 
 '''''''''''''''''''
 ' SGW part
 '''''''''''''''''''
 
 class SgwCtrl {
-  sendMsg()
-  CreateSession(Apn, IMSI, etc.) SessionID
+  CreateSession(pgwUDPAddr, IMSI, etc.) SessionID
+  countUp(UDPAddr)
+  countDown(UDPAddr)
 }
 
 class SgwData {
@@ -93,8 +78,8 @@ class SgwData {
 }
 SgwCtrl *-- SgwData
 
-AbsSpgw <|-- SgwCtrl
-AbsSpgw <|-- SgwData
+AbsSPgw <|-- SgwCtrl
+AbsSPgw <|-- SgwData
 
 class SgwDataSender <<GoRoutine>>
 class SgwDataReceiver <<GoRoutine>>
@@ -115,11 +100,27 @@ class SgwEchoUMgr <<GoRoutine>>
 SgwCtrl *-- SgwEchoCMgr
 SgwData *-- SgwEchoUMgr
 
+SgwCtrl ..> GtpSession : chan CMD
+
 '''''''''''''''''''
 ' GtpSession part
 '''''''''''''''''''
 
+class GtpSessionsRepo {
+  Create(SgwCtrl, SgwCtrlTEID, SgwDataTEID, \n\
+         VpgwCtrl, IMSI, etc) (SessionID, error)
+  FindCtrlChan(SgwCtrl, )
+  FindSgwCtrl(UDPAddr, SgwCtrlTeid) (GtpSessionID, bool)
+  FindSgwData(UDPAddr, SgwDataTeid) (GtpSessionID, bool)
+}
+GtpSessionsRepo ..> GtpSession : Create
+
 class GtpSession <<GoRoutine>> {
+  id            uint32
+  status  // Init, Sended, Established,
+  ctrlChan          chan GtpSesCmd
+  sgwCtrlSenderChan chan<- []byte
+
   PgwCtrlFteid FTEID
   PgwDataFteid FTEID
   SgwCFteid FTEID
@@ -135,11 +136,9 @@ class Flow <<GoRoutine>>
 
 GtpSession *-- "*" Flow
 
-GtpSession ..> SgwCtrl : sendMsg()
 Flow ..> SgwData
 
 
 SgwCtrlReceiver ..> GtpSession : received packet
-PgwCtrlReceiver ..> GtpSession : received packet
 
 @enduml
