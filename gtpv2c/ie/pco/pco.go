@@ -19,26 +19,26 @@ const (
 )
 
 type pco struct {
-	ConfigProto byte
-	Ipcp        *Ipcp
+	configProto byte
+	ipcp        *Ipcp
 }
 
 type MsToNetwork struct {
 	pco
-	DNSServerV4Req   bool
-	DNSServerV6Req   bool
-	IPAllocViaNasSig bool
+	dnsServerV4Req   bool
+	dnsServerV6Req   bool
+	ipAllocViaNasSig bool
 }
 
 type NetworkToMs struct {
 	pco
-	DNSServerV4s []*DNSServerV4
-	DNSServerV6s []*DNSServerV6
+	dnsServerV4s []*DNSServerV4
+	dnsServerV6s []*DNSServerV6
 }
 
 func NewMsToNetwork(ipcp *Ipcp, dnsServerV4Req, dnsServerV6Req, ipAllocViaNasSig bool) *MsToNetwork {
 	return &MsToNetwork{
-		pco{Ipcp: ipcp},
+		pco{ipcp: ipcp},
 		dnsServerV4Req,
 		dnsServerV6Req,
 		ipAllocViaNasSig,
@@ -47,7 +47,7 @@ func NewMsToNetwork(ipcp *Ipcp, dnsServerV4Req, dnsServerV6Req, ipAllocViaNasSig
 
 func NewNetworkToMs(ipcp *Ipcp, dnsServerV4s []*DNSServerV4, dnsServerV6s []*DNSServerV6) *NetworkToMs {
 	return &NetworkToMs{
-		pco{Ipcp: ipcp},
+		pco{ipcp: ipcp},
 		dnsServerV4s,
 		dnsServerV6s,
 	}
@@ -55,15 +55,15 @@ func NewNetworkToMs(ipcp *Ipcp, dnsServerV4s []*DNSServerV4, dnsServerV6s []*DNS
 
 func (p MsToNetwork) Marshal() []byte {
 	res := make([]byte, 0, 6)
-	if p.DNSServerV4Req {
+	if p.dnsServerV4Req {
 		b := NewDNSServerV4(nil).marshal()
 		res = append(res, b...)
 	}
-	if p.DNSServerV6Req {
+	if p.dnsServerV6Req {
 		b := NewDNSServerV6(nil).marshal()
 		res = append(res, b...)
 	}
-	if p.IPAllocViaNasSig {
+	if p.ipAllocViaNasSig {
 		b := NewIPAllocViaNasSignalling().marshal()
 		res = append(res, b...)
 	}
@@ -72,13 +72,13 @@ func (p MsToNetwork) Marshal() []byte {
 
 func (p NetworkToMs) Marshal() []byte {
 	res := make([]byte, 0, 128)
-	for _, dnsServerV4 := range p.DNSServerV4s {
+	for _, dnsServerV4 := range p.dnsServerV4s {
 		if dnsServerV4 != nil {
 			b := dnsServerV4.marshal()
 			res = append(res, b...)
 		}
 	}
-	for _, dnsServerV6 := range p.DNSServerV6s {
+	for _, dnsServerV6 := range p.dnsServerV6s {
 		if dnsServerV6 != nil {
 			b := dnsServerV6.marshal()
 			res = append(res, b...)
@@ -89,9 +89,9 @@ func (p NetworkToMs) Marshal() []byte {
 
 func (p pco) marshal(body []byte) []byte {
 	res := make([]byte, 1, 1+16+len(body))
-	res[0] = byte(0x80 + p.ConfigProto)
-	if p.Ipcp != nil {
-		ipcpBin := p.Ipcp.marshal()
+	res[0] = byte(0x80 + p.configProto)
+	if p.ipcp != nil {
+		ipcpBin := p.ipcp.marshal()
 		res = append(res, ipcpBin...)
 	}
 	// copy body
@@ -136,13 +136,13 @@ func UnmarshalMsToNetowrk(buf []byte) (*MsToNetwork, []byte, error) {
 			if err != nil {
 				return err
 			}
-			res.Ipcp = ipcp
+			res.ipcp = ipcp
 		case dnsServerV4Num:
-			res.DNSServerV4Req = true
+			res.dnsServerV4Req = true
 		case dnsServerV6Num:
-			res.DNSServerV6Req = true
+			res.dnsServerV6Req = true
 		case ipAllocViaNasSigNum:
-			res.IPAllocViaNasSig = true
+			res.ipAllocViaNasSig = true
 		}
 		return nil
 	})
@@ -166,19 +166,19 @@ func UnmarshalNetowrkToMs(buf []byte) (*NetworkToMs, []byte, error) {
 			if err != nil {
 				return err
 			}
-			res.Ipcp = ipcp
+			res.ipcp = ipcp
 		case dnsServerV4Num:
 			dnsServerV4, err := unmarshalDNSServerV4(body)
 			if err != nil {
 				return err
 			}
-			res.DNSServerV4s = append(res.DNSServerV4s, dnsServerV4)
+			res.dnsServerV4s = append(res.dnsServerV4s, dnsServerV4)
 		case dnsServerV6Num:
 			dnsServerV6, err := unmarshalDNSServerV6(body)
 			if err != nil {
 				return err
 			}
-			res.DNSServerV6s = append(res.DNSServerV6s, dnsServerV6)
+			res.dnsServerV6s = append(res.dnsServerV6s, dnsServerV6)
 		}
 		return nil
 	})
@@ -194,7 +194,35 @@ func unmarshal(buf []byte) (pco, []byte, error) {
 	if head&0x80 == 0 {
 		return pco{}, buf, errors.New("MSB of the first octet must be 1")
 	}
-	res := pco{ConfigProto: head & 0x7}
+	res := pco{configProto: head & 0x7}
 
 	return res, buf[1:], nil
+}
+
+func (p pco) Ipcp() *Ipcp {
+	return p.ipcp
+}
+
+func (p pco) ConfigProto() byte {
+	return p.configProto
+}
+
+func (p MsToNetwork) DNSServerV4Req() bool {
+	return p.dnsServerV4Req
+}
+
+func (p MsToNetwork) DNSServerV6Req() bool {
+	return p.dnsServerV6Req
+}
+
+func (p MsToNetwork) IPAllocViaNasSig() bool {
+	return p.ipAllocViaNasSig
+}
+
+func (p NetworkToMs) DNSServerV4s() []*DNSServerV4 {
+	return p.dnsServerV4s
+}
+
+func (p NetworkToMs) DNSServerV6s() []*DNSServerV6 {
+	return p.dnsServerV6s
 }

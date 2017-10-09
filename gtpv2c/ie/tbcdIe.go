@@ -6,7 +6,7 @@ import (
 
 type tbcdIE struct {
 	header
-	Value string
+	value string
 	tbcd  tbcd
 }
 
@@ -26,11 +26,15 @@ func newTbcdIE(typeNum ieTypeNum, addLen uint16, instance byte, value string, mi
 
 	return tbcdIE{
 		header: header,
-		Value:  value,
+		value:  value,
 		tbcd:   tbcd,
 	}, nil
 }
 
 func (t *tbcdIE) marshal() []byte {
 	return t.header.marshal(t.tbcd)
+}
+
+func (t *tbcdIE) Value() string {
+	return t.value
 }

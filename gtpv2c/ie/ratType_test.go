@@ -9,7 +9,7 @@ import (
 func TestNewRatType(t *testing.T) {
 	rt, _ := NewRatType(0, 1)
 	assert.Equal(t, ratTypeNum, rt.header.typeNum)
-	assert.Equal(t, byte(1), rt.Value)
+	assert.Equal(t, byte(1), rt.Value())
 
 	_, err := NewRatType(0x0f, 1)
 	assert.Nil(t, err)
@@ -35,7 +35,7 @@ func TestUnmarshal_RatType(t *testing.T) {
 	rtBin := rtOrg.Marshal()
 	msg, tail, err := Unmarshal(rtBin, CreateSessionRequest)
 	rt := msg.(*RatType)
-	assert.Equal(t, byte(255), rt.Value)
+	assert.Equal(t, byte(255), rt.Value())
 	assert.Equal(t, byte(0), rt.header.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)

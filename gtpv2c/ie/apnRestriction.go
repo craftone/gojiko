@@ -5,7 +5,7 @@ import "errors"
 
 type ApnRestriction struct {
 	header
-	Value byte
+	value byte
 }
 
 func NewApnRestriction(instance byte, value byte) (*ApnRestriction, error) {
@@ -15,12 +15,12 @@ func NewApnRestriction(instance byte, value byte) (*ApnRestriction, error) {
 	}
 	return &ApnRestriction{
 		header: header,
-		Value:  value,
+		value:  value,
 	}, nil
 }
 
 func (r *ApnRestriction) Marshal() []byte {
-	body := []byte{r.Value}
+	body := []byte{r.value}
 	return r.header.marshal(body)
 }
 
@@ -38,4 +38,8 @@ func unmarshalApnRestriction(h header, buf []byte) (*ApnRestriction, error) {
 		return nil, err
 	}
 	return rec, nil
+}
+
+func (a *ApnRestriction) Value() byte {
+	return a.value
 }

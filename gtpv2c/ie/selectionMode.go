@@ -6,7 +6,7 @@ import "fmt"
 
 type SelectionMode struct {
 	header
-	Value byte
+	value byte
 }
 
 func NewSelectionMode(instance byte, value byte) (*SelectionMode, error) {
@@ -24,7 +24,7 @@ func NewSelectionMode(instance byte, value byte) (*SelectionMode, error) {
 }
 
 func (s *SelectionMode) Marshal() []byte {
-	body := []byte{s.Value}
+	body := []byte{s.value}
 	return s.header.marshal(body)
 }
 
@@ -42,4 +42,8 @@ func unmarshalSelectionMode(h header, buf []byte) (*SelectionMode, error) {
 		return nil, err
 	}
 	return rec, nil
+}
+
+func (s *SelectionMode) Value() byte {
+	return s.value
 }

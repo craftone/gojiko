@@ -8,10 +8,10 @@ import (
 
 type Ipcp struct {
 	header
-	Code       ipcpCode
-	Identifier byte
-	PriDNS     net.IP
-	SecDNS     net.IP
+	code       ipcpCode
+	identifier byte
+	priDNS     net.IP
+	secDNS     net.IP
 }
 
 type ipcpCode byte
@@ -50,8 +50,8 @@ func NewIpcp(code ipcpCode, identifier byte, priDNS, secDNS net.IP) *Ipcp {
 func (i *Ipcp) marshal() []byte {
 	body := make([]byte, i.length)
 
-	body[0] = byte(i.Code)
-	body[1] = byte(i.Identifier)
+	body[0] = byte(i.code)
+	body[1] = byte(i.identifier)
 
 	// length
 	binary.BigEndian.PutUint16(body[2:4], 12)
@@ -59,12 +59,12 @@ func (i *Ipcp) marshal() []byte {
 	// Primary DNS Server
 	body[4] = byte(primaryDNSServerAddress)
 	body[5] = 6
-	copy(body[6:10], i.PriDNS)
+	copy(body[6:10], i.priDNS)
 
 	// Secondary DNS Server
 	body[10] = byte(secondaryDNSServerAddress)
 	body[11] = 6
-	copy(body[12:16], i.SecDNS)
+	copy(body[12:16], i.secDNS)
 
 	return i.header.marshal(body)
 }
@@ -103,4 +103,19 @@ func unmarshalIpcp(buf []byte) (*Ipcp, error) {
 	}
 
 	return NewIpcp(code, identifier, priDNS, secDNS), nil
+}
+
+func (i *Ipcp) Code() ipcpCode {
+	return i.code
+}
+
+func (i *Ipcp) Identifier() byte {
+	return i.identifier
+}
+func (i *Ipcp) PriDNS() net.IP {
+	return i.priDNS
+}
+
+func (i *Ipcp) SecDNS() net.IP {
+	return i.secDNS
 }

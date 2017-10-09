@@ -9,8 +9,8 @@ import (
 func TestNewAmbr(t *testing.T) {
 	ambr, _ := NewAmbr(0, 4294967, 4294960)
 	assert.Equal(t, ambrNum, ambr.typeNum)
-	assert.Equal(t, uint32(4294967), ambr.UplinkKbps)
-	assert.Equal(t, uint32(4294960), ambr.DownlinkKbps)
+	assert.Equal(t, uint32(4294967), ambr.UplinkKbps())
+	assert.Equal(t, uint32(4294960), ambr.DownlinkKbps())
 }
 
 func TestAmbr_mambrshal(t *testing.T) {
@@ -25,8 +25,8 @@ func TestUnmambrshal_Ambr(t *testing.T) {
 	msg, tail, err := Unmarshal(ambrBin, CreateSessionRequest)
 	ambr := msg.(*Ambr)
 	assert.Equal(t, byte(0), ambr.header.instance)
-	assert.Equal(t, uint32(4294967), ambr.UplinkKbps)
-	assert.Equal(t, uint32(4294960), ambr.DownlinkKbps)
+	assert.Equal(t, uint32(4294967), ambr.UplinkKbps())
+	assert.Equal(t, uint32(4294960), ambr.DownlinkKbps())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }

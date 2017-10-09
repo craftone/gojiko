@@ -6,7 +6,7 @@ import "fmt"
 
 type Ebi struct {
 	header
-	Value byte
+	value byte
 }
 
 func NewEbi(instance byte, value byte) (*Ebi, error) {
@@ -19,12 +19,12 @@ func NewEbi(instance byte, value byte) (*Ebi, error) {
 	}
 	return &Ebi{
 		header: header,
-		Value:  value,
+		value:  value,
 	}, nil
 }
 
 func (r *Ebi) Marshal() []byte {
-	body := []byte{r.Value}
+	body := []byte{r.value}
 	return r.header.marshal(body)
 }
 
@@ -42,4 +42,8 @@ func unmarshalEbi(h header, buf []byte) (*Ebi, error) {
 		return nil, err
 	}
 	return rec, nil
+}
+
+func (e *Ebi) Value() byte {
+	return e.value
 }

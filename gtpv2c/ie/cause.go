@@ -75,11 +75,11 @@ const (
 
 type Cause struct {
 	header
-	Value       causeValue
-	Pce         bool
-	Bce         bool
-	Cs          bool
-	OffendingIe *header
+	value       causeValue
+	pce         bool
+	bce         bool
+	cs          bool
+	offendingIe *header
 }
 
 func NewCause(instance byte, value causeValue, pce, bce, cs bool, offendingIe *header) (*Cause, error) {
@@ -95,23 +95,23 @@ func NewCause(instance byte, value causeValue, pce, bce, cs bool, offendingIe *h
 
 	return &Cause{
 		header:      header,
-		Value:       value,
-		Pce:         pce,
-		Bce:         bce,
-		Cs:          cs,
-		OffendingIe: offendingIe,
+		value:       value,
+		pce:         pce,
+		bce:         bce,
+		cs:          cs,
+		offendingIe: offendingIe,
 	}, nil
 }
 
 func (c *Cause) Marshal() []byte {
 	buf := make([]byte, c.header.length)
-	buf[0] = byte(c.Value)
-	buf[1] = setBit(buf[1], 2, c.Pce)
-	buf[1] = setBit(buf[1], 1, c.Bce)
-	buf[1] = setBit(buf[1], 0, c.Cs)
-	if c.OffendingIe != nil {
-		buf[2] = byte(c.OffendingIe.typeNum)
-		buf[5] = c.OffendingIe.instance
+	buf[0] = byte(c.value)
+	buf[1] = setBit(buf[1], 2, c.pce)
+	buf[1] = setBit(buf[1], 1, c.bce)
+	buf[1] = setBit(buf[1], 0, c.cs)
+	if c.offendingIe != nil {
+		buf[2] = byte(c.offendingIe.typeNum)
+		buf[5] = c.offendingIe.instance
 	}
 	return c.header.marshal(buf)
 }
@@ -142,4 +142,17 @@ func unmarshalCause(h header, buf []byte) (*Cause, error) {
 		return nil, err
 	}
 	return cause, nil
+}
+
+func (c *Cause) Value() causeValue {
+	return c.value
+}
+func (c *Cause) Pce() bool {
+	return c.pce
+}
+func (c *Cause) Bce() bool {
+	return c.bce
+}
+func (c *Cause) Cs() bool {
+	return c.cs
 }

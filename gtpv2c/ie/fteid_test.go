@@ -8,11 +8,12 @@ import (
 )
 
 func TestNewFteid(t *testing.T) {
-	fteid, err := NewFteid(1, net.IPv4(1, 2, 3, 4), nil, 6, 0x0006c6ea)
+	fteid, err := NewFteid(1, net.IPv4(1, 2, 3, 4), nil, S5S8SgwGtpCIf, 0x0006c6ea)
 	assert.Equal(t, fteidNum, fteid.typeNum)
-	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), fteid.Ipv4)
-	assert.Nil(t, fteid.Ipv6)
-	assert.Equal(t, uint32(0x0006c6ea), fteid.Value)
+	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), fteid.Ipv4())
+	assert.Nil(t, fteid.Ipv6())
+	assert.Equal(t, S5S8SgwGtpCIf, fteid.IfType())
+	assert.Equal(t, uint32(0x0006c6ea), fteid.Value())
 	assert.Nil(t, err)
 }
 
@@ -23,14 +24,15 @@ func TestFteid_Marshal(t *testing.T) {
 }
 
 func TestUnmarshal_fteid(t *testing.T) {
-	fteid, _ := NewFteid(1, net.IPv4(1, 2, 3, 4), nil, 6, 0x0006c6ea)
+	fteid, _ := NewFteid(1, net.IPv4(1, 2, 3, 4), nil, S5S8SgwGtpCIf, 0x0006c6ea)
 	fteidBin := fteid.Marshal()
 	msg, tail, err := Unmarshal(fteidBin, CreateSessionRequest)
 	fteid = msg.(*Fteid)
 	assert.Equal(t, fteidNum, fteid.typeNum)
-	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), fteid.Ipv4)
-	assert.Nil(t, fteid.Ipv6)
-	assert.Equal(t, uint32(0x0006c6ea), fteid.Value)
+	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), fteid.Ipv4())
+	assert.Nil(t, fteid.Ipv6())
+	assert.Equal(t, S5S8SgwGtpCIf, fteid.IfType())
+	assert.Equal(t, uint32(0x0006c6ea), fteid.Value())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }

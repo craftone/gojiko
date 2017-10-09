@@ -8,7 +8,7 @@ import (
 
 type echo struct {
 	header
-	Recovery *ie.Recovery
+	recovery *ie.Recovery
 }
 
 type EchoRequest struct {
@@ -47,7 +47,7 @@ func NewEchoResponse(seqNum uint32, recoveryValue byte) (*EchoResponse, error) {
 }
 
 func (e echo) Marshal() []byte {
-	body := e.Recovery.Marshal()
+	body := e.recovery.Marshal()
 	return e.header.marshal(body)
 }
 
@@ -61,7 +61,7 @@ func unmarshalEchoRequest(h header, buf []byte) (*EchoRequest, error) {
 		return nil, err
 	}
 	rec := anIe.(*ie.Recovery)
-	return NewEchoRequest(h.seqNum, rec.Value)
+	return NewEchoRequest(h.seqNum, rec.Value())
 }
 
 func unmarshalEchoResponse(h header, buf []byte) (*EchoResponse, error) {
@@ -74,5 +74,11 @@ func unmarshalEchoResponse(h header, buf []byte) (*EchoResponse, error) {
 		return nil, err
 	}
 	rec := anIe.(*ie.Recovery)
-	return NewEchoResponse(h.seqNum, rec.Value)
+	return NewEchoResponse(h.seqNum, rec.Value())
+}
+
+// Getters
+
+func (e *echo) Recovery() *ie.Recovery {
+	return e.recovery
 }

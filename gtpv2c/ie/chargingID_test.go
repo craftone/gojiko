@@ -23,7 +23,7 @@ func TestUnmarshal_ChargingID(t *testing.T) {
 	msg, tail, err := Unmarshal(chargingIDBin, CreateSessionRequest)
 	chargingID = msg.(*ChargingID)
 	assert.Equal(t, byte(1), chargingID.instance)
-	assert.Equal(t, uint32(0x00558776), chargingID.Value)
+	assert.Equal(t, uint32(0x00558776), chargingID.Value())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 

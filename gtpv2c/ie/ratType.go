@@ -5,7 +5,7 @@ import "errors"
 
 type RatType struct {
 	header
-	Value byte
+	value byte
 }
 
 func NewRatType(instance byte, value byte) (*RatType, error) {
@@ -15,12 +15,12 @@ func NewRatType(instance byte, value byte) (*RatType, error) {
 	}
 	return &RatType{
 		header: header,
-		Value:  value,
+		value:  value,
 	}, nil
 }
 
 func (r *RatType) Marshal() []byte {
-	body := []byte{r.Value}
+	body := []byte{r.value}
 	return r.header.marshal(body)
 }
 
@@ -38,4 +38,8 @@ func unmarshalRatType(h header, buf []byte) (*RatType, error) {
 		return nil, err
 	}
 	return rec, nil
+}
+
+func (r *RatType) Value() byte {
+	return r.value
 }

@@ -7,7 +7,14 @@ import "encoding/binary"
 
 type BearerQoS struct {
 	header
-	BearerQoSArg
+	pci         bool
+	pl          byte
+	pvi         bool
+	label       byte
+	uplinkMBR   uint64
+	downlinkMBR uint64
+	uplinkGBR   uint64
+	downlinkGBR uint64
 }
 
 type BearerQoSArg struct {
@@ -40,7 +47,14 @@ func NewBearerQoS(instance byte, bearerQoSArg BearerQoSArg) (*BearerQoS, error) 
 	}
 	return &BearerQoS{
 		header,
-		bearerQoSArg,
+		bearerQoSArg.Pci,
+		bearerQoSArg.Pl,
+		bearerQoSArg.Pvi,
+		bearerQoSArg.Label,
+		bearerQoSArg.UplinkMBR,
+		bearerQoSArg.DownlinkMBR,
+		bearerQoSArg.UplinkGBR,
+		bearerQoSArg.DownlinkGBR,
 	}, nil
 }
 
@@ -51,15 +65,15 @@ func putBitrate(body []byte, bitrate uint64) {
 
 func (p *BearerQoS) Marshal() []byte {
 	body := make([]byte, 22)
-	body[0] = setBit(body[0], 6, p.Pci)
-	body[0] += (p.Pl << 2)
-	body[0] = setBit(body[0], 0, p.Pvi)
-	body[1] = p.Label
+	body[0] = setBit(body[0], 6, p.pci)
+	body[0] += (p.pl << 2)
+	body[0] = setBit(body[0], 0, p.pvi)
+	body[1] = p.label
 
-	putBitrate(body[2:7], p.UplinkMBR)
-	putBitrate(body[7:12], p.DownlinkMBR)
-	putBitrate(body[12:17], p.UplinkMBR)
-	putBitrate(body[17:22], p.DownlinkMBR)
+	putBitrate(body[2:7], p.uplinkMBR)
+	putBitrate(body[7:12], p.downlinkMBR)
+	putBitrate(body[12:17], p.uplinkMBR)
+	putBitrate(body[17:22], p.downlinkMBR)
 	return p.header.marshal(body)
 }
 
@@ -102,4 +116,36 @@ func unmarshalBearerQoS(h header, buf []byte) (*BearerQoS, error) {
 		return nil, err
 	}
 	return bq, nil
+}
+
+func (b *BearerQoS) Pci() bool {
+	return b.pci
+}
+
+func (b *BearerQoS) Pl() byte {
+	return b.pl
+}
+
+func (b *BearerQoS) Pvi() bool {
+	return b.pvi
+}
+
+func (b *BearerQoS) Label() byte {
+	return b.label
+}
+
+func (b *BearerQoS) UplinkMBR() uint64 {
+	return b.uplinkMBR
+}
+
+func (b *BearerQoS) DownlinkMBR() uint64 {
+	return b.downlinkMBR
+}
+
+func (b *BearerQoS) UplinkGBR() uint64 {
+	return b.uplinkGBR
+}
+
+func (b *BearerQoS) DownlinkGBR() uint64 {
+	return b.downlinkGBR
 }

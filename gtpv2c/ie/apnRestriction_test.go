@@ -9,7 +9,7 @@ import (
 func TestNewApnRestriction(t *testing.T) {
 	ar, _ := NewApnRestriction(0, 1)
 	assert.Equal(t, apnRestrictionNum, ar.typeNum)
-	assert.Equal(t, byte(1), ar.Value)
+	assert.Equal(t, byte(1), ar.Value())
 }
 
 func TestApnRestriction_marshal(t *testing.T) {
@@ -23,7 +23,7 @@ func TestUnmarshal_ApnRestriction(t *testing.T) {
 	arBin := arOrg.Marshal()
 	msg, tail, err := Unmarshal(arBin, CreateSessionRequest)
 	ar := msg.(*ApnRestriction)
-	assert.Equal(t, byte(255), ar.Value)
+	assert.Equal(t, byte(255), ar.Value())
 	assert.Equal(t, byte(0), ar.header.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)

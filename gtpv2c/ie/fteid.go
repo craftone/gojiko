@@ -10,10 +10,10 @@ import (
 
 type Fteid struct {
 	header
-	IfType IfType
-	Ipv4   net.IP
-	Ipv6   net.IP
-	Value  uint32
+	ifType IfType
+	ipv4   net.IP
+	ipv6   net.IP
+	value  uint32
 }
 
 type IfType byte
@@ -60,17 +60,17 @@ func NewFteid(instance byte, ipv4, ipv6 net.IP, ifType IfType, value uint32) (*F
 
 func (f *Fteid) Marshal() []byte {
 	body := make([]byte, f.length)
-	body[0] = setBit(body[0], 7, f.Ipv4 != nil)
-	body[0] = setBit(body[0], 6, f.Ipv6 != nil)
-	body[0] += byte(f.IfType) & 0x3f
-	binary.BigEndian.PutUint32(body[1:5], f.Value)
+	body[0] = setBit(body[0], 7, f.ipv4 != nil)
+	body[0] = setBit(body[0], 6, f.ipv6 != nil)
+	body[0] += byte(f.ifType) & 0x3f
+	binary.BigEndian.PutUint32(body[1:5], f.value)
 	offset := 5
-	if f.Ipv4 != nil {
-		copy(body[5:9], f.Ipv4)
+	if f.ipv4 != nil {
+		copy(body[5:9], f.ipv4)
 		offset += 4
 	}
-	if f.Ipv6 != nil {
-		copy(body[offset:offset+16], f.Ipv6)
+	if f.ipv6 != nil {
+		copy(body[offset:offset+16], f.ipv6)
 	}
 	return f.header.marshal(body)
 }
@@ -116,4 +116,17 @@ func unmarshalFteid(h header, buf []byte) (*Fteid, error) {
 		return nil, err
 	}
 	return fteid, nil
+}
+
+func (f *Fteid) IfType() IfType {
+	return f.ifType
+}
+func (f *Fteid) Ipv4() net.IP {
+	return f.ipv4
+}
+func (f *Fteid) Ipv6() net.IP {
+	return f.ipv6
+}
+func (f *Fteid) Value() uint32 {
+	return f.value
 }

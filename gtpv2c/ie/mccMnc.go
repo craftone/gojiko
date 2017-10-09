@@ -5,8 +5,8 @@ import (
 )
 
 type mccMnc struct {
-	Mcc  string
-	Mnc  string
+	mcc  string
+	mnc  string
 	tbcd [3]byte
 }
 
@@ -37,8 +37,8 @@ func newMccMnc(mcc, mnc string) (mccMnc, error) {
 	}
 
 	return mccMnc{
-		Mcc:  mcc,
-		Mnc:  mnc,
+		mcc:  mcc,
+		mnc:  mnc,
 		tbcd: tbcd,
 	}, nil
 }
@@ -72,4 +72,12 @@ func unmarshalMccMnc(buf []byte) (mccMnc, []byte, error) {
 		return mccMnc{}, buf, fmt.Errorf("Invalid binary")
 	}
 	return mccMncStr, buf[3:], nil
+}
+
+func (m mccMnc) Mcc() string {
+	return m.mcc
+}
+
+func (m mccMnc) Mnc() string {
+	return m.mnc
 }

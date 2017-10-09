@@ -9,10 +9,10 @@ import (
 func TestNewEbi(t *testing.T) {
 	ebi, _ := NewEbi(0, 5)
 	assert.Equal(t, ebiNum, ebi.typeNum)
-	assert.Equal(t, byte(5), ebi.Value)
+	assert.Equal(t, byte(5), ebi.value)
 	ebi, _ = NewEbi(0, 15)
 	assert.Equal(t, ebiNum, ebi.typeNum)
-	assert.Equal(t, byte(15), ebi.Value)
+	assert.Equal(t, byte(15), ebi.value)
 
 	_, err := NewEbi(0, 0)
 	assert.Error(t, err)
@@ -37,7 +37,7 @@ func TestUnmebishal_Ebi(t *testing.T) {
 	ebiBin := ebiOrg.Marshal()
 	msg, tail, err := Unmarshal(ebiBin, CreateSessionRequest)
 	ebi := msg.(*Ebi)
-	assert.Equal(t, byte(5), ebi.Value)
+	assert.Equal(t, byte(5), ebi.Value())
 	assert.Equal(t, byte(0), ebi.header.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)

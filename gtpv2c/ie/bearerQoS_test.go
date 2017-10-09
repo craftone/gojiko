@@ -12,17 +12,21 @@ func TestNewBearerQoS(t *testing.T) {
 		Pl:          15,
 		Pvi:         false,
 		Label:       9,
-		UplinkMBR:   0,
-		DownlinkMBR: 0,
-		UplinkGBR:   0,
-		DownlinkGBR: 0,
+		UplinkMBR:   1000,
+		DownlinkMBR: 2000,
+		UplinkGBR:   3000,
+		DownlinkGBR: 4000,
 	}
 	bearerQoS, err := NewBearerQoS(1, bearerQoSArg)
 	assert.Equal(t, bearerQoSNum, bearerQoS.typeNum)
-	assert.Equal(t, true, bearerQoS.Pci)
-	assert.Equal(t, byte(15), bearerQoS.Pl)
-	assert.Equal(t, false, bearerQoS.Pvi)
-	assert.Equal(t, byte(9), bearerQoS.Label)
+	assert.Equal(t, true, bearerQoS.Pci())
+	assert.Equal(t, byte(15), bearerQoS.Pl())
+	assert.Equal(t, false, bearerQoS.Pvi())
+	assert.Equal(t, byte(9), bearerQoS.Label())
+	assert.Equal(t, uint64(1000), bearerQoS.UplinkMBR())
+	assert.Equal(t, uint64(2000), bearerQoS.DownlinkMBR())
+	assert.Equal(t, uint64(3000), bearerQoS.UplinkGBR())
+	assert.Equal(t, uint64(4000), bearerQoS.DownlinkGBR())
 	assert.Nil(t, err)
 
 	bearerQoSArg.Pl = 16
@@ -74,10 +78,10 @@ func TestUnmarshal_BearerQoS(t *testing.T) {
 	msg, tail, err := Unmarshal(bearerQoSBin, CreateSessionRequest)
 	bearerQoS = msg.(*BearerQoS)
 	assert.Equal(t, bearerQoSNum, bearerQoS.typeNum)
-	assert.Equal(t, true, bearerQoS.Pci)
-	assert.Equal(t, byte(15), bearerQoS.Pl)
-	assert.Equal(t, false, bearerQoS.Pvi)
-	assert.Equal(t, byte(9), bearerQoS.Label)
+	assert.Equal(t, true, bearerQoS.Pci())
+	assert.Equal(t, byte(15), bearerQoS.Pl())
+	assert.Equal(t, false, bearerQoS.Pvi())
+	assert.Equal(t, byte(9), bearerQoS.Label())
 	assert.Nil(t, err)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)

@@ -18,13 +18,18 @@ type UliArg struct {
 
 type Uli struct {
 	header
-	UliArg
+	cgi  *Cgi
+	sai  *Sai
+	rai  *Rai
+	tai  *Tai
+	ecgi *Ecgi
+	lai  *Lai
 }
 
 type Cgi struct {
 	mccMnc
-	Lac uint16
-	Ci  uint16
+	lac uint16
+	ci  uint16
 }
 
 func NewCgi(mcc, mnc string, lac, ci uint16) (*Cgi, error) {
@@ -45,17 +50,25 @@ func unmarshalCgi(buf []byte) (*Cgi, []byte, error) {
 	}
 	lac := binary.BigEndian.Uint16(tail[0:2])
 	ci := binary.BigEndian.Uint16(tail[2:4])
-	cgi, err := NewCgi(mccMnc.Mcc, mccMnc.Mnc, lac, ci)
+	cgi, err := NewCgi(mccMnc.mcc, mccMnc.mnc, lac, ci)
 	if err != nil {
 		return nil, buf, fmt.Errorf("Invalid binary")
 	}
 	return cgi, tail[4:], nil
 }
 
+func (c *Cgi) Lac() uint16 {
+	return c.lac
+}
+
+func (c *Cgi) Ci() uint16 {
+	return c.ci
+}
+
 type Sai struct {
 	mccMnc
-	Lac uint16
-	Sac uint16
+	lac uint16
+	sac uint16
 }
 
 func NewSai(mcc, mnc string, lac, sac uint16) (*Sai, error) {
@@ -76,17 +89,25 @@ func unmarshalSai(buf []byte) (*Sai, []byte, error) {
 	}
 	lac := binary.BigEndian.Uint16(tail[0:2])
 	sac := binary.BigEndian.Uint16(tail[2:4])
-	sai, err := NewSai(mccMnc.Mcc, mccMnc.Mnc, lac, sac)
+	sai, err := NewSai(mccMnc.mcc, mccMnc.mnc, lac, sac)
 	if err != nil {
 		return nil, buf, fmt.Errorf("Invalid binary")
 	}
 	return sai, tail[4:], nil
 }
 
+func (s *Sai) Lac() uint16 {
+	return s.lac
+}
+
+func (s *Sai) Sac() uint16 {
+	return s.sac
+}
+
 type Rai struct {
 	mccMnc
-	Lac uint16
-	Rac uint16
+	lac uint16
+	rac uint16
 }
 
 func NewRai(mcc, mnc string, lac, rac uint16) (*Rai, error) {
@@ -107,16 +128,24 @@ func unmarshalRai(buf []byte) (*Rai, []byte, error) {
 	}
 	lac := binary.BigEndian.Uint16(tail[0:2])
 	rac := binary.BigEndian.Uint16(tail[2:4])
-	rai, err := NewRai(mccMnc.Mcc, mccMnc.Mnc, lac, rac)
+	rai, err := NewRai(mccMnc.mcc, mccMnc.mnc, lac, rac)
 	if err != nil {
 		return nil, buf, fmt.Errorf("Invalid binary")
 	}
 	return rai, tail[4:], nil
 }
 
+func (r *Rai) Lac() uint16 {
+	return r.lac
+}
+
+func (r *Rai) Rac() uint16 {
+	return r.rac
+}
+
 type Tai struct {
 	mccMnc
-	Tac uint16
+	tac uint16
 }
 
 func NewTai(mcc, mnc string, tac uint16) (*Tai, error) {
@@ -136,16 +165,20 @@ func unmarshalTai(buf []byte) (*Tai, []byte, error) {
 		return nil, buf, fmt.Errorf("Invalid binary")
 	}
 	tac := binary.BigEndian.Uint16(tail[0:2])
-	tai, err := NewTai(mccMnc.Mcc, mccMnc.Mnc, tac)
+	tai, err := NewTai(mccMnc.mcc, mccMnc.mnc, tac)
 	if err != nil {
 		return nil, buf, fmt.Errorf("Invalid binary")
 	}
 	return tai, tail[2:], nil
 }
 
+func (t *Tai) Tac() uint16 {
+	return t.tac
+}
+
 type Ecgi struct {
 	mccMnc
-	Eci uint32 // actually uint28
+	eci uint32 // actually uint28
 }
 
 func NewEcgi(mcc, mnc string, eci uint32) (*Ecgi, error) {
@@ -168,16 +201,20 @@ func unmarshalEcgi(buf []byte) (*Ecgi, []byte, error) {
 		return nil, buf, fmt.Errorf("Invalid binary")
 	}
 	eci := binary.BigEndian.Uint32(tail[0:4]) & 0xfffffff
-	ecgi, err := NewEcgi(mccMnc.Mcc, mccMnc.Mnc, eci)
+	ecgi, err := NewEcgi(mccMnc.mcc, mccMnc.mnc, eci)
 	if err != nil {
 		return nil, buf, fmt.Errorf("Invalid binary")
 	}
 	return ecgi, tail[4:], nil
 }
 
+func (e *Ecgi) Eci() uint32 {
+	return e.eci
+}
+
 type Lai struct {
 	mccMnc
-	Lac uint16
+	lac uint16
 }
 
 func NewLai(mcc, mnc string, lai uint16) (*Lai, error) {
@@ -197,7 +234,7 @@ func unmarshalLai(buf []byte) (*Lai, []byte, error) {
 		return nil, buf, fmt.Errorf("Invalid binary")
 	}
 	lac := binary.BigEndian.Uint16(tail[0:2])
-	lai, err := NewLai(mccMnc.Mcc, mccMnc.Mnc, lac)
+	lai, err := NewLai(mccMnc.mcc, mccMnc.mnc, lac)
 	if err != nil {
 		return nil, buf, fmt.Errorf("Invalid binary")
 	}
@@ -225,53 +262,61 @@ func NewUli(instance byte, uliArg UliArg) (*Uli, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Uli{header, uliArg}, nil
+	return &Uli{
+		header,
+		uliArg.Cgi,
+		uliArg.Sai,
+		uliArg.Rai,
+		uliArg.Tai,
+		uliArg.Ecgi,
+		uliArg.Lai,
+	}, nil
 }
 
 func (r *Uli) Marshal() []byte {
 	body := make([]byte, r.length)
 
 	offset := 1
-	if r.Cgi != nil {
+	if r.cgi != nil {
 		body[0] = setBit(body[0], 0, true)
-		offset += r.Cgi.mccMnc.copyTo(body[offset:])
-		binary.BigEndian.PutUint16(body[offset:], r.Cgi.Lac)
+		offset += r.cgi.mccMnc.copyTo(body[offset:])
+		binary.BigEndian.PutUint16(body[offset:], r.cgi.lac)
 		offset += 2
-		binary.BigEndian.PutUint16(body[offset:], r.Cgi.Ci)
+		binary.BigEndian.PutUint16(body[offset:], r.cgi.ci)
 		offset += 2
 	}
-	if r.Sai != nil {
+	if r.sai != nil {
 		body[0] = setBit(body[0], 1, true)
-		offset += r.Sai.mccMnc.copyTo(body[offset:])
-		binary.BigEndian.PutUint16(body[offset:], r.Sai.Lac)
+		offset += r.sai.mccMnc.copyTo(body[offset:])
+		binary.BigEndian.PutUint16(body[offset:], r.sai.lac)
 		offset += 2
-		binary.BigEndian.PutUint16(body[offset:], r.Sai.Sac)
+		binary.BigEndian.PutUint16(body[offset:], r.sai.sac)
 		offset += 2
 	}
-	if r.Rai != nil {
+	if r.rai != nil {
 		body[0] = setBit(body[0], 2, true)
-		offset += r.Rai.mccMnc.copyTo(body[offset:])
-		binary.BigEndian.PutUint16(body[offset:], r.Rai.Lac)
+		offset += r.rai.mccMnc.copyTo(body[offset:])
+		binary.BigEndian.PutUint16(body[offset:], r.rai.lac)
 		offset += 2
-		binary.BigEndian.PutUint16(body[offset:], r.Rai.Rac)
+		binary.BigEndian.PutUint16(body[offset:], r.rai.rac)
 		offset += 2
 	}
-	if r.Tai != nil {
+	if r.tai != nil {
 		body[0] = setBit(body[0], 3, true)
-		offset += r.Tai.mccMnc.copyTo(body[offset:])
-		binary.BigEndian.PutUint16(body[offset:], r.Tai.Tac)
+		offset += r.tai.mccMnc.copyTo(body[offset:])
+		binary.BigEndian.PutUint16(body[offset:], r.tai.tac)
 		offset += 2
 	}
-	if r.Ecgi != nil {
+	if r.ecgi != nil {
 		body[0] = setBit(body[0], 4, true)
-		offset += r.Ecgi.mccMnc.copyTo(body[offset:])
-		binary.BigEndian.PutUint32(body[offset:], r.Ecgi.Eci)
+		offset += r.ecgi.mccMnc.copyTo(body[offset:])
+		binary.BigEndian.PutUint32(body[offset:], r.ecgi.eci)
 		offset += 4
 	}
-	if r.Lai != nil {
+	if r.lai != nil {
 		body[0] = setBit(body[0], 5, true)
-		offset += r.Lai.mccMnc.copyTo(body[offset:])
-		binary.BigEndian.PutUint16(body[offset:], r.Lai.Lac)
+		offset += r.lai.mccMnc.copyTo(body[offset:])
+		binary.BigEndian.PutUint16(body[offset:], r.lai.lac)
 		offset += 2
 	}
 
@@ -328,4 +373,28 @@ func unmarshalUli(h header, buf []byte) (*Uli, error) {
 		}
 	}
 	return NewUli(h.instance, uliArg)
+}
+
+func (u *Uli) Cgi() *Cgi {
+	return u.cgi
+}
+
+func (u *Uli) Sai() *Sai {
+	return u.sai
+}
+
+func (u *Uli) Rai() *Rai {
+	return u.rai
+}
+
+func (u *Uli) Tai() *Tai {
+	return u.tai
+}
+
+func (u *Uli) Ecgi() *Ecgi {
+	return u.ecgi
+}
+
+func (u *Uli) Lai() *Lai {
+	return u.lai
 }

@@ -8,8 +8,8 @@ import (
 
 func TestNewServingNetwork(t *testing.T) {
 	sn, err := NewServingNetwork(0, "440", "10")
-	assert.Equal(t, "440", sn.Mcc)
-	assert.Equal(t, "10", sn.Mnc)
+	assert.Equal(t, "440", sn.Mcc())
+	assert.Equal(t, "10", sn.Mnc())
 	assert.Nil(t, err)
 
 	_, err = NewServingNetwork(0, "4400", "10")
@@ -28,8 +28,8 @@ func TestUnmarshal_servingNetwork(t *testing.T) {
 	msg, tail, err := Unmarshal(snBin, CreateSessionRequest)
 	sn = msg.(*ServingNetwork)
 	assert.Equal(t, byte(1), sn.instance)
-	assert.Equal(t, "440", sn.Mcc)
-	assert.Equal(t, "10", sn.Mnc)
+	assert.Equal(t, "440", sn.Mcc())
+	assert.Equal(t, "10", sn.Mnc())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }

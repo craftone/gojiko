@@ -5,7 +5,7 @@ import "errors"
 
 type Recovery struct {
 	header
-	Value byte
+	value byte
 }
 
 func NewRecovery(instance byte, value byte) (*Recovery, error) {
@@ -15,12 +15,12 @@ func NewRecovery(instance byte, value byte) (*Recovery, error) {
 	}
 	return &Recovery{
 		header: header,
-		Value:  value,
+		value:  value,
 	}, nil
 }
 
 func (r *Recovery) Marshal() []byte {
-	body := []byte{r.Value}
+	body := []byte{r.value}
 	return r.header.marshal(body)
 }
 
@@ -38,4 +38,8 @@ func unmarshalRecovery(h header, buf []byte) (*Recovery, error) {
 		return nil, err
 	}
 	return rec, nil
+}
+
+func (r *Recovery) Value() byte {
+	return r.value
 }

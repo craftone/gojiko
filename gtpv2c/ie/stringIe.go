@@ -6,7 +6,7 @@ import (
 
 type stringIE struct {
 	header
-	Value string
+	value string
 }
 
 func newStringIE(typeNum ieTypeNum, length uint16, instance byte, value string, minLen, maxLen int) (stringIE, error) {
@@ -21,10 +21,14 @@ func newStringIE(typeNum ieTypeNum, length uint16, instance byte, value string, 
 
 	return stringIE{
 		header: header,
-		Value:  value,
+		value:  value,
 	}, nil
 }
 
 func (s *stringIE) marshal() []byte {
-	return s.header.marshal([]byte(s.Value))
+	return s.header.marshal([]byte(s.value))
+}
+
+func (s *stringIE) Value() string {
+	return s.value
 }

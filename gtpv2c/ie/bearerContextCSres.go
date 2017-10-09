@@ -27,21 +27,21 @@ func NewBearerContextCreatedWithinCSRes(bcCwCSResArg BearerContextCreatedWithinC
 	instance := byte(0)
 
 	bcArg := BearerContextArg{
-		Ebi:          bcCwCSResArg.Ebi,
-		Cause:        bcCwCSResArg.Cause,
-		PgwDataFteid: bcCwCSResArg.PgwDataFteid,
-		ChargingID:   bcCwCSResArg.ChargingID,
+		ebi:          bcCwCSResArg.Ebi,
+		cause:        bcCwCSResArg.Cause,
+		pgwDataFteid: bcCwCSResArg.PgwDataFteid,
+		chargingID:   bcCwCSResArg.ChargingID,
 	}
 
-	if bcArg.Cause == nil {
+	if bcArg.cause == nil {
 		return nil, fmt.Errorf("Cause is a mondatory IE")
 	}
-	bcArg.Cause.instance = 0
+	bcArg.cause.instance = 0
 
-	if bcArg.PgwDataFteid == nil {
+	if bcArg.pgwDataFteid == nil {
 		return nil, fmt.Errorf("S5/S8-U PGW F-TEID is a mondatory IE in this condition")
 	}
-	bcArg.PgwDataFteid.instance = 2
+	bcArg.pgwDataFteid.instance = 2
 
 	bc, err := NewBearerContext(instance, bcArg)
 	if err != nil {

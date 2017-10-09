@@ -6,8 +6,8 @@ import "encoding/binary"
 
 type Ambr struct {
 	header
-	UplinkKbps   uint32
-	DownlinkKbps uint32
+	uplinkKbps   uint32
+	downlinkKbps uint32
 }
 
 func NewAmbr(instance byte, uplinkKbps, downlinkKbps uint32) (*Ambr, error) {
@@ -17,15 +17,15 @@ func NewAmbr(instance byte, uplinkKbps, downlinkKbps uint32) (*Ambr, error) {
 	}
 	return &Ambr{
 		header:       header,
-		UplinkKbps:   uplinkKbps,
-		DownlinkKbps: downlinkKbps,
+		uplinkKbps:   uplinkKbps,
+		downlinkKbps: downlinkKbps,
 	}, nil
 }
 
 func (a *Ambr) Marshal() []byte {
 	body := make([]byte, 8)
-	binary.BigEndian.PutUint32(body[0:4], a.UplinkKbps)
-	binary.BigEndian.PutUint32(body[4:8], a.DownlinkKbps)
+	binary.BigEndian.PutUint32(body[0:4], a.uplinkKbps)
+	binary.BigEndian.PutUint32(body[4:8], a.downlinkKbps)
 	return a.header.marshal(body)
 }
 
@@ -45,4 +45,12 @@ func unmarshalAmbr(h header, buf []byte) (*Ambr, error) {
 		return nil, err
 	}
 	return ambr, nil
+}
+
+func (a *Ambr) UplinkKbps() uint32 {
+	return a.uplinkKbps
+}
+
+func (a *Ambr) DownlinkKbps() uint32 {
+	return a.downlinkKbps
 }

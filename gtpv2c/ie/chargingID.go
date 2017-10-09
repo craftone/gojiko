@@ -8,7 +8,7 @@ import (
 
 type ChargingID struct {
 	header
-	Value uint32
+	value uint32
 }
 
 func NewChargingID(instance byte, value uint32) (*ChargingID, error) {
@@ -19,13 +19,13 @@ func NewChargingID(instance byte, value uint32) (*ChargingID, error) {
 
 	return &ChargingID{
 		header: header,
-		Value:  value,
+		value:  value,
 	}, nil
 }
 
 func (c *ChargingID) Marshal() []byte {
 	buf := make([]byte, 4)
-	binary.BigEndian.PutUint32(buf[0:4], c.Value)
+	binary.BigEndian.PutUint32(buf[0:4], c.value)
 	return c.header.marshal(buf)
 }
 
@@ -44,4 +44,8 @@ func unmarshalChargingID(h header, buf []byte) (*ChargingID, error) {
 		return nil, err
 	}
 	return chargingID, nil
+}
+
+func (c *ChargingID) Value() uint32 {
+	return c.value
 }

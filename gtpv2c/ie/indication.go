@@ -28,37 +28,74 @@ type IndicationArg struct {
 
 type Indication struct {
 	header
-	IndicationArg
+	daf   bool
+	dtf   bool
+	hi    bool
+	dfi   bool
+	oi    bool
+	isrsi bool
+	israi bool
+	sgwci bool
+	sqci  bool
+	uimsi bool
+	cfsi  bool
+	crsi  bool
+	p     bool
+	pt    bool
+	si    bool
+	msv   bool
+	israu bool
+	ccrsi bool
 }
 
-func NewIndication(instance byte, IndicationArg IndicationArg) (*Indication, error) {
+func NewIndication(instance byte, indicationArg IndicationArg) (*Indication, error) {
 	header, err := newHeader(indicationNum, 3, instance)
 	if err != nil {
 		return nil, err
 	}
-	return &Indication{header, IndicationArg}, nil
+	return &Indication{
+		header: header,
+		daf:    indicationArg.DAF,
+		dtf:    indicationArg.DTF,
+		hi:     indicationArg.HI,
+		dfi:    indicationArg.DFI,
+		oi:     indicationArg.OI,
+		isrsi:  indicationArg.ISRSI,
+		israi:  indicationArg.ISRAI,
+		sgwci:  indicationArg.SGWCI,
+		sqci:   indicationArg.SQCI,
+		uimsi:  indicationArg.UIMSI,
+		cfsi:   indicationArg.CFSI,
+		crsi:   indicationArg.CRSI,
+		p:      indicationArg.P,
+		pt:     indicationArg.PT,
+		si:     indicationArg.SI,
+		msv:    indicationArg.MSV,
+		israu:  indicationArg.ISRAU,
+		ccrsi:  indicationArg.CCRSI,
+	}, nil
 }
 
 func (i *Indication) Marshal() []byte {
 	body := make([]byte, 3)
-	body[0] = setBit(body[0], 7, i.DAF)
-	body[0] = setBit(body[0], 6, i.DTF)
-	body[0] = setBit(body[0], 5, i.HI)
-	body[0] = setBit(body[0], 4, i.DFI)
-	body[0] = setBit(body[0], 3, i.OI)
-	body[0] = setBit(body[0], 2, i.ISRSI)
-	body[0] = setBit(body[0], 1, i.ISRAI)
-	body[0] = setBit(body[0], 0, i.SGWCI)
-	body[1] = setBit(body[1], 7, i.SQCI)
-	body[1] = setBit(body[1], 6, i.UIMSI)
-	body[1] = setBit(body[1], 5, i.CFSI)
-	body[1] = setBit(body[1], 4, i.CRSI)
-	body[1] = setBit(body[1], 3, i.P)
-	body[1] = setBit(body[1], 2, i.PT)
-	body[1] = setBit(body[1], 1, i.SI)
-	body[1] = setBit(body[1], 0, i.MSV)
-	body[2] = setBit(body[2], 1, i.ISRAU)
-	body[2] = setBit(body[2], 0, i.CCRSI)
+	body[0] = setBit(body[0], 7, i.daf)
+	body[0] = setBit(body[0], 6, i.dtf)
+	body[0] = setBit(body[0], 5, i.hi)
+	body[0] = setBit(body[0], 4, i.dfi)
+	body[0] = setBit(body[0], 3, i.oi)
+	body[0] = setBit(body[0], 2, i.isrsi)
+	body[0] = setBit(body[0], 1, i.israi)
+	body[0] = setBit(body[0], 0, i.sgwci)
+	body[1] = setBit(body[1], 7, i.sqci)
+	body[1] = setBit(body[1], 6, i.uimsi)
+	body[1] = setBit(body[1], 5, i.cfsi)
+	body[1] = setBit(body[1], 4, i.crsi)
+	body[1] = setBit(body[1], 3, i.p)
+	body[1] = setBit(body[1], 2, i.pt)
+	body[1] = setBit(body[1], 1, i.si)
+	body[1] = setBit(body[1], 0, i.msv)
+	body[2] = setBit(body[2], 1, i.israu)
+	body[2] = setBit(body[2], 0, i.ccrsi)
 
 	return i.header.marshal(body)
 }
@@ -93,4 +130,76 @@ func unmarshalIndication(h header, buf []byte) (*Indication, error) {
 	indicationArg.ISRAU = getBit(buf[2], 1)
 	indicationArg.CCRSI = getBit(buf[2], 0)
 	return NewIndication(h.instance, indicationArg)
+}
+
+func (i *Indication) DAF() bool {
+	return i.daf
+}
+
+func (i *Indication) DTF() bool {
+	return i.dtf
+}
+
+func (i *Indication) HI() bool {
+	return i.hi
+}
+
+func (i *Indication) DFI() bool {
+	return i.dfi
+}
+
+func (i *Indication) OI() bool {
+	return i.oi
+}
+
+func (i *Indication) ISRSI() bool {
+	return i.isrsi
+}
+
+func (i *Indication) ISRAI() bool {
+	return i.israi
+}
+
+func (i *Indication) SGWCI() bool {
+	return i.sgwci
+}
+
+func (i *Indication) SQCI() bool {
+	return i.sqci
+}
+
+func (i *Indication) UIMSI() bool {
+	return i.uimsi
+}
+
+func (i *Indication) CFSI() bool {
+	return i.cfsi
+}
+
+func (i *Indication) CRSI() bool {
+	return i.crsi
+}
+
+func (i *Indication) P() bool {
+	return i.p
+}
+
+func (i *Indication) PT() bool {
+	return i.pt
+}
+
+func (i *Indication) SI() bool {
+	return i.si
+}
+
+func (i *Indication) MSV() bool {
+	return i.msv
+}
+
+func (i *Indication) ISRAU() bool {
+	return i.israu
+}
+
+func (i *Indication) CCRSI() bool {
+	return i.ccrsi
 }

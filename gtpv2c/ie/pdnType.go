@@ -6,7 +6,7 @@ import "fmt"
 
 type PdnType struct {
 	header
-	Value PdnTypeValue
+	value PdnTypeValue
 }
 
 type PdnTypeValue byte
@@ -39,7 +39,7 @@ func NewPdnType(instance byte, value PdnTypeValue) (*PdnType, error) {
 }
 
 func (p *PdnType) Marshal() []byte {
-	body := []byte{byte(p.Value)}
+	body := []byte{byte(p.value)}
 	return p.header.marshal(body)
 }
 
@@ -61,4 +61,8 @@ func unmarshalPdnType(h header, buf []byte) (*PdnType, error) {
 		return nil, err
 	}
 	return pt, nil
+}
+
+func (p PdnType) Value() PdnTypeValue {
+	return p.value
 }

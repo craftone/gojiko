@@ -9,7 +9,7 @@ import (
 func TestNewApn(t *testing.T) {
 	apn, _ := NewApn(0, "example.com")
 	assert.Equal(t, apnNum, apn.typeNum)
-	assert.Equal(t, "example.com", apn.Value)
+	assert.Equal(t, "example.com", apn.Value())
 
 	_, err := NewApn(0, "")
 	assert.Error(t, err)
@@ -30,7 +30,7 @@ func TestUnmarshal_apn(t *testing.T) {
 	msg, tail, err := Unmarshal(apnBin, CreateSessionRequest)
 	apn := msg.(*Apn)
 	assert.Equal(t, byte(1), apn.instance)
-	assert.Equal(t, "example.com", apn.Value)
+	assert.Equal(t, "example.com", apn.Value())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }

@@ -36,7 +36,7 @@ func unmarshalServingNetwork(h header, buf []byte) (*ServingNetwork, error) {
 	if err != nil {
 		return nil, err
 	}
-	sn, err := NewServingNetwork(h.instance, mccMnc.Mcc, mccMnc.Mnc)
+	sn, err := NewServingNetwork(h.instance, mccMnc.mcc, mccMnc.mnc)
 	if err != nil {
 		return nil, err
 	}

@@ -26,20 +26,20 @@ func NewBearerContextToBeCreatedWithinCSReq(bcTBCwCSReqArg BearerContextToBeCrea
 	instance := byte(0)
 
 	bcArg := BearerContextArg{
-		Ebi:          bcTBCwCSReqArg.Ebi,
-		BearerQoS:    bcTBCwCSReqArg.BearerQoS,
-		SgwDataFteid: bcTBCwCSReqArg.SgwDataFteid,
+		ebi:          bcTBCwCSReqArg.Ebi,
+		bearerQoS:    bcTBCwCSReqArg.BearerQoS,
+		sgwDataFteid: bcTBCwCSReqArg.SgwDataFteid,
 	}
 
-	if bcArg.BearerQoS == nil {
+	if bcArg.bearerQoS == nil {
 		return nil, fmt.Errorf("Bearer QoS is a mondatory IE")
 	}
-	bcArg.BearerQoS.instance = 0
+	bcArg.bearerQoS.instance = 0
 
-	if bcArg.SgwDataFteid == nil {
+	if bcArg.sgwDataFteid == nil {
 		return nil, fmt.Errorf("S5/S8-U SGW F-TEID is a mondatory IE in this condition")
 	}
-	bcArg.SgwDataFteid.instance = 2
+	bcArg.sgwDataFteid.instance = 2
 
 	bc, err := NewBearerContext(instance, bcArg)
 	if err != nil {

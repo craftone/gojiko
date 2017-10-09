@@ -15,6 +15,12 @@ const (
 	echoRequestNum                   messageTypeNum = 1
 	echoResponseNum                  messageTypeNum = 2
 	versionNotSupportedIndicationNum messageTypeNum = 3
+	createSessionRequestNum          messageTypeNum = 32
+	createSessionResponseNum         messageTypeNum = 33
+	deleteSessionRequestNum          messageTypeNum = 36
+	deleteSessionResponseNum         messageTypeNum = 37
+	deleteBearerRequestNum           messageTypeNum = 99
+	deleteBearerResponseNum          messageTypeNum = 100
 )
 
 type GtpV2cMsg interface {

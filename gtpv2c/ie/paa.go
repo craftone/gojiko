@@ -9,7 +9,7 @@ import (
 
 type Paa struct {
 	header
-	Value PdnTypeValue
+	value PdnTypeValue
 	ipv4  net.IP
 	ipv6  net.IP
 }
@@ -55,13 +55,13 @@ func NewPaa(instance byte, value PdnTypeValue, ipv4, ipv6 net.IP) (*Paa, error) 
 
 func (p *Paa) Marshal() []byte {
 	body := make([]byte, p.length)
-	body[0] = byte(p.Value)
+	body[0] = byte(p.value)
 	offset := 1
-	if p.Value == PdnTypeIPv6 || p.Value == PdnTypeIPv4v6 {
+	if p.value == PdnTypeIPv6 || p.value == PdnTypeIPv4v6 {
 		copy(body[offset:offset+16], p.ipv6)
 		offset += 16
 	}
-	if p.Value == PdnTypeIPv4 || p.Value == PdnTypeIPv4v6 {
+	if p.value == PdnTypeIPv4 || p.value == PdnTypeIPv4v6 {
 		copy(body[offset:offset+4], p.ipv4)
 	}
 	return p.header.marshal(body)

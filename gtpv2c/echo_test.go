@@ -16,7 +16,7 @@ func TestNewEchoRequest(t *testing.T) {
 	assert.Equal(t, echoRequestNum, er.messageType)
 	assert.Equal(t, uint32(1), er.seqNum)
 	assert.Equal(t, gtp.Teid(0), er.teid)
-	assert.Equal(t, byte(2), er.Recovery.Value)
+	assert.Equal(t, byte(2), er.Recovery().Value())
 	assert.NoError(t, err)
 }
 
@@ -36,7 +36,7 @@ func TestNewEchoResponse(t *testing.T) {
 	assert.Equal(t, echoResponseNum, er.messageType)
 	assert.Equal(t, uint32(1), er.seqNum)
 	assert.Equal(t, gtp.Teid(0), er.teid)
-	assert.Equal(t, byte(2), er.Recovery.Value)
+	assert.Equal(t, byte(2), er.Recovery().Value())
 	assert.NoError(t, err)
 }
 
@@ -54,7 +54,7 @@ func TestUnmarshal_echoRequest(t *testing.T) {
 	msg, _, err := Unmarshal(erBin)
 	er = msg.(*EchoRequest)
 	assert.Equal(t, uint32(1), er.seqNum)
-	assert.Equal(t, byte(2), er.Recovery.Value)
+	assert.Equal(t, byte(2), er.Recovery().Value())
 	assert.Nil(t, err)
 }
 
@@ -64,6 +64,6 @@ func TestUnmarshal_echoResponse(t *testing.T) {
 	msg, _, err := Unmarshal(erBin)
 	er = msg.(*EchoResponse)
 	assert.Equal(t, uint32(1), er.seqNum)
-	assert.Equal(t, byte(2), er.Recovery.Value)
+	assert.Equal(t, byte(2), er.Recovery().Value())
 	assert.Nil(t, err)
 }
