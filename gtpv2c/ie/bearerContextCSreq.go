@@ -6,7 +6,7 @@ import (
 )
 
 type BearerContextToBeCreatedWithinCSReq struct {
-	BearerContext
+	bearerContext
 }
 
 // NOT IMPLEMENTED since this type is for S4/S11.
@@ -25,7 +25,7 @@ func NewBearerContextToBeCreatedWithinCSReq(bcTBCwCSReqArg BearerContextToBeCrea
 	// BearerContectToBeCreatedWithinCSReq's instance number shoub be 0.
 	instance := byte(0)
 
-	bcArg := BearerContextArg{
+	bcArg := bearerContextArg{
 		ebi:          bcTBCwCSReqArg.Ebi,
 		bearerQoS:    bcTBCwCSReqArg.BearerQoS,
 		sgwDataFteid: bcTBCwCSReqArg.SgwDataFteid,

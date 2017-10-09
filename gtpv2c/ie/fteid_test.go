@@ -4,6 +4,8 @@ import (
 	"net"
 	"testing"
 
+	"github.com/craftone/gojiko/gtp"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +15,7 @@ func TestNewFteid(t *testing.T) {
 	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), fteid.Ipv4())
 	assert.Nil(t, fteid.Ipv6())
 	assert.Equal(t, S5S8SgwGtpCIf, fteid.IfType())
-	assert.Equal(t, uint32(0x0006c6ea), fteid.Value())
+	assert.Equal(t, gtp.Teid(0x0006c6ea), fteid.Teid())
 	assert.Nil(t, err)
 }
 
@@ -32,7 +34,7 @@ func TestUnmarshal_fteid(t *testing.T) {
 	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), fteid.Ipv4())
 	assert.Nil(t, fteid.Ipv6())
 	assert.Equal(t, S5S8SgwGtpCIf, fteid.IfType())
-	assert.Equal(t, uint32(0x0006c6ea), fteid.Value())
+	assert.Equal(t, gtp.Teid(0x0006c6ea), fteid.Teid())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }

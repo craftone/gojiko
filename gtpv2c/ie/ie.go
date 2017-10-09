@@ -74,6 +74,7 @@ func newHeader(typeNum ieTypeNum, length uint16, instance byte) (header, error) 
 }
 
 type IE interface {
+	Instance() byte
 	Marshal() []byte
 }
 
@@ -98,7 +99,7 @@ func Unmarshal(buf []byte, msgType MsgType) (IE, []byte, error) {
 	h.length = binary.BigEndian.Uint16(buf[1:3])
 	msgSize := int(h.length)
 	if len(buf) < msgSize+4 {
-		return nil, buf, fmt.Errorf("It is too short for the length : %d", h.length)
+		return nil, buf, fmt.Errorf("The binary size %d is too short for the length : %d", len(buf), h.length+4)
 	}
 	h.instance = buf[3] & 0xf
 
@@ -170,5 +171,8 @@ func Unmarshal(buf []byte, msgType MsgType) (IE, []byte, error) {
 		return nil, buf, err
 	}
 	return msg, buf[4+msgSize:], nil
+}
 
+func (h *header) Instance() byte {
+	return h.instance
 }

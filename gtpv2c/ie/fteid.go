@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+
+	"github.com/craftone/gojiko/gtp"
 )
 
 type Fteid struct {
@@ -13,7 +15,7 @@ type Fteid struct {
 	ifType IfType
 	ipv4   net.IP
 	ipv6   net.IP
-	value  uint32
+	teid   gtp.Teid
 }
 
 type IfType byte
@@ -25,7 +27,7 @@ const (
 	S5S8PgwGtpCIf IfType = 7
 )
 
-func NewFteid(instance byte, ipv4, ipv6 net.IP, ifType IfType, value uint32) (*Fteid, error) {
+func NewFteid(instance byte, ipv4, ipv6 net.IP, ifType IfType, teid gtp.Teid) (*Fteid, error) {
 	if ipv4 != nil {
 		ipv4 = ipv4.To4()
 	}
@@ -54,7 +56,7 @@ func NewFteid(instance byte, ipv4, ipv6 net.IP, ifType IfType, value uint32) (*F
 	return &Fteid{
 		header, ifType,
 		ipv4, ipv6,
-		value,
+		teid,
 	}, nil
 }
 
@@ -63,7 +65,7 @@ func (f *Fteid) Marshal() []byte {
 	body[0] = setBit(body[0], 7, f.ipv4 != nil)
 	body[0] = setBit(body[0], 6, f.ipv6 != nil)
 	body[0] += byte(f.ifType) & 0x3f
-	binary.BigEndian.PutUint32(body[1:5], f.value)
+	binary.BigEndian.PutUint32(body[1:5], uint32(f.teid))
 	offset := 5
 	if f.ipv4 != nil {
 		copy(body[5:9], f.ipv4)
@@ -99,7 +101,7 @@ func unmarshalFteid(h header, buf []byte) (*Fteid, error) {
 		return nil, errors.New("Invalid binary")
 	}
 
-	value := binary.BigEndian.Uint32(buf[1:5])
+	teid := gtp.Teid(binary.BigEndian.Uint32(buf[1:5]))
 
 	var ipv4, ipv6 net.IP
 	offset := 5
@@ -111,7 +113,7 @@ func unmarshalFteid(h header, buf []byte) (*Fteid, error) {
 		ipv6 = buf[offset : offset+16]
 	}
 
-	fteid, err := NewFteid(h.instance, ipv4, ipv6, ifType, value)
+	fteid, err := NewFteid(h.instance, ipv4, ipv6, ifType, teid)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +129,6 @@ func (f *Fteid) Ipv4() net.IP {
 func (f *Fteid) Ipv6() net.IP {
 	return f.ipv6
 }
-func (f *Fteid) Value() uint32 {
-	return f.value
+func (f *Fteid) Teid() gtp.Teid {
+	return f.teid
 }

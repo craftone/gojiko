@@ -11,7 +11,8 @@ func TestNewRecovery(t *testing.T) {
 	assert.Equal(t, recoveryNum, rec.header.typeNum)
 	assert.Equal(t, byte(1), rec.Value())
 
-	_, err := NewRecovery(0x0f, 1)
+	rec, err := NewRecovery(0x0f, 1)
+	assert.Equal(t, byte(0xf), rec.Instance())
 	assert.Nil(t, err)
 
 	_, err = NewRecovery(0x10, 1)

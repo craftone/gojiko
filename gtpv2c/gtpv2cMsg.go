@@ -25,6 +25,9 @@ const (
 
 type GtpV2cMsg interface {
 	Marshal() []byte
+	TeidFlag() bool
+	Teid() gtp.Teid
+	SeqNum() uint32
 }
 
 type header struct {
@@ -98,18 +101,20 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 	if len(buf) < 8 {
 		return nil, buf, fmt.Errorf("It needs at least 8 bytes : %v", buf)
 	}
+
+	// Unmarshal header part
 	h := header{}
 	h.version = buf[0] >> 5
 	if h.version != 2 {
 		return nil, buf, fmt.Errorf("Version must be 2, but the version is %d", h.version)
 	}
 	h.piggybackingFlag = (buf[0]&0x10 == 1)
-	h.teidFlag = (buf[0]&0x40 == 1)
+	h.teidFlag = (buf[0]&0x08 != 0)
 	h.messageType = messageTypeNum(buf[1])
 	h.length = binary.BigEndian.Uint16(buf[2:4])
 	msgSize := int(h.length) + 4
 	if len(buf) < msgSize {
-		return nil, buf, fmt.Errorf("It is too short for the length : %d", h.length)
+		return nil, buf, fmt.Errorf("The binary size %d is too short for the length : %d", len(buf), msgSize)
 	}
 	idx := 4
 	if h.teidFlag {
@@ -127,11 +132,14 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 	body := buf[idx:msgSize]
 	tail := buf[msgSize:]
 
+	// Unmarshal body part
 	switch h.messageType {
 	case echoRequestNum:
 		msg, err = unmarshalEchoRequest(h, body)
 	case echoResponseNum:
 		msg, err = unmarshalEchoResponse(h, body)
+	case createSessionRequestNum:
+		msg, err = unmarshalCreateSessionRequest(h, body)
 	default:
 		return nil, buf, fmt.Errorf("Unkown message type : %d", h.messageType)
 	}
@@ -139,4 +147,18 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 		return nil, buf, err
 	}
 	return msg, tail, nil
+}
+
+// Getters
+
+func (h *header) TeidFlag() bool {
+	return h.teidFlag
+}
+
+func (h *header) Teid() gtp.Teid {
+	return h.teid
+}
+
+func (h *header) SeqNum() uint32 {
+	return h.seqNum
 }
