@@ -16,9 +16,9 @@ class AbsSPgw {
   NextTeid() TEID
 }
 note left
-  ・複数のAPNで
-    同一IPアドレスが
-    使われない前提
+・複数のAPNで
+  同一IPアドレスが
+  使われない前提
 end note
 
 

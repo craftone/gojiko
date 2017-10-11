@@ -14,43 +14,43 @@ import (
 
 type CreateSessionRequest struct {
 	header
-	imsi              *ie.Imsi
-	msisdn            *ie.Msisdn
-	mei               *ie.Mei
-	uli               *ie.Uli
-	servingNetwork    *ie.ServingNetwork
-	ratType           *ie.RatType
-	indication        *ie.Indication
-	senderFteid       *ie.Fteid
-	apn               *ie.Apn
-	selectionMode     *ie.SelectionMode
-	pdnType           *ie.PdnType
-	paa               *ie.Paa
-	maxApnRestriction *ie.ApnRestriction
-	apnAmbr           *ie.Ambr
-	pco               *ie.PcoMsToNetwork
-	bearerContextTBC  *ie.BearerContextToBeCreatedWithinCSReq
-	recovery          *ie.Recovery
+	imsi             *ie.Imsi
+	msisdn           *ie.Msisdn
+	mei              *ie.Mei
+	uli              *ie.Uli
+	servingNetwork   *ie.ServingNetwork
+	ratType          *ie.RatType
+	indication       *ie.Indication
+	senderFteid      *ie.Fteid
+	apn              *ie.Apn
+	selectionMode    *ie.SelectionMode
+	pdnType          *ie.PdnType
+	paa              *ie.Paa
+	apnRestriction   *ie.ApnRestriction
+	apnAmbr          *ie.Ambr
+	pco              *ie.PcoMsToNetwork
+	bearerContextTBC *ie.BearerContextToBeCreatedWithinCSReq
+	recovery         *ie.Recovery
 }
 
 type CreateSessionRequestArg struct {
-	Imsi              *ie.Imsi
-	Msisdn            *ie.Msisdn
-	Mei               *ie.Mei
-	Uli               *ie.Uli
-	ServingNetwork    *ie.ServingNetwork
-	RatType           *ie.RatType
-	Indication        *ie.Indication
-	SenderFteid       *ie.Fteid
-	Apn               *ie.Apn
-	SelectionMode     *ie.SelectionMode
-	PdnType           *ie.PdnType
-	Paa               *ie.Paa
-	MaxApnRestriction *ie.ApnRestriction
-	ApnAmbr           *ie.Ambr
-	Pco               *ie.PcoMsToNetwork
-	BearerContextTBC  *ie.BearerContextToBeCreatedWithinCSReq
-	Recovery          *ie.Recovery
+	Imsi             *ie.Imsi
+	Msisdn           *ie.Msisdn
+	Mei              *ie.Mei
+	Uli              *ie.Uli
+	ServingNetwork   *ie.ServingNetwork
+	RatType          *ie.RatType
+	Indication       *ie.Indication
+	SenderFteid      *ie.Fteid
+	Apn              *ie.Apn
+	SelectionMode    *ie.SelectionMode
+	PdnType          *ie.PdnType
+	Paa              *ie.Paa
+	ApnRestriction   *ie.ApnRestriction
+	ApnAmbr          *ie.Ambr
+	Pco              *ie.PcoMsToNetwork
+	BearerContextTBC *ie.BearerContextToBeCreatedWithinCSReq
+	Recovery         *ie.Recovery
 }
 
 func NewCreateSessionRequest(seqNum uint32, csReqArg CreateSessionRequestArg) (*CreateSessionRequest, error) {
@@ -72,7 +72,7 @@ func NewCreateSessionRequest(seqNum uint32, csReqArg CreateSessionRequestArg) (*
 		csReqArg.SelectionMode,
 		csReqArg.PdnType,
 		csReqArg.Paa,
-		csReqArg.MaxApnRestriction,
+		csReqArg.ApnRestriction,
 		csReqArg.ApnAmbr,
 		csReqArg.Pco,
 		csReqArg.BearerContextTBC,
@@ -118,7 +118,7 @@ func checkCreateSessionRequestArg(csReqArg CreateSessionRequestArg) error {
 	if csReqArg.Paa == nil {
 		errMsgs = append(errMsgs, "PAA")
 	}
-	if csReqArg.MaxApnRestriction == nil {
+	if csReqArg.ApnRestriction == nil {
 		errMsgs = append(errMsgs, "Max APN Restriction")
 	}
 	if csReqArg.ApnAmbr == nil {
@@ -228,7 +228,7 @@ func MakeCSReqArg(imsi, msisdn, mei, mcc, mnc string,
 		return CreateSessionRequestArg{}, err
 	}
 
-	maxApnRestrictionIE, err := ie.NewApnRestriction(0, 0)
+	apnRestrictionIE, err := ie.NewApnRestriction(0, 0)
 	if err != nil {
 		return CreateSessionRequestArg{}, err
 	}
@@ -275,23 +275,23 @@ func MakeCSReqArg(imsi, msisdn, mei, mcc, mnc string,
 	}
 
 	return CreateSessionRequestArg{
-		Imsi:              imsiIE,
-		Msisdn:            msisdnIE,
-		Mei:               meiIE,
-		Uli:               uliIE,
-		ServingNetwork:    servingNetworkIE,
-		RatType:           ratTypeIE,
-		Indication:        indicationIE,
-		SenderFteid:       senderFteidIE,
-		Apn:               apnIE,
-		SelectionMode:     selectionModeIE,
-		PdnType:           pdnTypeIE,
-		Paa:               paaIE,
-		MaxApnRestriction: maxApnRestrictionIE,
-		ApnAmbr:           apnAmbrIE,
-		Pco:               pcoIE,
-		BearerContextTBC:  bearerContextTBCIE,
-		Recovery:          recoveryIE,
+		Imsi:             imsiIE,
+		Msisdn:           msisdnIE,
+		Mei:              meiIE,
+		Uli:              uliIE,
+		ServingNetwork:   servingNetworkIE,
+		RatType:          ratTypeIE,
+		Indication:       indicationIE,
+		SenderFteid:      senderFteidIE,
+		Apn:              apnIE,
+		SelectionMode:    selectionModeIE,
+		PdnType:          pdnTypeIE,
+		Paa:              paaIE,
+		ApnRestriction:   apnRestrictionIE,
+		ApnAmbr:          apnAmbrIE,
+		Pco:              pcoIE,
+		BearerContextTBC: bearerContextTBCIE,
+		Recovery:         recoveryIE,
 	}, nil
 }
 
@@ -334,8 +334,8 @@ func (c *CreateSessionRequest) Marshal() []byte {
 	if c.paa != nil {
 		body = append(body, c.paa.Marshal()...)
 	}
-	if c.maxApnRestriction != nil {
-		body = append(body, c.maxApnRestriction.Marshal()...)
+	if c.apnRestriction != nil {
+		body = append(body, c.apnRestriction.Marshal()...)
 	}
 	if c.apnAmbr != nil {
 		body = append(body, c.apnAmbr.Marshal()...)
@@ -397,7 +397,7 @@ func unmarshalCreateSessionRequest(h header, buf []byte) (*CreateSessionRequest,
 		case *ie.Paa:
 			csReqArg.Paa = msg
 		case *ie.ApnRestriction:
-			csReqArg.MaxApnRestriction = msg
+			csReqArg.ApnRestriction = msg
 		case *ie.Ambr:
 			csReqArg.ApnAmbr = msg
 		case *ie.PcoMsToNetwork:
@@ -412,6 +412,10 @@ func unmarshalCreateSessionRequest(h header, buf []byte) (*CreateSessionRequest,
 	}
 	return NewCreateSessionRequest(h.seqNum, csReqArg)
 }
+
+//
+// Getters
+//
 
 func (c *CreateSessionRequest) Imsi() *ie.Imsi {
 	return c.imsi
@@ -449,8 +453,8 @@ func (c *CreateSessionRequest) PdnType() *ie.PdnType {
 func (c *CreateSessionRequest) Paa() *ie.Paa {
 	return c.paa
 }
-func (c *CreateSessionRequest) MaxApnRestriction() *ie.ApnRestriction {
-	return c.maxApnRestriction
+func (c *CreateSessionRequest) ApnRestriction() *ie.ApnRestriction {
+	return c.apnRestriction
 }
 func (c *CreateSessionRequest) ApnAmbr() *ie.Ambr {
 	return c.apnAmbr
