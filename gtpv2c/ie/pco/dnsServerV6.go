@@ -39,3 +39,7 @@ func unmarshalDNSServerV6(buf []byte) (*DNSServerV6, error) {
 	}
 	return nil, fmt.Errorf("It should be 16 octets binary : %v", buf)
 }
+
+func (d *DNSServerV6) Value() net.IP {
+	return d.value
+}

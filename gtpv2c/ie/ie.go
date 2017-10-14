@@ -106,6 +106,7 @@ func Unmarshal(buf []byte, msgType MsgType) (IE, []byte, error) {
 	var msg IE
 	var err error
 	body := buf[4 : 4+msgSize]
+	tail := buf[4+msgSize:]
 
 	switch h.typeNum {
 	case imsiNum:
@@ -154,7 +155,7 @@ func Unmarshal(buf []byte, msgType MsgType) (IE, []byte, error) {
 		} else if msgType == CreateSessionResponse && h.instance == 0 {
 			msg, err = unmarshalBearerContextCreatedWithinCSRes(h, body)
 		} else {
-			return nil, buf, fmt.Errorf("Unknown Bearar Context : %v", buf)
+			return nil, tail, &UnknownIEError{h.typeNum, h.instance}
 		}
 	case chargingIDNum:
 		msg, err = unmarshalChargingID(h, body)
@@ -165,13 +166,17 @@ func Unmarshal(buf []byte, msgType MsgType) (IE, []byte, error) {
 	case selectionModeNum:
 		msg, err = unmarshalSelectionMode(h, body)
 	default:
-		return nil, buf, fmt.Errorf("Unknown IE type : %d", h.typeNum)
+		return nil, tail, &UnknownIEError{h.typeNum, h.instance}
 	}
 	if err != nil {
 		return nil, buf, err
 	}
-	return msg, buf[4+msgSize:], nil
+	return msg, tail, nil
 }
+
+//
+// Getters
+//
 
 func (h *header) Instance() byte {
 	return h.instance

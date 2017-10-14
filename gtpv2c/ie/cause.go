@@ -3,86 +3,88 @@ package ie
 import (
 	"errors"
 	"log"
+
+	"github.com/craftone/gojiko/util"
 )
 
-type causeValue byte
+type CauseValue byte
 
 const (
 	// Request / Initial message
 
-	CauseLocalDetach                          causeValue = 2
-	CauseCompleteDetach                       causeValue = 3
-	CauseRATChangedFrom3GPPtoNon3GPP          causeValue = 4
-	CauseISRDeactivation                      causeValue = 5
-	CauseErrorIndicationReceivedFromRNCeNodeB causeValue = 6
-	CauseIMSIDetachOnly                       causeValue = 7
-	CauseReactivationRequested                causeValue = 8
-	CausePDNReconnectionToThisAPNDisallowed   causeValue = 9
-	CauseAccessChangedFromNon3GPPto3GPP       causeValue = 10
-	CausePDNConnectionInactivityTimerExpires  causeValue = 11
+	CauseLocalDetach                          CauseValue = 2
+	CauseCompleteDetach                       CauseValue = 3
+	CauseRATChangedFrom3GPPtoNon3GPP          CauseValue = 4
+	CauseISRDeactivation                      CauseValue = 5
+	CauseErrorIndicationReceivedFromRNCeNodeB CauseValue = 6
+	CauseIMSIDetachOnly                       CauseValue = 7
+	CauseReactivationRequested                CauseValue = 8
+	CausePDNReconnectionToThisAPNDisallowed   CauseValue = 9
+	CauseAccessChangedFromNon3GPPto3GPP       CauseValue = 10
+	CausePDNConnectionInactivityTimerExpires  CauseValue = 11
 
 	// Acceptance in a Response / triggered message.
 
-	CauseRequestAccepted                        causeValue = 16
-	CauseRequestAcceptedPartially               causeValue = 17
-	CauseNewPDNTypeDueToNetworkPreference       causeValue = 18
-	CauseNewPDNTypeDueToSingleAddressBearerOnly causeValue = 19
+	CauseRequestAccepted                        CauseValue = 16
+	CauseRequestAcceptedPartially               CauseValue = 17
+	CauseNewPDNTypeDueToNetworkPreference       CauseValue = 18
+	CauseNewPDNTypeDueToSingleAddressBearerOnly CauseValue = 19
 
 	// Rejection in a Response / triggered message.
 
-	CauseContextNotFound               causeValue = 64
-	CauseInvalidMessageFormat          causeValue = 65
-	CauseVersionNotSupportedByNextPeer causeValue = 66
-	CauseInvalidLength                 causeValue = 67
-	CauseServiceNotSupported           causeValue = 68
-	CauseMandatoryIEIncorrect          causeValue = 69
-	CauseMandatoryIEMissing            causeValue = 70
+	CauseContextNotFound               CauseValue = 64
+	CauseInvalidMessageFormat          CauseValue = 65
+	CauseVersionNotSupportedByNextPeer CauseValue = 66
+	CauseInvalidLength                 CauseValue = 67
+	CauseServiceNotSupported           CauseValue = 68
+	CauseMandatoryIEIncorrect          CauseValue = 69
+	CauseMandatoryIEMissing            CauseValue = 70
 
-	CauseSystemFailure                   causeValue = 72
-	CauseNoResourcesAvailable            causeValue = 73
-	CauseSemanticErrorInTheTFTOperation  causeValue = 74
-	CauseSyntacticErrorInTheTFTOperation causeValue = 75
-	CauseSemanticErrorsInPacketFilters   causeValue = 76
-	CauseSyntacticErrorsInPacketFilters  causeValue = 77
-	CauseMissingOrUnknownAPN             causeValue = 78
+	CauseSystemFailure                   CauseValue = 72
+	CauseNoResourcesAvailable            CauseValue = 73
+	CauseSemanticErrorInTheTFTOperation  CauseValue = 74
+	CauseSyntacticErrorInTheTFTOperation CauseValue = 75
+	CauseSemanticErrorsInPacketFilters   CauseValue = 76
+	CauseSyntacticErrorsInPacketFilters  CauseValue = 77
+	CauseMissingOrUnknownAPN             CauseValue = 78
 
-	CauseGREKeyNotFound                       causeValue = 80
-	CauseRelocationFailure                    causeValue = 81
-	CauseDeniedInRAT                          causeValue = 82
-	CausePreferredPDNTypeNotSupported         causeValue = 83
-	CauseAllDynamicAddressesAreOccupied       causeValue = 85
-	CauseUEContextWithoutTFTAlreadyActivated  causeValue = 86
-	CauseProtocolTypeNotSupported             causeValue = 87
-	CauseUENotResponding                      causeValue = 88
-	CauseUERefuses                            causeValue = 89
-	CauseUnableToPageUE                       causeValue = 90
-	CauseNoMemoryAvailable                    causeValue = 91
-	CauseUserAuthenticationFailed             causeValue = 92
-	CauseAPNAccessDeniedNoSubscription        causeValue = 93
-	CauseRequestRejectedReasonNotSpecified    causeValue = 94
-	CausePTMSISignatureMismatch               causeValue = 95
-	CauseIMSINotKnown                         causeValue = 96
-	CauseSemanticErrorInTheTADOperation       causeValue = 97
-	CauseSyntacticErrorInTheTADOperation      causeValue = 98
-	CauseServiceDenied                        causeValue = 99
-	CauseRemotePeerNotResponding              causeValue = 100
-	CauseCollisionWithNetworkInitiatedRequest causeValue = 101
-	CauseUnableToPageUEDueToSuspension        causeValue = 102
-	CauseConditionalIEMissing                 causeValue = 103
+	CauseGREKeyNotFound                       CauseValue = 80
+	CauseRelocationFailure                    CauseValue = 81
+	CauseDeniedInRAT                          CauseValue = 82
+	CausePreferredPDNTypeNotSupported         CauseValue = 83
+	CauseAllDynamicAddressesAreOccupied       CauseValue = 85
+	CauseUEContextWithoutTFTAlreadyActivated  CauseValue = 86
+	CauseProtocolTypeNotSupported             CauseValue = 87
+	CauseUENotResponding                      CauseValue = 88
+	CauseUERefuses                            CauseValue = 89
+	CauseUnableToPageUE                       CauseValue = 90
+	CauseNoMemoryAvailable                    CauseValue = 91
+	CauseUserAuthenticationFailed             CauseValue = 92
+	CauseAPNAccessDeniedNoSubscription        CauseValue = 93
+	CauseRequestRejectedReasonNotSpecified    CauseValue = 94
+	CausePTMSISignatureMismatch               CauseValue = 95
+	CauseIMSINotKnown                         CauseValue = 96
+	CauseSemanticErrorInTheTADOperation       CauseValue = 97
+	CauseSyntacticErrorInTheTADOperation      CauseValue = 98
+	CauseServiceDenied                        CauseValue = 99
+	CauseRemotePeerNotResponding              CauseValue = 100
+	CauseCollisionWithNetworkInitiatedRequest CauseValue = 101
+	CauseUnableToPageUEDueToSuspension        CauseValue = 102
+	CauseConditionalIEMissing                 CauseValue = 103
 
-	CauseAPNRestrictionTypeIncompatibleWithCurrentlyActivePDNConnection causeValue = 104
+	CauseAPNRestrictionTypeIncompatibleWithCurrentlyActivePDNConnection CauseValue = 104
 )
 
 type Cause struct {
 	header
-	value       causeValue
+	value       CauseValue
 	pce         bool
 	bce         bool
 	cs          bool
 	offendingIe *header
 }
 
-func NewCause(instance byte, value causeValue, pce, bce, cs bool, offendingIe *header) (*Cause, error) {
+func NewCause(instance byte, value CauseValue, pce, bce, cs bool, offendingIe *header) (*Cause, error) {
 	length := 2
 	if offendingIe != nil {
 		length = 6
@@ -106,9 +108,9 @@ func NewCause(instance byte, value causeValue, pce, bce, cs bool, offendingIe *h
 func (c *Cause) Marshal() []byte {
 	buf := make([]byte, c.header.length)
 	buf[0] = byte(c.value)
-	buf[1] = setBit(buf[1], 2, c.pce)
-	buf[1] = setBit(buf[1], 1, c.bce)
-	buf[1] = setBit(buf[1], 0, c.cs)
+	buf[1] = util.SetBit(buf[1], 2, c.pce)
+	buf[1] = util.SetBit(buf[1], 1, c.bce)
+	buf[1] = util.SetBit(buf[1], 0, c.cs)
 	if c.offendingIe != nil {
 		buf[2] = byte(c.offendingIe.typeNum)
 		buf[5] = c.offendingIe.instance
@@ -124,10 +126,10 @@ func unmarshalCause(h header, buf []byte) (*Cause, error) {
 	if len(buf) < 2 {
 		return nil, errors.New("too short data")
 	}
-	value := causeValue(buf[0])
-	pce := getBit(buf[1], 2)
-	bce := getBit(buf[1], 1)
-	cs := getBit(buf[1], 0)
+	value := CauseValue(buf[0])
+	pce := util.GetBit(buf[1], 2)
+	bce := util.GetBit(buf[1], 1)
+	cs := util.GetBit(buf[1], 0)
 
 	var offendingIeHeader *header
 	if h.length == 6 {
@@ -144,7 +146,7 @@ func unmarshalCause(h header, buf []byte) (*Cause, error) {
 	return cause, nil
 }
 
-func (c *Cause) Value() causeValue {
+func (c *Cause) Value() CauseValue {
 	return c.value
 }
 func (c *Cause) Pce() bool {

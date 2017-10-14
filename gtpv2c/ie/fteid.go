@@ -8,6 +8,7 @@ import (
 	"net"
 
 	"github.com/craftone/gojiko/gtp"
+	"github.com/craftone/gojiko/util"
 )
 
 type Fteid struct {
@@ -62,8 +63,8 @@ func NewFteid(instance byte, ipv4, ipv6 net.IP, ifType IfType, teid gtp.Teid) (*
 
 func (f *Fteid) Marshal() []byte {
 	body := make([]byte, f.length)
-	body[0] = setBit(body[0], 7, f.ipv4 != nil)
-	body[0] = setBit(body[0], 6, f.ipv6 != nil)
+	body[0] = util.SetBit(body[0], 7, f.ipv4 != nil)
+	body[0] = util.SetBit(body[0], 6, f.ipv6 != nil)
 	body[0] += byte(f.ifType) & 0x3f
 	binary.BigEndian.PutUint32(body[1:5], uint32(f.teid))
 	offset := 5
@@ -86,8 +87,8 @@ func unmarshalFteid(h header, buf []byte) (*Fteid, error) {
 		return nil, errors.New("Invalid binary")
 	}
 
-	v4flag := getBit(buf[0], 7)
-	v6flag := getBit(buf[0], 6)
+	v4flag := util.GetBit(buf[0], 7)
+	v6flag := util.GetBit(buf[0], 6)
 	ifType := IfType(buf[0] & 0x3f)
 
 	length := 5

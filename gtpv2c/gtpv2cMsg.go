@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/craftone/gojiko/gtp"
+	"github.com/craftone/gojiko/util"
 )
 
 type messageTypeNum byte
@@ -64,12 +65,8 @@ func (h *header) marshal(body []byte) []byte {
 	// make header
 	addr := 0
 	res[addr] = byte(h.version << 5)
-	if h.piggybackingFlag {
-		res[addr] |= (1 << 4)
-	}
-	if h.teidFlag {
-		res[addr] |= (1 << 3)
-	}
+	res[addr] = util.SetBit(res[addr], 4, h.piggybackingFlag)
+	res[addr] = util.SetBit(res[addr], 3, h.teidFlag)
 	addr++
 
 	// Message Type
@@ -108,8 +105,8 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 	if h.version != 2 {
 		return nil, buf, fmt.Errorf("Version must be 2, but the version is %d", h.version)
 	}
-	h.piggybackingFlag = (buf[0]&0x10 == 1)
-	h.teidFlag = (buf[0]&0x08 != 0)
+	h.piggybackingFlag = util.GetBit(buf[0], 4)
+	h.teidFlag = util.GetBit(buf[0], 3)
 	h.messageType = messageTypeNum(buf[1])
 	h.length = binary.BigEndian.Uint16(buf[2:4])
 	msgSize := int(h.length) + 4
@@ -140,6 +137,8 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 		msg, err = unmarshalEchoResponse(h, body)
 	case createSessionRequestNum:
 		msg, err = unmarshalCreateSessionRequest(h, body)
+	case createSessionResponseNum:
+		msg, err = unmarshalCreateSessionResponse(h, body)
 	default:
 		return nil, buf, fmt.Errorf("Unkown message type : %d", h.messageType)
 	}
@@ -149,7 +148,9 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 	return msg, tail, nil
 }
 
+//
 // Getters
+//
 
 func (h *header) TeidFlag() bool {
 	return h.teidFlag

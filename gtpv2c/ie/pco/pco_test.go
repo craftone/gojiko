@@ -229,9 +229,9 @@ func TestUnmarshalNetowrkToMs(t *testing.T) {
 	}
 	pBin = p.Marshal()
 	p, tail, err = UnmarshalNetowrkToMs(pBin)
-	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), p.DNSServerV4s()[0].value)
-	assert.Equal(t, net.IPv4(5, 6, 7, 8).To4(), p.DNSServerV4s()[1].value)
-	assert.Nil(t, p.dnsServerV6s)
+	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), p.DNSServerV4s()[0].Value())
+	assert.Equal(t, net.IPv4(5, 6, 7, 8).To4(), p.DNSServerV4s()[1].Value())
+	assert.Nil(t, p.DNSServerV6s())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 
@@ -243,7 +243,7 @@ func TestUnmarshalNetowrkToMs(t *testing.T) {
 	pBin = p.Marshal()
 	p, tail, err = UnmarshalNetowrkToMs(pBin)
 	assert.Nil(t, p.DNSServerV4s())
-	assert.Equal(t, net.ParseIP("2001:db8::68"), p.DNSServerV6s()[0].value)
+	assert.Equal(t, net.ParseIP("2001:db8::68"), p.DNSServerV6s()[0].Value())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 
@@ -255,8 +255,8 @@ func TestUnmarshalNetowrkToMs(t *testing.T) {
 	}
 	pBin = p.Marshal()
 	p, tail, err = UnmarshalNetowrkToMs(pBin)
-	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), p.dnsServerV4s[0].value)
-	assert.Equal(t, net.ParseIP("2001:db8::68"), p.dnsServerV6s[0].value)
+	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), p.DNSServerV4s()[0].Value())
+	assert.Equal(t, net.ParseIP("2001:db8::68"), p.DNSServerV6s()[0].Value())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 
@@ -270,8 +270,8 @@ func TestUnmarshalNetowrkToMs(t *testing.T) {
 	p, tail, err = UnmarshalNetowrkToMs(pBin)
 	assert.Nil(t, p.dnsServerV4s)
 	assert.Nil(t, p.dnsServerV6s)
-	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), p.ipcp.PriDNS())
-	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), p.ipcp.SecDNS())
+	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), p.Ipcp().PriDNS())
+	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), p.Ipcp().SecDNS())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }

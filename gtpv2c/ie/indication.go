@@ -3,6 +3,8 @@ package ie
 import (
 	"errors"
 	"log"
+
+	"github.com/craftone/gojiko/util"
 )
 
 type IndicationArg struct {
@@ -78,24 +80,24 @@ func NewIndication(instance byte, indicationArg IndicationArg) (*Indication, err
 
 func (i *Indication) Marshal() []byte {
 	body := make([]byte, 3)
-	body[0] = setBit(body[0], 7, i.daf)
-	body[0] = setBit(body[0], 6, i.dtf)
-	body[0] = setBit(body[0], 5, i.hi)
-	body[0] = setBit(body[0], 4, i.dfi)
-	body[0] = setBit(body[0], 3, i.oi)
-	body[0] = setBit(body[0], 2, i.isrsi)
-	body[0] = setBit(body[0], 1, i.israi)
-	body[0] = setBit(body[0], 0, i.sgwci)
-	body[1] = setBit(body[1], 7, i.sqci)
-	body[1] = setBit(body[1], 6, i.uimsi)
-	body[1] = setBit(body[1], 5, i.cfsi)
-	body[1] = setBit(body[1], 4, i.crsi)
-	body[1] = setBit(body[1], 3, i.p)
-	body[1] = setBit(body[1], 2, i.pt)
-	body[1] = setBit(body[1], 1, i.si)
-	body[1] = setBit(body[1], 0, i.msv)
-	body[2] = setBit(body[2], 1, i.israu)
-	body[2] = setBit(body[2], 0, i.ccrsi)
+	body[0] = util.SetBit(body[0], 7, i.daf)
+	body[0] = util.SetBit(body[0], 6, i.dtf)
+	body[0] = util.SetBit(body[0], 5, i.hi)
+	body[0] = util.SetBit(body[0], 4, i.dfi)
+	body[0] = util.SetBit(body[0], 3, i.oi)
+	body[0] = util.SetBit(body[0], 2, i.isrsi)
+	body[0] = util.SetBit(body[0], 1, i.israi)
+	body[0] = util.SetBit(body[0], 0, i.sgwci)
+	body[1] = util.SetBit(body[1], 7, i.sqci)
+	body[1] = util.SetBit(body[1], 6, i.uimsi)
+	body[1] = util.SetBit(body[1], 5, i.cfsi)
+	body[1] = util.SetBit(body[1], 4, i.crsi)
+	body[1] = util.SetBit(body[1], 3, i.p)
+	body[1] = util.SetBit(body[1], 2, i.pt)
+	body[1] = util.SetBit(body[1], 1, i.si)
+	body[1] = util.SetBit(body[1], 0, i.msv)
+	body[2] = util.SetBit(body[2], 1, i.israu)
+	body[2] = util.SetBit(body[2], 0, i.ccrsi)
 
 	return i.header.marshal(body)
 }
@@ -111,24 +113,24 @@ func unmarshalIndication(h header, buf []byte) (*Indication, error) {
 
 	indicationArg := IndicationArg{}
 
-	indicationArg.DAF = getBit(buf[0], 7)
-	indicationArg.DTF = getBit(buf[0], 6)
-	indicationArg.HI = getBit(buf[0], 5)
-	indicationArg.DFI = getBit(buf[0], 4)
-	indicationArg.OI = getBit(buf[0], 3)
-	indicationArg.ISRSI = getBit(buf[0], 2)
-	indicationArg.ISRAI = getBit(buf[0], 1)
-	indicationArg.SGWCI = getBit(buf[0], 0)
-	indicationArg.SQCI = getBit(buf[1], 7)
-	indicationArg.UIMSI = getBit(buf[1], 6)
-	indicationArg.CFSI = getBit(buf[1], 5)
-	indicationArg.CRSI = getBit(buf[1], 4)
-	indicationArg.P = getBit(buf[1], 3)
-	indicationArg.PT = getBit(buf[1], 2)
-	indicationArg.SI = getBit(buf[1], 1)
-	indicationArg.MSV = getBit(buf[1], 0)
-	indicationArg.ISRAU = getBit(buf[2], 1)
-	indicationArg.CCRSI = getBit(buf[2], 0)
+	indicationArg.DAF = util.GetBit(buf[0], 7)
+	indicationArg.DTF = util.GetBit(buf[0], 6)
+	indicationArg.HI = util.GetBit(buf[0], 5)
+	indicationArg.DFI = util.GetBit(buf[0], 4)
+	indicationArg.OI = util.GetBit(buf[0], 3)
+	indicationArg.ISRSI = util.GetBit(buf[0], 2)
+	indicationArg.ISRAI = util.GetBit(buf[0], 1)
+	indicationArg.SGWCI = util.GetBit(buf[0], 0)
+	indicationArg.SQCI = util.GetBit(buf[1], 7)
+	indicationArg.UIMSI = util.GetBit(buf[1], 6)
+	indicationArg.CFSI = util.GetBit(buf[1], 5)
+	indicationArg.CRSI = util.GetBit(buf[1], 4)
+	indicationArg.P = util.GetBit(buf[1], 3)
+	indicationArg.PT = util.GetBit(buf[1], 2)
+	indicationArg.SI = util.GetBit(buf[1], 1)
+	indicationArg.MSV = util.GetBit(buf[1], 0)
+	indicationArg.ISRAU = util.GetBit(buf[2], 1)
+	indicationArg.CCRSI = util.GetBit(buf[2], 0)
 	return NewIndication(h.instance, indicationArg)
 }
 

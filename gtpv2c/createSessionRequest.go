@@ -21,7 +21,7 @@ type CreateSessionRequest struct {
 	servingNetwork   *ie.ServingNetwork
 	ratType          *ie.RatType
 	indication       *ie.Indication
-	senderFteid      *ie.Fteid
+	sgwCtrlFteid     *ie.Fteid
 	apn              *ie.Apn
 	selectionMode    *ie.SelectionMode
 	pdnType          *ie.PdnType
@@ -41,7 +41,7 @@ type CreateSessionRequestArg struct {
 	ServingNetwork   *ie.ServingNetwork
 	RatType          *ie.RatType
 	Indication       *ie.Indication
-	SenderFteid      *ie.Fteid
+	SgwCtrlFteid     *ie.Fteid
 	Apn              *ie.Apn
 	SelectionMode    *ie.SelectionMode
 	PdnType          *ie.PdnType
@@ -67,7 +67,7 @@ func NewCreateSessionRequest(seqNum uint32, csReqArg CreateSessionRequestArg) (*
 		csReqArg.ServingNetwork,
 		csReqArg.RatType,
 		csReqArg.Indication,
-		csReqArg.SenderFteid,
+		csReqArg.SgwCtrlFteid,
 		csReqArg.Apn,
 		csReqArg.SelectionMode,
 		csReqArg.PdnType,
@@ -103,7 +103,7 @@ func checkCreateSessionRequestArg(csReqArg CreateSessionRequestArg) error {
 	if csReqArg.Indication == nil {
 		errMsgs = append(errMsgs, "Indication")
 	}
-	if csReqArg.SenderFteid == nil {
+	if csReqArg.SgwCtrlFteid == nil {
 		errMsgs = append(errMsgs, "Sender F-TEID")
 	}
 	if csReqArg.Apn == nil {
@@ -203,7 +203,7 @@ func MakeCSReqArg(imsi, msisdn, mei, mcc, mnc string,
 		return CreateSessionRequestArg{}, err
 	}
 
-	senderFteidIE, err := ie.NewFteid(0, sgwCtrlIPv4, nil, ie.S5S8SgwGtpCIf, sgwCtrlTeid)
+	sgwCtrlFteidIE, err := ie.NewFteid(0, sgwCtrlIPv4, nil, ie.S5S8SgwGtpCIf, sgwCtrlTeid)
 	if err != nil {
 		return CreateSessionRequestArg{}, err
 	}
@@ -282,7 +282,7 @@ func MakeCSReqArg(imsi, msisdn, mei, mcc, mnc string,
 		ServingNetwork:   servingNetworkIE,
 		RatType:          ratTypeIE,
 		Indication:       indicationIE,
-		SenderFteid:      senderFteidIE,
+		SgwCtrlFteid:     sgwCtrlFteidIE,
 		Apn:              apnIE,
 		SelectionMode:    selectionModeIE,
 		PdnType:          pdnTypeIE,
@@ -319,8 +319,8 @@ func (c *CreateSessionRequest) Marshal() []byte {
 	if c.indication != nil {
 		body = append(body, c.indication.Marshal()...)
 	}
-	if c.senderFteid != nil {
-		body = append(body, c.senderFteid.Marshal()...)
+	if c.sgwCtrlFteid != nil {
+		body = append(body, c.sgwCtrlFteid.Marshal()...)
 	}
 	if c.apn != nil {
 		body = append(body, c.apn.Marshal()...)
@@ -357,14 +357,18 @@ func unmarshalCreateSessionRequest(h header, buf []byte) (*CreateSessionRequest,
 	if h.messageType != createSessionRequestNum {
 		log.Fatal("Invalud messageType")
 	}
-	log.Printf("%v\n", buf)
+
 	csReqArg := CreateSessionRequestArg{}
 	for len(buf) > 0 {
 		msg, tail, err := ie.Unmarshal(buf, ie.CreateSessionRequest)
+		buf = tail
 		if err != nil {
+			if _, ok := err.(*ie.UnknownIEError); ok {
+				log.Println(err)
+				continue
+			}
 			return nil, err
 		}
-		buf = tail
 
 		if msg.Instance() != 0 {
 			log.Printf("Unkown IE : %v", msg)
@@ -387,7 +391,7 @@ func unmarshalCreateSessionRequest(h header, buf []byte) (*CreateSessionRequest,
 		case *ie.Indication:
 			csReqArg.Indication = msg
 		case *ie.Fteid:
-			csReqArg.SenderFteid = msg
+			csReqArg.SgwCtrlFteid = msg
 		case *ie.Apn:
 			csReqArg.Apn = msg
 		case *ie.SelectionMode:
@@ -438,8 +442,8 @@ func (c *CreateSessionRequest) RatType() *ie.RatType {
 func (c *CreateSessionRequest) Indication() *ie.Indication {
 	return c.indication
 }
-func (c *CreateSessionRequest) SenderFteid() *ie.Fteid {
-	return c.senderFteid
+func (c *CreateSessionRequest) SgwCtrlFteid() *ie.Fteid {
+	return c.sgwCtrlFteid
 }
 func (c *CreateSessionRequest) Apn() *ie.Apn {
 	return c.apn

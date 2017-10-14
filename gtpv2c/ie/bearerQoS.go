@@ -1,9 +1,13 @@
 package ie
 
-import "log"
-import "errors"
-import "fmt"
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"log"
+
+	"github.com/craftone/gojiko/util"
+)
 
 type BearerQoS struct {
 	header
@@ -65,9 +69,9 @@ func putBitrate(body []byte, bitrate uint64) {
 
 func (p *BearerQoS) Marshal() []byte {
 	body := make([]byte, 22)
-	body[0] = setBit(body[0], 6, p.pci)
+	body[0] = util.SetBit(body[0], 6, p.pci)
 	body[0] += (p.pl << 2)
-	body[0] = setBit(body[0], 0, p.pvi)
+	body[0] = util.SetBit(body[0], 0, p.pvi)
 	body[1] = p.label
 
 	putBitrate(body[2:7], p.uplinkMBR)
@@ -93,9 +97,9 @@ func unmarshalBearerQoS(h header, buf []byte) (*BearerQoS, error) {
 		return nil, errors.New("Invalid binary length")
 	}
 
-	pci := getBit(buf[0], 6)
+	pci := util.GetBit(buf[0], 6)
 	pl := (buf[0] >> 2) & 0xf
-	pvi := getBit(buf[0], 0)
+	pvi := util.GetBit(buf[0], 0)
 	label := buf[1]
 	uplinkMBR := getBitrate(buf[2:7])
 	downlinkMBR := getBitrate(buf[7:12])

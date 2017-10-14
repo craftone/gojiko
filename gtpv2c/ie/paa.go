@@ -99,3 +99,15 @@ func unmarshalPaa(h header, buf []byte) (*Paa, error) {
 	}
 	return paa, nil
 }
+
+func (p *Paa) Value() PdnTypeValue {
+	return p.value
+}
+
+func (p *Paa) IPv4() net.IP {
+	return p.ipv4
+}
+
+func (p *Paa) IPv6() net.IP {
+	return p.ipv6
+}

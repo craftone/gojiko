@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+
+	"github.com/craftone/gojiko/util"
 )
 
 type UliArg struct {
@@ -278,7 +280,7 @@ func (r *Uli) Marshal() []byte {
 
 	offset := 1
 	if r.cgi != nil {
-		body[0] = setBit(body[0], 0, true)
+		body[0] = util.SetBit(body[0], 0, true)
 		offset += r.cgi.mccMnc.copyTo(body[offset:])
 		binary.BigEndian.PutUint16(body[offset:], r.cgi.lac)
 		offset += 2
@@ -286,7 +288,7 @@ func (r *Uli) Marshal() []byte {
 		offset += 2
 	}
 	if r.sai != nil {
-		body[0] = setBit(body[0], 1, true)
+		body[0] = util.SetBit(body[0], 1, true)
 		offset += r.sai.mccMnc.copyTo(body[offset:])
 		binary.BigEndian.PutUint16(body[offset:], r.sai.lac)
 		offset += 2
@@ -294,7 +296,7 @@ func (r *Uli) Marshal() []byte {
 		offset += 2
 	}
 	if r.rai != nil {
-		body[0] = setBit(body[0], 2, true)
+		body[0] = util.SetBit(body[0], 2, true)
 		offset += r.rai.mccMnc.copyTo(body[offset:])
 		binary.BigEndian.PutUint16(body[offset:], r.rai.lac)
 		offset += 2
@@ -302,19 +304,19 @@ func (r *Uli) Marshal() []byte {
 		offset += 2
 	}
 	if r.tai != nil {
-		body[0] = setBit(body[0], 3, true)
+		body[0] = util.SetBit(body[0], 3, true)
 		offset += r.tai.mccMnc.copyTo(body[offset:])
 		binary.BigEndian.PutUint16(body[offset:], r.tai.tac)
 		offset += 2
 	}
 	if r.ecgi != nil {
-		body[0] = setBit(body[0], 4, true)
+		body[0] = util.SetBit(body[0], 4, true)
 		offset += r.ecgi.mccMnc.copyTo(body[offset:])
 		binary.BigEndian.PutUint32(body[offset:], r.ecgi.eci)
 		offset += 4
 	}
 	if r.lai != nil {
-		body[0] = setBit(body[0], 5, true)
+		body[0] = util.SetBit(body[0], 5, true)
 		offset += r.lai.mccMnc.copyTo(body[offset:])
 		binary.BigEndian.PutUint16(body[offset:], r.lai.lac)
 		offset += 2
@@ -336,37 +338,37 @@ func unmarshalUli(h header, buf []byte) (*Uli, error) {
 	uliArg := UliArg{}
 
 	tail := buf[1:]
-	if getBit(buf[0], 0) {
+	if util.GetBit(buf[0], 0) {
 		uliArg.Cgi, tail, err = unmarshalCgi(tail)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if getBit(buf[0], 1) {
+	if util.GetBit(buf[0], 1) {
 		uliArg.Sai, tail, err = unmarshalSai(tail)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if getBit(buf[0], 2) {
+	if util.GetBit(buf[0], 2) {
 		uliArg.Rai, tail, err = unmarshalRai(tail)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if getBit(buf[0], 3) {
+	if util.GetBit(buf[0], 3) {
 		uliArg.Tai, tail, err = unmarshalTai(tail)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if getBit(buf[0], 4) {
+	if util.GetBit(buf[0], 4) {
 		uliArg.Ecgi, tail, err = unmarshalEcgi(tail)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if getBit(buf[0], 5) {
+	if util.GetBit(buf[0], 5) {
 		uliArg.Lai, tail, err = unmarshalLai(tail)
 		if err != nil {
 			return nil, err

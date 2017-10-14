@@ -39,14 +39,14 @@ func (b *bearerContext) Marshal() []byte {
 	if b.ebi != nil {
 		body = append(body, b.ebi.Marshal()...)
 	}
+	if b.cause != nil {
+		body = append(body, b.cause.Marshal()...)
+	}
 	if b.bearerQoS != nil {
 		body = append(body, b.bearerQoS.Marshal()...)
 	}
 	if b.sgwDataFteid != nil {
 		body = append(body, b.sgwDataFteid.Marshal()...)
-	}
-	if b.cause != nil {
-		body = append(body, b.cause.Marshal()...)
 	}
 	if b.pgwDataFteid != nil {
 		body = append(body, b.pgwDataFteid.Marshal()...)

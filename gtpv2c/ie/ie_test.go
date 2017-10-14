@@ -9,8 +9,8 @@ import (
 func TestUnmarshal_unknown(t *testing.T) {
 	rec, err := NewRecovery(0, 255)
 	recBin := rec.Marshal()
-	recBin[0] = 0
+	recBin[0] = 255
 	msg, _, err := Unmarshal(recBin, CreateSessionRequest)
 	assert.Nil(t, msg)
-	assert.Error(t, err)
+	assert.Equal(t, err, &UnknownIEError{255, 0})
 }

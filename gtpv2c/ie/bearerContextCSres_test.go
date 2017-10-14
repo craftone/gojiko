@@ -64,7 +64,7 @@ func TestBearerContextCreatedWithinCSRes_Marshal(t *testing.T) {
 		0x49, 0, 1, 0, 5, //EBI
 		0x02, 0, 2, 0, 0x10, 0, //Cause
 		0x57, 0, 9, 2, 0x85, 0x86, 0x44, 0x00, 0x02, 1, 2, 3, 4, //PgwDataFTEID
-		0x5E, 0, 4, 0, 0, 0x55, 0x87, 0x76, //BearerQoS
+		0x5E, 0, 4, 0, 0, 0x55, 0x87, 0x76, //Charging ID
 	}, bcCwCSResBin)
 }
 
