@@ -1,4 +1,4 @@
-@startuml
+@startuml gojiko
 
 '''''''''''''''''''
 ' S/PGW part
@@ -8,10 +8,9 @@ class AbsSPgw {
   UDPAddr
   Recovery byte
 
-  fromReceiver chan []byte
-  toSender chan []byte
-  opSPgwMap map[UDPAddr]OpSPgw
-  opSPgwSessionCnt map[UDPAddr]int
+  fromReceiver chan UDPpacket
+  toSender chan UDPpacket
+  conn *UDPConn
 
   NextTeid() TEID
 }
@@ -22,61 +21,30 @@ note left
 end note
 
 
-'''''''''''''''''''''''
-' Opposite S/PGW Part
-'''''''''''''''''''''''
-
-class OpSpgwsRepo {
-  map[UDPAddr]*AbsSPgw
-  CountUp(UDPAddr, Recovery)
-  CountDown(UDPAddr, Recovery)
-  Find(UDPAddr) *AbsSPgw
-  Delete(UDPAddr)
-}
-
-class OpSpgwCtrl {
-  opSpgwData *OpSpgwData
-}
-AbsSPgw <|-- OpSpgwCtrl
-
-class OpSpgwCtrlEchoMgr <<GoRoutine>> {
-  spgwCtrlSendChan
-  spgwCtrlRecvChan
-}
-OpSpgwCtrl *-- OpSpgwCtrlEchoMgr
-
-class OpSpgwData {
-  opSpgwCtrl *OpSpgwCtrl
-}
-AbsSPgw <|-- OpSpgwData
-OpSpgwCtrl *-- OpSpgwData
-
-class OpSpgwDataEchoMgr <<GoRoutine>> {
-  spgwDataSendChan
-  spgwDataRecvChan
-}
-OpSpgwData *-- OpSpgwDataEchoMgr
-
-OpSpgwsRepo ..> OpSpgwCtrl : CRUD
-OpSpgwsRepo ..> OpSpgwData : CRUD
-
-
-
-
 '''''''''''''''''''
 ' SGW part
 '''''''''''''''''''
 
+class SgwCtrlRepo {
+  sgwCtrls map[UDPAddr]*SgwCtrlRepo
+  Get(UDPAddr) *SgwCtrl
+  Add(*SgwCtrl) error
+  Remove(*SgwCtrl) error
+}
+SgwCtrlRepo -> SgwCtrl
+note left
+  デフォルトで127.0.0.1:2123 を持つ
+end note
+
 class SgwCtrl {
+  map [UDPaddr]OpPgwCtrl
   CreateSession(pgwUDPAddr, IMSI, etc.) SessionID
-  countUp(UDPAddr)
-  countDown(UDPAddr)
 }
 
 class SgwData {
   sendMsg()
 }
-SgwCtrl *-- SgwData
+SgwCtrl *-> SgwData
 
 AbsSPgw <|-- SgwCtrl
 AbsSPgw <|-- SgwData
@@ -84,49 +52,73 @@ AbsSPgw <|-- SgwData
 class SgwDataSender <<GoRoutine>>
 class SgwDataReceiver <<GoRoutine>>
 
-SgwCtrl *-- SgwCtrlSender
-SgwCtrl *-- SgwCtrlReceiver
+SgwCtrl *--> SgwCtrlSender
+SgwCtrl *--> SgwCtrlReceiver
 
 
-class SgwCtrlSender <<GoRoutine>>
+class SgwCtrlSender <<GoRoutine>> {
+  SendChan chan UDPpacket
+}
+
 class SgwCtrlReceiver <<GoRoutine>>
 
-SgwData *-- SgwDataSender
-SgwData *-- SgwDataReceiver
+SgwData *--> SgwDataSender
+SgwData *--> SgwDataReceiver
+
+
+
+SgwCtrl ..> GtpSessionRoutine : chan CMD
+
+'''''''''''''''''''
+' OpPgw part
+'''''''''''''''''''
+
+class OpSPgw {
+  numOfSessions int
+  fromReceiver chan UDPpacket
+}
+SgwCtrl *--> "*" OpSPgw
 
 class SgwEchoCMgr <<GoRoutine>>
 class SgwEchoUMgr <<GoRoutine>>
+OpSPgw *--> "1" SgwEchoCMgr
+SgwData *--> SgwEchoUMgr
 
-SgwCtrl *-- SgwEchoCMgr
-SgwData *-- SgwEchoUMgr
-
-SgwCtrl ..> GtpSession : chan CMD
+SgwEchoCMgr ..> SgwCtrlSender : send packets
+SgwCtrlReceiver .> SgwEchoCMgr : received packets
 
 '''''''''''''''''''
 ' GtpSession part
 '''''''''''''''''''
 
 class GtpSessionsRepo {
-  Create(SgwCtrl, SgwCtrlTEID, SgwDataTEID, \n\
-         VpgwCtrl, IMSI, etc) (SessionID, error)
+  newSession(SgwCtrl, SgwCtrlTEID, SgwDataTEID, \n\
+         PgwCtrlAddr, IMSI, etc) (SessionID, error)
   FindCtrlChan(SgwCtrl, )
   FindSgwCtrl(UDPAddr, SgwCtrlTeid) (GtpSessionID, bool)
   FindSgwData(UDPAddr, SgwDataTeid) (GtpSessionID, bool)
 }
 GtpSessionsRepo ..> GtpSession : Create
 
-class GtpSession <<GoRoutine>> {
-  id            uint32
+class GtpSession {
+  mtx Mutex
+  sessionId         uint32
   status  // Init, Sended, Established,
   ctrlChan          chan GtpSesCmd
-  sgwCtrlSenderChan chan<- []byte
+  sgwCtrlSenderChan chan<- UDPpacket
 
   PgwCtrlFteid FTEID
   PgwDataFteid FTEID
   SgwCFteid FTEID
   SgwUFeession chan
 }
-note right
+GtpSession *--> "1" GtpSessionRoutine
+GtpSessionRoutine ..> SgwCtrlSender : send packets
+
+class GtpSessionRoutine <<GoRoutine>> {
+  data *GtpSession
+}
+note left
   リトライ制御は
   ここで実施
 end note
@@ -134,11 +126,36 @@ end note
 class Flow <<GoRoutine>>
 
 
-GtpSession *-- "*" Flow
-
+GtpSession *--> "*" Flow
 Flow ..> SgwData
 
 
-SgwCtrlReceiver ..> GtpSession : received packet
+SgwCtrlReceiver ..> GtpSessionRoutine : received packets
+
+
+'''''''''''''''''''
+' APN part
+'''''''''''''''''''
+class ApnRepo {
+  apnMap [string]*Apn
+
+  Post(*Apn)
+  Find(networkID, mcc, mnc)
+}
+note right
+  apnMap's key is APN's fullString
+end note
+
+class Apn {
+  networkID string
+  operatorID string
+  fullString string
+  ips []net.IP
+  curIdx
+}
+note right
+  fullString := networkID "." operatorID
+end note
+ApnRepo *--> Apn : Post & Find
 
 @enduml

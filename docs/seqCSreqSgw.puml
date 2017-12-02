@@ -1,40 +1,76 @@
-@startuml
+@startuml seqCSreqSgw
 
-Client -> API : POST sessions
-API -> SgwCtrl : CreateSession()
-SgwCtrl -> GtpSessionsRepo : CreateSession()
-GtpSessionsRepo -> GtpSession : make (\n\
-  SessionID for you,\n\
-  CmdChan for you,\n\
+Client -> API : POST sessions(\n\
+  PGW Ctrl Addr,\n\
+  IMSI, MSISDN, etc\n\
+)
+
+API -> SgwCtrl : CreateSession(\n\
+  APN,\n\
+  IMSI, MSISDN, etc\n\
+)
+
+SgwCtrl -> ApnRepo : Query(APN)
+SgwCtrl <-- ApnRepo : pgwCtrlIPAddr
+note right: 1APNに複数のIPがある場合は\nCyclicに1つだけ応答する
+
+SgwCtrl -> SgwCtrl : find OpPgwCtrl and the UDPconn
+opt when No OpPgwCtrl
+  SgwCtrl -> OpPgwCtrl : make(PgwCtrlAddr)
+  OpPgwCtrl -> OpPgwCtrl : make a UDPconn
+  SgwCtrl <-- OpPgwCtrl
+
+end
+
+SgwCtrl -> GtpSessionsRepo : newSession(\n\
+  PgwCtrlIP,\n\
+  IMSI, MSISDN, etc\n\
   SgwCtrlSendChan,\n\
-  SgwCtrlRecvChan for you\n)
-activate GtpSession
-GtpSession -> GtpSession : Status:Idle
+  SGW Ctrl F-TEID,\n\
+  SGW Data F-TEID,\n\
+)
+
+GtpSessionsRepo -> GtpSessionsRepo : make a GtpSession(\n\
+  SessionID for new sess,\n\
+  CmdChan for new sess,\n\
+  SgwCtrlSendChan,\n\
+  SgwCtrlRecvChan for new sess\n\
+)
+
+GtpSessionsRepo -> GtpSessionsRepo : ADD TO map[SessionID]session
+
+
+GtpSessionsRepo -> GtpSessionRoutine : go!(session)
+activate GtpSessionRoutine
+GtpSessionsRepo <-- GtpSessionRoutine
+
+GtpSessionRoutine -> GtpSessionRoutine : Status:Idle
 SgwCtrl <-- GtpSessionsRepo : SessionID, CmdChan
 
-GtpSession -> GtpSession : Wait a CMD
-SgwCtrl -> GtpSession : <<CHAN>>\n Dst, Local, CSReq
+GtpSessionRoutine -> GtpSessionRoutine : Wait a CMD
+SgwCtrl -> GtpSessionRoutine : <<cmdChan>>\n CSReq
 SgwCtrl -> SgwCtrl : Wait Chan result
 
-GtpSession -> GtpSession : Status:CSReqSending
-activate GtpSession #FFBBBB
+GtpSessionRoutine -> GtpSessionRoutine : Status:CSReqSending
+activate GtpSessionRoutine #FFBBBB
 
-GtpSession -> SgwCtrl : NextSeq()
-GtpSession <-- SgwCtrl : Seq
+GtpSessionRoutine -> SgwCtrl : NextSeq()
+GtpSessionRoutine <-- SgwCtrl : Seq
 
-GtpSession -> SgwCtrlSender : <<CHAN>>\n Dst, Local, MsgBin
+GtpSessionRoutine -> SgwCtrlSender : <<sgwCtrlSendChan>>\n Dst, Local, MsgBin
+
 SgwCtrlSender -> SgwCtrlSender : Send a UDP packet
 
-GtpSession -> GtpSession : Wait receive (Seq) \n or timeout / retry
+GtpSessionRoutine -> GtpSessionRoutine : Wait receive (Seq) \n or timeout / retry
 
 SgwCtrlReceiver -> SgwCtrlReceiver : Read a UDP packet
-SgwCtrlReceiver -> GtpSessionsRepo : Find (Remote UDPAddr, Local UDPAddr, SgwCtrlTEID)
+SgwCtrlReceiver -> GtpSessionsRepo : Find (SgwCtrlFTEID)
 SgwCtrlReceiver <-- GtpSessionsRepo : SgwCtrlRecvChan for the session
-SgwCtrlReceiver -> GtpSession : <<CHAN>> Remote, MsgBin
-SgwCtrl <- GtpSession : <<CHAN>> CSReq result
+SgwCtrlReceiver -> GtpSessionRoutine : <<sgwRecvChan>> Remote, MsgBin
+SgwCtrl <- GtpSessionRoutine : <<cmdChan>> CSReq result
 
-GtpSession -> GtpSession : Status:Connected
-deactivate GtpSession
+GtpSessionRoutine -> GtpSessionRoutine : Status:Connected
+deactivate GtpSessionRoutine
 
 API <-- SgwCtrl : result
 Client <-- API : result

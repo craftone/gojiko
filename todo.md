@@ -27,10 +27,32 @@
   + ~~Bearer Context~~
     + ~~Bearer Context to be created within Create Session Request~~
     + ~~Bearer Context created within Create Session Response~~
-  + CSreq
-  + CSres
+  + ~~CSreq~~
+  + ~~CSres~~ @ 2017/10/15
 
-- gtpv2cのTEIDをgtp.Teidに変更
+- ~~gtpv2cのTEIDをgtp.Teidに変更~~
+
+- PPGW/gojiko でパケットのやり取りを実装
+  + ~~APN repo を実装~~
+  + SgwCtrl.CreateSession() を実装
+    + ~~Sender/Receiverとの連携チャンネルに宛先アドレスも入れるようにする~~
+    + ~~CreateSessionでMakeCSReqArg()利用を止める~~
+    + SgwCtrlSender を実装
+      + ~~OpSPgw関連のFindOrCreate等をSgwCtrlではなくAbsSPgwに実装する~~
+      + ~~connの保有者をOpSPgwからabsSPgwに移す~~
+
+
+  + PgwCtrl.CreateSession() を実装
+    + Sender/Receiver を実装
+
+  + SgwCtrl.DeleteSession() を実装
+  + PgwCtrl.DeleteSession() を実装
+
+  + ECHO-Cを実装する
+
+  + SgwData.SendUDP() を実装
+  + PgwData.RecvUDP() を実装
+
+  + SgwDataSender / SgwDataReceiver を実装
 
 - Monitor を実装
-- PPGW/gojiko でパケットのやり取りを実装
