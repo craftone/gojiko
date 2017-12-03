@@ -4,6 +4,8 @@ import (
 	"net"
 	"sync"
 
+	gsc "github.com/craftone/gojiko/domain/gtpSessionCmd"
+
 	"github.com/craftone/gojiko/gtpv2c"
 
 	"github.com/craftone/gojiko/gtpv2c/ie"
@@ -22,7 +24,7 @@ type gtpSession struct {
 	status gtpSessionStatus
 	mtx    sync.RWMutex
 
-	cmdChan      chan gtpSessionCmd
+	cmdChan      chan gsc.Cmd
 	ctrlSendChan chan UDPpacket
 	ctrlRecvChan chan UDPpacket
 	dataSendChan chan UDPpacket
@@ -59,7 +61,7 @@ func gtpSessionRoutine(session *gtpSession) {
 		myLog.Debugf("Received CMD : %v", msg)
 
 		switch cmd := msg.(type) {
-		case gscCreateSession:
+		case gsc.CreateSessionReq:
 			err := procCreateSession(session, cmd)
 			if err != nil {
 				log.Error(err)
@@ -68,7 +70,7 @@ func gtpSessionRoutine(session *gtpSession) {
 	}
 }
 
-func procCreateSession(session *gtpSession, cmd gscCreateSession) error {
+func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq) error {
 	session.status = gssCSReqSending
 	seqNum := session.sgwCtrl.nextSeqNum()
 
@@ -79,7 +81,7 @@ func procCreateSession(session *gtpSession, cmd gscCreateSession) error {
 	bearerContextTBCIE, err := ie.NewBearerContextToBeCreatedWithinCSReq(
 		ie.BearerContextToBeCreatedWithinCSReqArg{
 			Ebi:          session.ebi,
-			BearerQoS:    cmd.bearerQoS,
+			BearerQoS:    cmd.BearerQoS,
 			SgwDataFteid: session.sgwDataFTEID,
 		})
 	if err != nil {
@@ -89,19 +91,19 @@ func procCreateSession(session *gtpSession, cmd gscCreateSession) error {
 	csReqArg := gtpv2c.CreateSessionRequestArg{
 		Imsi:             session.imsi,
 		Msisdn:           session.msisdn,
-		Mei:              cmd.mei,
-		Uli:              cmd.uli,
+		Mei:              cmd.Mei,
+		Uli:              cmd.Uli,
 		ServingNetwork:   session.servingNetwork,
 		RatType:          session.ratType,
-		Indication:       cmd.indication,
+		Indication:       cmd.Indication,
 		SgwCtrlFteid:     session.sgwCtrlFTEID,
 		Apn:              session.apn,
-		SelectionMode:    cmd.selectionMode,
+		SelectionMode:    cmd.SelectionMode,
 		PdnType:          session.pdnType,
 		Paa:              session.paa,
-		ApnRestriction:   cmd.apnRestriction,
+		ApnRestriction:   cmd.ApnRestriction,
 		ApnAmbr:          session.ambr,
-		Pco:              cmd.pco,
+		Pco:              cmd.Pco,
 		BearerContextTBC: bearerContextTBCIE,
 		Recovery:         recoveryIE,
 	}

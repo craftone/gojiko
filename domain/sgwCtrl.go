@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/craftone/gojiko/domain/gtpSessionCmd"
+
 	"github.com/craftone/gojiko/domain/apns"
 	"github.com/craftone/gojiko/gtpv2c/ie"
 	"github.com/sirupsen/logrus"
@@ -134,7 +136,7 @@ func (s *SgwCtrl) CreateSession(
 	}
 
 	// Make GTP Session CMD
-	cmd, err := newGscCreateSession(mcc, mnc, mei)
+	cmd, err := gtpSessionCmd.NewCreateSessionReq(mcc, mnc, mei)
 	if err != nil {
 		return err
 	}

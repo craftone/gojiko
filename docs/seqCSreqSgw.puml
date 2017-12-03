@@ -57,7 +57,7 @@ activate GtpSessionRoutine #FFBBBB
 GtpSessionRoutine -> SgwCtrl : NextSeq()
 GtpSessionRoutine <-- SgwCtrl : Seq
 
-GtpSessionRoutine -> SgwCtrlSender : <<sgwCtrlSendChan>>\n Dst, Local, MsgBin
+GtpSessionRoutine -> SgwCtrlSender : <<sgwCtrlSendChan>>\n Dst, MsgBin
 
 SgwCtrlSender -> SgwCtrlSender : Send a UDP packet
 

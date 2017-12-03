@@ -5,6 +5,8 @@ import (
 	"net"
 	"sync"
 
+	"github.com/craftone/gojiko/domain/gtpSessionCmd"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/craftone/gojiko/gtpv2c/ie"
@@ -57,7 +59,7 @@ func (r *gtpSessionRepo) newSession(
 		status: gssIdle,
 		mtx:    sync.RWMutex{},
 
-		cmdChan:      make(chan gtpSessionCmd),
+		cmdChan:      make(chan gtpSessionCmd.Cmd),
 		ctrlSendChan: sgwCtrlSendChan,
 		ctrlRecvChan: make(chan UDPpacket),
 		dataSendChan: make(chan UDPpacket),
