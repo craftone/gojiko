@@ -145,5 +145,8 @@ func (s *SgwCtrl) CreateSession(
 	cmdChan := theGtpSessionRepo.getBySessionID(gsid).cmdChan
 	cmdChan <- cmd
 
+	res := <-cmdChan
+	fmt.Print(res)
+
 	return fmt.Errorf("Now be implementing")
 }

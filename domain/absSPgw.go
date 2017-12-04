@@ -44,7 +44,7 @@ func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) 
 	if err != nil {
 		return nil, err
 	}
-	res := &absSPgw{
+	spgw := &absSPgw{
 		addr:        addr,
 		conn:        conn,
 		recovery:    recovery,
@@ -53,8 +53,8 @@ func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) 
 		toSender:    make(chan UDPpacket),
 		opSpgwMap:   make(map[string]*opSPgw),
 	}
-	go absSPgwSenderRoutine(res, res.toSender)
-	return res, nil
+	go absSPgwSenderRoutine(spgw, spgw.toSender)
+	return spgw, nil
 }
 
 // absSPgwSenderRoutine is for GoRoutine
@@ -66,7 +66,7 @@ func absSPgwSenderRoutine(spgw *absSPgw, recvChan <-chan UDPpacket) {
 	myLog.Info("Start a SPgw Sender goroutine")
 
 	for msg := range recvChan {
-		myLog.Debug("Received packet : ", msg)
+		myLog.Debug("Sending packet : ", msg)
 		conn := spgw.conn
 		_, err := conn.WriteToUDP(msg.body, &msg.raddr)
 		if err != nil {

@@ -3,6 +3,7 @@ package domain
 import (
 	"net"
 	"sync"
+	"time"
 
 	gsc "github.com/craftone/gojiko/domain/gtpSessionCmd"
 
@@ -116,5 +117,14 @@ func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq) error {
 
 	raddr := session.pgwCtrlAddr
 	session.ctrlSendChan <- UDPpacket{raddr, csReqBin}
+
+	select {
+	case recv := <-session.ctrlRecvChan:
+		log.Debug("received packet from %v body: %v", recv.raddr, recv.body)
+	case <-time.After(1 * time.Second):
+		log.Error("Timeout waiting Create Session Response")
+		session.cmdChan <- gsc.CreateSessionRes{Code: gsc.CSResTimeout, Msg: "Timeout"}
+	}
+
 	return nil
 }
