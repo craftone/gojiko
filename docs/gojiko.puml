@@ -12,6 +12,8 @@ class AbsSPgw {
   toSender chan UDPpacket
   conn *UDPConn
 
+  map [UDPaddr]OpSPgw
+
   NextTeid() TEID
 }
 note left
@@ -31,13 +33,13 @@ class SgwCtrlRepo {
   Add(*SgwCtrl) error
   Remove(*SgwCtrl) error
 }
-SgwCtrlRepo -> SgwCtrl
+SgwCtrlRepo *--"*" SgwCtrl
 note left
   デフォルトで127.0.0.1:2123 を持つ
 end note
 
 class SgwCtrl {
-  map [UDPaddr]OpPgwCtrl
+  gtpSessionRepo
   CreateSession(pgwUDPAddr, IMSI, etc.) SessionID
 }
 
@@ -75,8 +77,10 @@ SgwCtrl ..> GtpSessionRoutine : chan CMD
 
 class OpSPgw {
   numOfSessions int
+  conn *UDPconn
   fromReceiver chan UDPpacket
 }
+
 SgwCtrl *--> "*" OpSPgw
 
 class SgwEchoCMgr <<GoRoutine>>
@@ -91,14 +95,14 @@ SgwCtrlReceiver .> SgwEchoCMgr : received packets
 ' GtpSession part
 '''''''''''''''''''
 
-class GtpSessionsRepo {
+class GtpSessionRepo {
   newSession(SgwCtrl, SgwCtrlTEID, SgwDataTEID, \n\
          PgwCtrlAddr, IMSI, etc) (SessionID, error)
-  FindCtrlChan(SgwCtrl, )
-  FindSgwCtrl(UDPAddr, SgwCtrlTeid) (GtpSessionID, bool)
-  FindSgwData(UDPAddr, SgwDataTeid) (GtpSessionID, bool)
+  getBySessionID(id SessionID) *gtpSession
+  findByFteid(FTEID) *gtpSession
 }
-GtpSessionsRepo ..> GtpSession : Create
+GtpSessionRepo ..> GtpSession : Create
+SgwCtrl *-- GtpSessionRepo
 
 class GtpSession {
   mtx Mutex

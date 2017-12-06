@@ -10,7 +10,6 @@ import (
 
 var log = newLogger()
 
-var theGtpSessionRepo *gtpSessionRepo
 var theSgwCtrlRepo *sgwCtrlRepo
 var defaultSgwCtrlAddr = net.UDPAddr{IP: net.IPv4(127, 0, 0, 1), Port: GtpControlPort}
 
@@ -24,8 +23,6 @@ func Init() error {
 	}
 	theSgwCtrlRepo = newSgwCtrlRepo()
 	theSgwCtrlRepo.AddCtrl(sgwCtrl)
-
-	theGtpSessionRepo = newGtpSessionRepo()
 
 	return nil
 }

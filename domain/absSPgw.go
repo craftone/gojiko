@@ -4,6 +4,8 @@ import (
 	"net"
 	"sync"
 
+	"github.com/craftone/gojiko/gtpv2c"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/craftone/gojiko/gtp"
@@ -24,8 +26,8 @@ type absSPgw struct {
 	mtxTeidSeq sync.Mutex
 	pair       SPgwIf
 
-	fromRceiver chan UDPpacket
-	toSender    chan UDPpacket
+	fromReceiver chan UDPpacket
+	toSender     chan UDPpacket
 
 	opSpgwMap map[string]*opSPgw //Key : UDPAddr.toString()
 	mtxOp     sync.RWMutex
@@ -45,27 +47,28 @@ func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) 
 		return nil, err
 	}
 	spgw := &absSPgw{
-		addr:        addr,
-		conn:        conn,
-		recovery:    recovery,
-		pair:        pair,
-		fromRceiver: make(chan UDPpacket),
-		toSender:    make(chan UDPpacket),
-		opSpgwMap:   make(map[string]*opSPgw),
+		addr:         addr,
+		conn:         conn,
+		recovery:     recovery,
+		pair:         pair,
+		fromReceiver: make(chan UDPpacket),
+		toSender:     make(chan UDPpacket),
+		opSpgwMap:    make(map[string]*opSPgw),
 	}
 	go absSPgwSenderRoutine(spgw, spgw.toSender)
+	go absSPgwReceiverRoutine(spgw, spgw.fromReceiver)
 	return spgw, nil
 }
 
 // absSPgwSenderRoutine is for GoRoutine
-func absSPgwSenderRoutine(spgw *absSPgw, recvChan <-chan UDPpacket) {
+func absSPgwSenderRoutine(spgw *absSPgw, sendChan <-chan UDPpacket) {
 	myLog := log.WithFields(logrus.Fields{
 		"laddr":   spgw.addr,
 		"routine": "SPgwSender",
 	})
 	myLog.Info("Start a SPgw Sender goroutine")
 
-	for msg := range recvChan {
+	for msg := range sendChan {
 		myLog.Debug("Sending packet : ", msg)
 		conn := spgw.conn
 		_, err := conn.WriteToUDP(msg.body, &msg.raddr)
@@ -73,6 +76,31 @@ func absSPgwSenderRoutine(spgw *absSPgw, recvChan <-chan UDPpacket) {
 			myLog.Error(err)
 			continue
 		}
+	}
+}
+
+// absSPgwReceiverRoutine is for GoRoutine
+func absSPgwReceiverRoutine(spgw *absSPgw, recvChan chan<- UDPpacket) {
+	myLog := log.WithFields(logrus.Fields{
+		"laddr":   spgw.addr,
+		"routine": "SPgwReceiver",
+	})
+	myLog.Info("Start a SPgw Receiver goroutine")
+
+	buf := make([]byte, 2000)
+	for {
+		n, addr, err := spgw.conn.ReadFromUDP(buf)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+		myLog.Debug("Received packet from %s : %v", buf[:n], addr.String())
+		msg, _, err := gtpv2c.Unmarshal(buf[:n])
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+		myLog.Debug("Received GTPv2c MSG : %v", msg)
 	}
 }
 

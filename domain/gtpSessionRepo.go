@@ -110,8 +110,8 @@ func (r *gtpSessionRepo) nextID() SessionID {
 	return res
 }
 
-// getBySessionID returns nil when the id does not exist.
-func (r *gtpSessionRepo) getBySessionID(id SessionID) *gtpSession {
+// findBySessionID returns nil when the id does not exist.
+func (r *gtpSessionRepo) findBySessionID(id SessionID) *gtpSession {
 	r.mtx4Map.RLock()
 	defer r.mtx4Map.RUnlock()
 	if val, ok := r.sessions[id]; ok {

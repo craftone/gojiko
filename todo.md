@@ -40,7 +40,8 @@
     + SgwCtrlSender を実装
       + ~~OpSPgw関連のFindOrCreate等をSgwCtrlではなくAbsSPgwに実装する~~
       + ~~connの保有者をOpSPgwからabsSPgwに移す~~
-
+    + SgwCtrlReceiver を実装
+      + receiverのテストを書く
 
   + PgwCtrl.CreateSession() を実装
     + Sender/Receiver を実装
@@ -54,5 +55,10 @@
   + PgwData.RecvUDP() を実装
 
   + SgwDataSender / SgwDataReceiver を実装
+
+- Config管理
+  + S5のtimeout, retry数をコンフィグで指定できるようにする
+
+- SPgwのgoroutine終了。UDP read timeoutもさせる必要がある。
 
 - Monitor を実装

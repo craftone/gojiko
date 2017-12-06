@@ -13,6 +13,7 @@ import (
 
 type SgwCtrl struct {
 	*absSPgw
+	*gtpSessionRepo
 }
 
 // newSgwCtrl creates a SgwCtrl and a paired SgwData that have same
@@ -28,7 +29,8 @@ func newSgwCtrl(addr net.UDPAddr, dataPort int, recovery byte) (*SgwCtrl, error)
 	if err != nil {
 		return nil, err
 	}
-	sgwCtrl := &SgwCtrl{absSPgw}
+	gtpSessionRepo := newGtpSessionRepo()
+	sgwCtrl := &SgwCtrl{absSPgw, gtpSessionRepo}
 
 	sgwDataUDPAddr := net.UDPAddr{IP: addr.IP, Port: dataPort}
 	sgwCtrl.pair, err = newSgwData(sgwDataUDPAddr, recovery, sgwCtrl)
@@ -116,7 +118,7 @@ func (s *SgwCtrl) CreateSession(
 	}
 
 	// make a new session to the GTP Session Repo
-	gsid, err := theGtpSessionRepo.newSession(
+	gsid, err := s.gtpSessionRepo.newSession(
 		s, pgwCtrlIPv4,
 		s.toSender,
 		sgwCtrlFTEID,
@@ -142,7 +144,7 @@ func (s *SgwCtrl) CreateSession(
 	}
 
 	// Send the CMD to the session's CMD chan
-	cmdChan := theGtpSessionRepo.getBySessionID(gsid).cmdChan
+	cmdChan := s.gtpSessionRepo.findBySessionID(gsid).cmdChan
 	cmdChan <- cmd
 
 	res := <-cmdChan

@@ -12,6 +12,7 @@ import (
 func TestGtpSessionsRepo_newSession(t *testing.T) {
 	Init()
 
+	theGtpSessionRepo := theSgwCtrlRepo.getCtrl(defaultSgwCtrlAddr).gtpSessionRepo
 	// at the first, there should be no session.
 	assert.Equal(t, 0, theGtpSessionRepo.numOfSessions())
 
@@ -42,7 +43,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, theGtpSessionRepo.numOfSessions())
-	session := theGtpSessionRepo.getBySessionID(sid)
+	session := theGtpSessionRepo.findBySessionID(sid)
 	assert.Equal(t, "22342345234", session.imsi.Value())
 
 	// Error when same pgw
@@ -58,10 +59,10 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, 2, theGtpSessionRepo.numOfSessions())
-	session2 := theGtpSessionRepo.getBySessionID(sid2)
+	session2 := theGtpSessionRepo.findBySessionID(sid2)
 	assert.Equal(t, "22342345234", session2.imsi.Value())
 
 	// get when the sid does not exist
-	session = theGtpSessionRepo.getBySessionID(SessionID(2343242))
+	session = theGtpSessionRepo.findBySessionID(SessionID(2343242))
 	assert.Nil(t, session)
 }
