@@ -46,7 +46,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	session := theGtpSessionRepo.findBySessionID(sid)
 	assert.Equal(t, "22342345234", session.imsi.Value())
 
-	// Error when same pgw
+	// Error when same SGW-CTRL-TEID
 	sid2, err := theGtpSessionRepo.newSession(
 		sgwCtrl,
 		net.IPv4(100, 100, 100, 100),
@@ -55,10 +55,9 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		imsi, msisdn, ebi, paa, apn, ambr,
 		ratType, servingNetwork, pdnType,
 	)
-	assert.Equal(t, SessionID(1), sid2)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
-	assert.Equal(t, 2, theGtpSessionRepo.numOfSessions())
+	assert.Equal(t, 1, theGtpSessionRepo.numOfSessions())
 	session2 := theGtpSessionRepo.findBySessionID(sid2)
 	assert.Equal(t, "22342345234", session2.imsi.Value())
 

@@ -5,6 +5,8 @@ import (
 	"net"
 	"sync"
 
+	"github.com/craftone/gojiko/gtp"
+
 	"github.com/craftone/gojiko/domain/gtpSessionCmd"
 
 	"github.com/sirupsen/logrus"
@@ -19,8 +21,9 @@ type SessionID uint32
 // by a tuple of SgwCtrlAddr, PgwCtrlAddr, imsi and ebi or
 // by SgwCtrlFTEID.
 type gtpSessionRepo struct {
-	sessions map[SessionID]*gtpSession
-	mtx4Map  sync.RWMutex
+	sessionsByID       map[SessionID]*gtpSession
+	sessionsByCtrlTeid map[gtp.Teid]*gtpSession
+	mtx4Map            sync.RWMutex
 
 	nextSessionID SessionID
 	mtx4Id        sync.RWMutex
@@ -29,7 +32,8 @@ type gtpSessionRepo struct {
 func newGtpSessionRepo() *gtpSessionRepo {
 	log.Info("Initialize GTP Sessions Repository")
 	return &gtpSessionRepo{
-		sessions: make(map[SessionID]*gtpSession),
+		sessionsByID:       make(map[SessionID]*gtpSession),
+		sessionsByCtrlTeid: make(map[gtp.Teid]*gtpSession),
 	}
 }
 
@@ -94,10 +98,15 @@ func (r *gtpSessionRepo) newSession(
 
 	r.mtx4Map.Lock()
 	defer r.mtx4Map.Unlock()
-	if _, ok := r.sessions[session.id]; ok {
+	if _, ok := r.sessionsByID[session.id]; ok {
 		return 0, fmt.Errorf("There is already the session that have the ID : %d", session.id)
 	}
-	r.sessions[session.id] = session
+	teid := session.sgwCtrlFTEID.Teid()
+	if _, ok := r.sessionsByCtrlTeid[teid]; ok {
+		return 0, fmt.Errorf("There is already the session that have the TEID : %d", teid)
+	}
+	r.sessionsByID[session.id] = session
+	r.sessionsByCtrlTeid[teid] = session
 	go gtpSessionRoutine(session)
 	return session.id, nil
 }
@@ -114,12 +123,22 @@ func (r *gtpSessionRepo) nextID() SessionID {
 func (r *gtpSessionRepo) findBySessionID(id SessionID) *gtpSession {
 	r.mtx4Map.RLock()
 	defer r.mtx4Map.RUnlock()
-	if val, ok := r.sessions[id]; ok {
+	if val, ok := r.sessionsByID[id]; ok {
+		return val
+	}
+	return nil
+}
+
+// findByTeid returns nil when the id does not exist.
+func (r *gtpSessionRepo) findByTeid(teid gtp.Teid) *gtpSession {
+	r.mtx4Map.RLock()
+	defer r.mtx4Map.RUnlock()
+	if val, ok := r.sessionsByCtrlTeid[teid]; ok {
 		return val
 	}
 	return nil
 }
 
 func (r *gtpSessionRepo) numOfSessions() int {
-	return len(r.sessions)
+	return len(r.sessionsByID)
 }
