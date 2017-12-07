@@ -10,8 +10,6 @@ import (
 )
 
 func TestGtpSessionsRepo_newSession(t *testing.T) {
-	Init()
-
 	theGtpSessionRepo := theSgwCtrlRepo.getCtrl(defaultSgwCtrlAddr).gtpSessionRepo
 	// at the first, there should be no session.
 	assert.Equal(t, 0, theGtpSessionRepo.numOfSessions())
@@ -47,7 +45,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	assert.Equal(t, "22342345234", session.imsi.Value())
 
 	// Error when same SGW-CTRL-TEID
-	sid2, err := theGtpSessionRepo.newSession(
+	_, err = theGtpSessionRepo.newSession(
 		sgwCtrl,
 		net.IPv4(100, 100, 100, 100),
 		sgwCtrlSendChan,
@@ -56,12 +54,30 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		ratType, servingNetwork, pdnType,
 	)
 	assert.Error(t, err)
-
 	assert.Equal(t, 1, theGtpSessionRepo.numOfSessions())
-	session2 := theGtpSessionRepo.findBySessionID(sid2)
-	assert.Equal(t, "22342345234", session2.imsi.Value())
 
-	// get when the sid does not exist
+	// No error when other SGW-CTRL-TEID
+	sgwCtrlFTEID2, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpCIf, 2)
+	imsi2 := "012345678901234"
+	imsi2ie, _ := ie.NewImsi(0, imsi2)
+	sid2, err := theGtpSessionRepo.newSession(
+		sgwCtrl,
+		net.IPv4(100, 100, 100, 100),
+		sgwCtrlSendChan,
+		sgwCtrlFTEID2, sgwDataFTEID,
+		imsi2ie, msisdn, ebi, paa, apn, ambr,
+		ratType, servingNetwork, pdnType,
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, theGtpSessionRepo.numOfSessions())
+
+	// Assert to find 2nd session by SessionID and TEID
+	session2 := theGtpSessionRepo.findBySessionID(sid2)
+	assert.Equal(t, imsi2, session2.imsi.Value())
+	session2t := theGtpSessionRepo.findByTeid(2)
+	assert.Equal(t, imsi2, session2t.imsi.Value())
+
+	// find nil when the sid does not exist
 	session = theGtpSessionRepo.findBySessionID(SessionID(2343242))
 	assert.Nil(t, session)
 }
