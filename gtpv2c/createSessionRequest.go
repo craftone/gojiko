@@ -59,7 +59,7 @@ func NewCreateSessionRequest(seqNum uint32, csReqArg CreateSessionRequestArg) (*
 	}
 
 	return &CreateSessionRequest{
-		newHeader(createSessionRequestNum, false, true, 0, seqNum),
+		newHeader(CreateSessionRequestNum, false, true, 0, seqNum),
 		csReqArg.Imsi,
 		csReqArg.Msisdn,
 		csReqArg.Mei,
@@ -354,7 +354,7 @@ func (c *CreateSessionRequest) Marshal() []byte {
 }
 
 func unmarshalCreateSessionRequest(h header, buf []byte) (*CreateSessionRequest, error) {
-	if h.messageType != createSessionRequestNum {
+	if h.messageType != CreateSessionRequestNum {
 		log.Fatal("Invalud messageType")
 	}
 

@@ -4,8 +4,6 @@ import (
 	"net"
 	"sync"
 
-	"github.com/craftone/gojiko/gtpv2c"
-
 	"github.com/sirupsen/logrus"
 
 	"github.com/craftone/gojiko/gtp"
@@ -26,8 +24,7 @@ type absSPgw struct {
 	mtxTeidSeq sync.Mutex
 	pair       SPgwIf
 
-	fromReceiver chan UDPpacket
-	toSender     chan UDPpacket
+	toSender chan UDPpacket
 
 	opSpgwMap map[string]*opSPgw //Key : UDPAddr.toString()
 	mtxOp     sync.RWMutex
@@ -47,16 +44,14 @@ func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) 
 		return nil, err
 	}
 	spgw := &absSPgw{
-		addr:         addr,
-		conn:         conn,
-		recovery:     recovery,
-		pair:         pair,
-		fromReceiver: make(chan UDPpacket),
-		toSender:     make(chan UDPpacket),
-		opSpgwMap:    make(map[string]*opSPgw),
+		addr:      addr,
+		conn:      conn,
+		recovery:  recovery,
+		pair:      pair,
+		toSender:  make(chan UDPpacket),
+		opSpgwMap: make(map[string]*opSPgw),
 	}
 	go absSPgwSenderRoutine(spgw, spgw.toSender)
-	go absSPgwReceiverRoutine(spgw, spgw.fromReceiver)
 	return spgw, nil
 }
 
@@ -76,31 +71,6 @@ func absSPgwSenderRoutine(spgw *absSPgw, sendChan <-chan UDPpacket) {
 			myLog.Error(err)
 			continue
 		}
-	}
-}
-
-// absSPgwReceiverRoutine is for GoRoutine
-func absSPgwReceiverRoutine(spgw *absSPgw, recvChan chan<- UDPpacket) {
-	myLog := log.WithFields(logrus.Fields{
-		"laddr":   spgw.addr,
-		"routine": "SPgwReceiver",
-	})
-	myLog.Info("Start a SPgw Receiver goroutine")
-
-	buf := make([]byte, 2000)
-	for {
-		n, addr, err := spgw.conn.ReadFromUDP(buf)
-		if err != nil {
-			log.Error(err)
-			continue
-		}
-		myLog.Debug("Received packet from %s : %v", buf[:n], addr.String())
-		msg, _, err := gtpv2c.Unmarshal(buf[:n])
-		if err != nil {
-			log.Error(err)
-			continue
-		}
-		myLog.Debug("Received GTPv2c MSG : %v", msg)
 	}
 }
 

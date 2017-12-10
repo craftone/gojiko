@@ -41,8 +41,10 @@
       + ~~OpSPgw関連のFindOrCreate等をSgwCtrlではなくAbsSPgwに実装する~~
       + ~~connの保有者をOpSPgwからabsSPgwに移す~~
     + SgwCtrlReceiver を実装
-      + receiverで宛先TEIDを見てパケットを振り分ける。ECHOだったらECHOMgrへ振り分ける。
-      
+      + ~~receiverで宛先TEIDを見てパケットを振り分ける~~ @ 2017/12/10
+      + 受け取ったパケットを解析してセッション情報をアップデートする
+      + ECHOパケットを適切なECHOMgrへ振り分ける。
+
 
   + PgwCtrl.CreateSession() を実装
     + Sender/Receiver を実装

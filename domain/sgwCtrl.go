@@ -1,10 +1,13 @@
 package domain
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
 
 	"github.com/craftone/gojiko/domain/gtpSessionCmd"
+	"github.com/craftone/gojiko/gtp"
+	"github.com/craftone/gojiko/gtpv2c"
 
 	"github.com/craftone/gojiko/domain/apns"
 	"github.com/craftone/gojiko/gtpv2c/ie"
@@ -38,6 +41,8 @@ func newSgwCtrl(addr net.UDPAddr, dataPort int, recovery byte) (*SgwCtrl, error)
 		return nil, err
 	}
 
+	go sgwCtrlReceiverRoutine(sgwCtrl)
+
 	return sgwCtrl, nil
 }
 
@@ -59,7 +64,7 @@ func (s *SgwCtrl) CreateSession(
 		return err
 	}
 
-	// Take SGW Ctrl F-TEID and SGW Data F-TEID
+	// Make SGW Ctrl F-TEID and SGW Data F-TEID
 	sgwCtrlFTEID, err := ie.NewFteid(0, s.addr.IP, nil, ie.S5S8SgwGtpCIf, s.nextTeid())
 	if err != nil {
 		return err
@@ -71,7 +76,7 @@ func (s *SgwCtrl) CreateSession(
 		return err
 	}
 
-	// make IMSI, MSISDN, etc
+	// Make IMSI, MSISDN, etc
 	imsiIE, err := ie.NewImsi(0, imsi)
 	if err != nil {
 		return err
@@ -137,18 +142,58 @@ func (s *SgwCtrl) CreateSession(
 		return err
 	}
 
-	// Make GTP Session CMD
+	// Make GTP Session CMD of Create Session Request
 	cmd, err := gtpSessionCmd.NewCreateSessionReq(mcc, mnc, mei)
 	if err != nil {
 		return err
 	}
 
 	// Send the CMD to the session's CMD chan
-	cmdChan := s.gtpSessionRepo.findBySessionID(gsid).cmdChan
-	cmdChan <- cmd
+	session := s.gtpSessionRepo.findBySessionID(gsid)
+	session.cmdReqChan <- cmd
 
-	res := <-cmdChan
+	res := <-session.cmdResChan
 	fmt.Print(res)
 
 	return fmt.Errorf("Now be implementing")
+}
+
+// sgwCtrlReceiverRoutine is for GoRoutine
+func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
+	myLog := log.WithFields(logrus.Fields{
+		"laddr":   sgwCtrl.addr,
+		"routine": "SPgwReceiver",
+	})
+	myLog.Info("Start a SPgw Receiver goroutine")
+
+	buf := make([]byte, 2000)
+	for {
+		n, raddr, err := sgwCtrl.conn.ReadFromUDP(buf)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+		myLog.Debug("Received packet from %s : %v", buf[:n], raddr.String())
+
+		if n < 8 {
+			log.Errorf("Too short packet : %v", buf[:n])
+			continue
+		}
+		msgType := gtpv2c.MessageTypeNum(buf[1])
+		switch msgType {
+		case gtpv2c.EchoRequestNum, gtpv2c.EchoResponseNum:
+			log.Error("Not yet be implemented!")
+			// Not yet be implemented
+		case gtpv2c.CreateSessionResponseNum:
+			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
+			sess := sgwCtrl.findByTeid(teid)
+			if sess == nil {
+				log.Debug("No session that have the teid : %d", teid)
+				continue
+			}
+			sess.fromCtrlReceiverChan <- UDPpacket{*raddr, buf[:n]}
+		default:
+			log.Debug("Unkown Message Type : %d", msgType)
+		}
+	}
 }

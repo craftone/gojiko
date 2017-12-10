@@ -3,6 +3,7 @@ package domain
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"sync"
 
 	"github.com/craftone/gojiko/gtp"
@@ -23,6 +24,7 @@ type SessionID uint32
 type gtpSessionRepo struct {
 	sessionsByID       map[SessionID]*gtpSession
 	sessionsByCtrlTeid map[gtp.Teid]*gtpSession
+	sessionsByImsiEbi  map[string]*gtpSession
 	mtx4Map            sync.RWMutex
 
 	nextSessionID SessionID
@@ -34,6 +36,7 @@ func newGtpSessionRepo() *gtpSessionRepo {
 	return &gtpSessionRepo{
 		sessionsByID:       make(map[SessionID]*gtpSession),
 		sessionsByCtrlTeid: make(map[gtp.Teid]*gtpSession),
+		sessionsByImsiEbi:  make(map[string]*gtpSession),
 	}
 }
 
@@ -63,11 +66,12 @@ func (r *gtpSessionRepo) newSession(
 		status: gssIdle,
 		mtx:    sync.RWMutex{},
 
-		cmdChan:      make(chan gtpSessionCmd.Cmd),
-		ctrlSendChan: sgwCtrlSendChan,
-		ctrlRecvChan: make(chan UDPpacket),
-		dataSendChan: make(chan UDPpacket),
-		dataRecvChan: make(chan UDPpacket),
+		cmdReqChan:           make(chan gtpSessionCmd.Cmd),
+		cmdResChan:           make(chan gtpSessionCmd.Res),
+		toCtrlSenderChan:     sgwCtrlSendChan,
+		fromCtrlReceiverChan: make(chan UDPpacket),
+		toDataSenderChan:     make(chan UDPpacket),
+		fromDataReceiverChan: make(chan UDPpacket),
 
 		sgwCtrl:      sgwCtrl,
 		sgwCtrlFTEID: sgwCtrlFTEID,
@@ -105,8 +109,14 @@ func (r *gtpSessionRepo) newSession(
 	if _, ok := r.sessionsByCtrlTeid[teid]; ok {
 		return 0, fmt.Errorf("There is already the session that have the TEID : %d", teid)
 	}
+	imsiEbi := imsi.Value() + "_" + strconv.Itoa(int(ebi.Value()))
+	if _, ok := r.sessionsByImsiEbi[imsiEbi]; ok {
+		return 0, fmt.Errorf("There is already the session that have the IMSI : %s and EBI : %d", imsi.Value(), ebi.Value())
+	}
+
 	r.sessionsByID[session.id] = session
 	r.sessionsByCtrlTeid[teid] = session
+	r.sessionsByImsiEbi[imsiEbi] = session
 	go gtpSessionRoutine(session)
 	return session.id, nil
 }
@@ -134,6 +144,16 @@ func (r *gtpSessionRepo) findByTeid(teid gtp.Teid) *gtpSession {
 	r.mtx4Map.RLock()
 	defer r.mtx4Map.RUnlock()
 	if val, ok := r.sessionsByCtrlTeid[teid]; ok {
+		return val
+	}
+	return nil
+}
+
+func (r *gtpSessionRepo) findByImsiEbi(imsi string, ebi byte) *gtpSession {
+	r.mtx4Map.RLock()
+	defer r.mtx4Map.RUnlock()
+	imsiEbi := imsi + "_" + strconv.Itoa(int(ebi))
+	if val, ok := r.sessionsByImsiEbi[imsiEbi]; ok {
 		return val
 	}
 	return nil

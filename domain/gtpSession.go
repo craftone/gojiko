@@ -6,6 +6,7 @@ import (
 	"time"
 
 	gsc "github.com/craftone/gojiko/domain/gtpSessionCmd"
+	"github.com/sirupsen/logrus"
 
 	"github.com/craftone/gojiko/gtpv2c"
 
@@ -25,11 +26,12 @@ type gtpSession struct {
 	status gtpSessionStatus
 	mtx    sync.RWMutex
 
-	cmdChan      chan gsc.Cmd
-	ctrlSendChan chan UDPpacket
-	ctrlRecvChan chan UDPpacket
-	dataSendChan chan UDPpacket
-	dataRecvChan chan UDPpacket
+	cmdReqChan           chan gsc.Cmd
+	cmdResChan           chan gsc.Res
+	toCtrlSenderChan     chan UDPpacket
+	fromCtrlReceiverChan chan UDPpacket
+	toDataSenderChan     chan UDPpacket
+	fromDataReceiverChan chan UDPpacket
 
 	sgwCtrl      *SgwCtrl
 	sgwCtrlFTEID *ie.Fteid
@@ -58,12 +60,12 @@ func gtpSessionRoutine(session *gtpSession) {
 	myLog := log.WithField("SessionID", session.id)
 	myLog.Debug("Start a GTP session goroutine")
 
-	for msg := range session.cmdChan {
+	for msg := range session.cmdReqChan {
 		myLog.Debugf("Received CMD : %v", msg)
 
 		switch cmd := msg.(type) {
 		case gsc.CreateSessionReq:
-			err := procCreateSession(session, cmd)
+			err := procCreateSession(session, cmd, myLog)
 			if err != nil {
 				log.Error(err)
 			}
@@ -71,7 +73,7 @@ func gtpSessionRoutine(session *gtpSession) {
 	}
 }
 
-func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq) error {
+func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq, myLog *logrus.Entry) error {
 	session.status = gssCSReqSending
 	seqNum := session.sgwCtrl.nextSeqNum()
 
@@ -115,15 +117,17 @@ func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq) error {
 	}
 	csReqBin := csReq.Marshal()
 
+	// Send a CSReq packet to the PGW
 	raddr := session.pgwCtrlAddr
-	session.ctrlSendChan <- UDPpacket{raddr, csReqBin}
+	session.toCtrlSenderChan <- UDPpacket{raddr, csReqBin}
 
 	select {
-	case recv := <-session.ctrlRecvChan:
-		log.Debug("received packet from %v body: %v", recv.raddr, recv.body)
+	case recv := <-session.fromCtrlReceiverChan:
+		myLog.Debugf("received packet from %v body: %v", recv.raddr, recv.body)
+		session.cmdResChan <- gsc.Res{Code: gsc.ResOK, Msg: "OK?"}
 	case <-time.After(1 * time.Second):
-		log.Error("Timeout waiting Create Session Response")
-		session.cmdChan <- gsc.CreateSessionRes{Code: gsc.CSResTimeout, Msg: "Timeout"}
+		myLog.Error("Timeout waiting Create Session Response")
+		session.cmdResChan <- gsc.Res{Code: gsc.ResTimeout, Msg: "Timeout"}
 	}
 
 	return nil

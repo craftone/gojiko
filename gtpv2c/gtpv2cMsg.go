@@ -10,18 +10,18 @@ import (
 	"github.com/craftone/gojiko/util"
 )
 
-type messageTypeNum byte
+type MessageTypeNum byte
 
 const (
-	echoRequestNum                   messageTypeNum = 1
-	echoResponseNum                  messageTypeNum = 2
-	versionNotSupportedIndicationNum messageTypeNum = 3
-	createSessionRequestNum          messageTypeNum = 32
-	createSessionResponseNum         messageTypeNum = 33
-	deleteSessionRequestNum          messageTypeNum = 36
-	deleteSessionResponseNum         messageTypeNum = 37
-	deleteBearerRequestNum           messageTypeNum = 99
-	deleteBearerResponseNum          messageTypeNum = 100
+	EchoRequestNum                   MessageTypeNum = 1
+	EchoResponseNum                  MessageTypeNum = 2
+	VersionNotSupportedIndicationNum MessageTypeNum = 3
+	CreateSessionRequestNum          MessageTypeNum = 32
+	CreateSessionResponseNum         MessageTypeNum = 33
+	DeleteSessionRequestNum          MessageTypeNum = 36
+	DeleteSessionResponseNum         MessageTypeNum = 37
+	DeleteBearerRequestNum           MessageTypeNum = 99
+	DeleteBearerResponseNum          MessageTypeNum = 100
 )
 
 type GtpV2cMsg interface {
@@ -33,7 +33,7 @@ type GtpV2cMsg interface {
 
 type header struct {
 	version          byte
-	messageType      messageTypeNum
+	messageType      MessageTypeNum
 	piggybackingFlag bool
 	teidFlag         bool
 	length           uint16
@@ -41,7 +41,7 @@ type header struct {
 	seqNum           uint32
 }
 
-func newHeader(messageType messageTypeNum, piggybakingFlag, teidFlag bool, teid gtp.Teid, seqNum uint32) header {
+func newHeader(messageType MessageTypeNum, piggybakingFlag, teidFlag bool, teid gtp.Teid, seqNum uint32) header {
 	if seqNum > 0xffffff {
 		log.Fatal("GTPv2-C's sequence number must be unit24")
 	}
@@ -107,7 +107,7 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 	}
 	h.piggybackingFlag = util.GetBit(buf[0], 4)
 	h.teidFlag = util.GetBit(buf[0], 3)
-	h.messageType = messageTypeNum(buf[1])
+	h.messageType = MessageTypeNum(buf[1])
 	h.length = binary.BigEndian.Uint16(buf[2:4])
 	msgSize := int(h.length) + 4
 	if len(buf) < msgSize {
@@ -131,13 +131,13 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 
 	// Unmarshal body part
 	switch h.messageType {
-	case echoRequestNum:
+	case EchoRequestNum:
 		msg, err = unmarshalEchoRequest(h, body)
-	case echoResponseNum:
+	case EchoResponseNum:
 		msg, err = unmarshalEchoResponse(h, body)
-	case createSessionRequestNum:
+	case CreateSessionRequestNum:
 		msg, err = unmarshalCreateSessionRequest(h, body)
-	case createSessionResponseNum:
+	case CreateSessionResponseNum:
 		msg, err = unmarshalCreateSessionResponse(h, body)
 	default:
 		return nil, buf, fmt.Errorf("Unkown message type : %d", h.messageType)

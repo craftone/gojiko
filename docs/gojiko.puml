@@ -109,7 +109,10 @@ class GtpSession {
   sessionId         uint32
   status  // Init, Sended, Established,
   ctrlChan          chan GtpSesCmd
-  sgwCtrlSenderChan chan<- UDPpacket
+  toCtrlSenderChan     chan<- UDPpacket
+  fromCtrlReceiverChan <-chan UDPpacket
+  toDataSenderChan     chan<- UDPpacket
+  fromDataReceiverChan <-chan UDPpacket
 
   PgwCtrlFteid FTEID
   PgwDataFteid FTEID

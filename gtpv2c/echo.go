@@ -19,7 +19,7 @@ type EchoResponse struct {
 	echo
 }
 
-func newEcho(messageType messageTypeNum, seqNum uint32, recoveryValue byte) (echo, error) {
+func newEcho(messageType MessageTypeNum, seqNum uint32, recoveryValue byte) (echo, error) {
 	rec, err := ie.NewRecovery(0, recoveryValue)
 	if err != nil {
 		return echo{}, err
@@ -31,7 +31,7 @@ func newEcho(messageType messageTypeNum, seqNum uint32, recoveryValue byte) (ech
 }
 
 func NewEchoRequest(seqNum uint32, recoveryValue byte) (*EchoRequest, error) {
-	echo, err := newEcho(echoRequestNum, seqNum, recoveryValue)
+	echo, err := newEcho(EchoRequestNum, seqNum, recoveryValue)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func NewEchoRequest(seqNum uint32, recoveryValue byte) (*EchoRequest, error) {
 }
 
 func NewEchoResponse(seqNum uint32, recoveryValue byte) (*EchoResponse, error) {
-	echo, err := newEcho(echoResponseNum, seqNum, recoveryValue)
+	echo, err := newEcho(EchoResponseNum, seqNum, recoveryValue)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (e echo) Marshal() []byte {
 }
 
 func unmarshalEchoRequest(h header, buf []byte) (*EchoRequest, error) {
-	if h.messageType != echoRequestNum {
+	if h.messageType != EchoRequestNum {
 		log.Fatal("Invalud messageType")
 	}
 
@@ -65,7 +65,7 @@ func unmarshalEchoRequest(h header, buf []byte) (*EchoRequest, error) {
 }
 
 func unmarshalEchoResponse(h header, buf []byte) (*EchoResponse, error) {
-	if h.messageType != echoResponseNum {
+	if h.messageType != EchoResponseNum {
 		log.Fatal("Invalud messageType")
 	}
 
