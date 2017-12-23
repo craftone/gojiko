@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"net"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 )
 
 func TestGtpSessionsRepo_newSession(t *testing.T) {
+	fmt.Println(theSgwCtrlRepo)
 	theGtpSessionRepo := theSgwCtrlRepo.getCtrl(defaultSgwCtrlAddr).gtpSessionRepo
 	// at the first, there should be no session.
 	assert.Equal(t, 0, theGtpSessionRepo.numOfSessions())
@@ -17,8 +19,12 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	// add first session
 	sgwCtrl := theSgwCtrlRepo.GetCtrl(defaultSgwCtrlAddr).(*SgwCtrl)
 	sgwCtrlSendChan := make(chan UDPpacket)
-	sgwCtrlFTEID, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpCIf, 0)
-	sgwDataFTEID, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpUIf, 0)
+
+	sgwCtrlTEID := sgwCtrl.nextTeid()
+	sgwDataTEID := sgwCtrl.getPair().nextTeid()
+	sgwCtrlFTEID, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpCIf, sgwCtrlTEID)
+	sgwDataFTEID, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpUIf, sgwDataTEID)
+
 	imsi1 := "22342345234"
 	imsi1Ie, _ := ie.NewImsi(0, imsi1)
 	imsi2 := "22342345239"
@@ -63,7 +69,8 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	assert.Equal(t, 1, theGtpSessionRepo.numOfSessions())
 
 	// Error when same IMSI and EBI
-	sgwCtrlFTEID2, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpCIf, 2)
+	sgwCtrlTEID2 := sgwCtrl.nextTeid()
+	sgwCtrlFTEID2, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpCIf, sgwCtrlTEID2)
 	_, err = theGtpSessionRepo.newSession(
 		sgwCtrl,
 		net.IPv4(100, 100, 100, 100),
@@ -91,7 +98,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	session2 := theGtpSessionRepo.findBySessionID(sid2)
 	assert.Equal(t, imsi2, session2.imsi.Value())
 	// Assert to find 2nd session by TEID
-	session2t := theGtpSessionRepo.findByTeid(2)
+	session2t := theGtpSessionRepo.findByTeid(sgwCtrlTEID2)
 	assert.Equal(t, imsi2, session2t.imsi.Value())
 	// Assert to find 2nd session by IMSI and EBI
 	session2i := theGtpSessionRepo.findByImsiEbi(imsi2, ebi1)

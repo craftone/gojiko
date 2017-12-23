@@ -36,8 +36,8 @@ type gtpSession struct {
 	sgwCtrl      *SgwCtrl
 	sgwCtrlFTEID *ie.Fteid
 	sgwDataFTEID *ie.Fteid
-	pgwCtrlFTEID *ie.Fteid
-	pgwDataFTEID *ie.Fteid
+	pgwCtrlFTEID *ie.Fteid // at first, ZERO FTEID
+	pgwDataFTEID *ie.Fteid // at first, nil
 
 	pgwCtrlAddr net.UDPAddr
 	pgwDataAddr net.UDPAddr
@@ -47,7 +47,7 @@ type gtpSession struct {
 	imsi           *ie.Imsi
 	msisdn         *ie.Msisdn
 	ebi            *ie.Ebi
-	paa            *ie.Paa
+	paa            *ie.Paa // at first, 0.0.0.0
 	apn            *ie.Apn
 	ambr           *ie.Ambr
 	ratType        *ie.RatType
@@ -121,14 +121,51 @@ func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq, myLog *log
 	raddr := session.pgwCtrlAddr
 	session.toCtrlSenderChan <- UDPpacket{raddr, csReqBin}
 
-	select {
-	case recv := <-session.fromCtrlReceiverChan:
-		myLog.Debugf("received packet from %v body: %v", recv.raddr, recv.body)
-		session.cmdResChan <- gsc.Res{Code: gsc.ResOK, Msg: "OK?"}
-	case <-time.After(1 * time.Second):
-		myLog.Error("Timeout waiting Create Session Response")
-		session.cmdResChan <- gsc.Res{Code: gsc.ResTimeout, Msg: "Timeout"}
+	var res gsc.Res
+	afterChan := time.After(1 * time.Second)
+	for {
+		select {
+		case recv := <-session.fromCtrlReceiverChan:
+			myLog.Debugf("received packet from %v body: %v", recv.raddr, recv.body)
+
+			// Ensure received packet has sent from correct PGW address
+			if !recv.raddr.IP.Equal(session.pgwCtrlAddr.IP) ||
+				recv.raddr.Port != session.pgwCtrlAddr.Port {
+				myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %v , expected : %v", recv.raddr, session.pgwCtrlAddr)
+				continue
+			}
+
+			// Unmarchal received packet
+			msg, _, err := gtpv2c.Unmarshal(recv.body)
+			if err != nil {
+				myLog.Debugf("Received invalid GTPv2-C packet")
+				continue
+			}
+			myLog.Debugf("received GTPv2-C packet : %v", msg)
+
+			// Ensure received packete is a Create Session Response
+			csres, ok := msg.(*gtpv2c.CreateSessionResponse)
+			if !ok {
+				myLog.Debugf("Received packet is not a Create Session Response message.")
+				continue
+			}
+
+			// Set PGW's F-TEIDs into the session
+			session.pgwCtrlFTEID = csres.PgwCtrlFteid()
+			session.pgwDataFTEID = csres.BearerContextCeated().PgwDataFteid()
+			// Set PDN Address Allocation into the session
+			session.paa = csres.Paa()
+
+			res = gsc.Res{Code: gsc.ResOK, Msg: ""}
+			goto eof
+		case <-afterChan:
+			myLog.Error("Timeout to wait Create Session Response")
+			res = gsc.Res{Code: gsc.ResTimeout, Msg: "Timeout"}
+			goto eof
+		}
 	}
+eof:
+	session.cmdResChan <- res
 
 	return nil
 }

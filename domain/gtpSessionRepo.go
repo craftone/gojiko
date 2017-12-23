@@ -97,6 +97,9 @@ func (r *gtpSessionRepo) newSession(
 	myLog := log.WithFields(logrus.Fields{
 		"id":          session.id,
 		"pgwCtrlIPv4": fmt.Sprint(pgwCtrlIPv4),
+		"imsi":        session.imsi,
+		"ebi":         session.ebi,
+		"msisdn":      session.msisdn,
 	})
 	myLog.Debugf("New GTP session created")
 
@@ -107,7 +110,7 @@ func (r *gtpSessionRepo) newSession(
 	}
 	teid := session.sgwCtrlFTEID.Teid()
 	if _, ok := r.sessionsByCtrlTeid[teid]; ok {
-		return 0, fmt.Errorf("There is already the session that have the TEID : %d", teid)
+		return 0, fmt.Errorf("There is already the session that have the SGW-CTRL-TEID : %d", teid)
 	}
 	imsiEbi := imsi.Value() + "_" + strconv.Itoa(int(ebi.Value()))
 	if _, ok := r.sessionsByImsiEbi[imsiEbi]; ok {

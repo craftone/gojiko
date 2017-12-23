@@ -49,11 +49,11 @@ func newSgwCtrl(addr net.UDPAddr, dataPort int, recovery byte) (*SgwCtrl, error)
 func (s *SgwCtrl) CreateSession(
 	imsi, msisdn, mei, mcc, mnc, apnNI string,
 	ebi byte,
-) error {
+) (*gtpSessionCmd.Res, error) {
 	// Query APN's IP address
 	apn, err := apns.TheRepo().Find(apnNI, mcc, mnc)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	pgwCtrlIPv4 := apn.GetIP()
 	pgwCtrlAddr := net.UDPAddr{IP: pgwCtrlIPv4, Port: GtpControlPort}
@@ -61,65 +61,65 @@ func (s *SgwCtrl) CreateSession(
 	// Find or Create OpPgwCtrl
 	_, err = s.findOrCreateOpSPgw(pgwCtrlAddr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Make SGW Ctrl F-TEID and SGW Data F-TEID
 	sgwCtrlFTEID, err := ie.NewFteid(0, s.addr.IP, nil, ie.S5S8SgwGtpCIf, s.nextTeid())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sgwData := s.pair
 	sgwDataFTEID, err := ie.NewFteid(0, sgwData.UDPAddr().IP, nil, ie.S5S8SgwGtpUIf, sgwData.nextTeid())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Make IMSI, MSISDN, etc
 	imsiIE, err := ie.NewImsi(0, imsi)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	msisdnIE, err := ie.NewMsisdn(0, msisdn)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ebiIE, err := ie.NewEbi(0, ebi)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	paaIE, err := ie.NewPaa(0, ie.PdnTypeIPv4, net.IPv4(0, 0, 0, 0), nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	apnIE, err := ie.NewApn(0, apn.FullString())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ambrIE, err := ie.NewAmbr(0, 4294967, 4294967)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ratTypeIE, err := ie.NewRatType(0, 6)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	servingNetworkID, err := ie.NewServingNetwork(0, mcc, mnc)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	pdnType, err := ie.NewPdnType(0, 1)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// make a new session to the GTP Session Repo
@@ -139,13 +139,13 @@ func (s *SgwCtrl) CreateSession(
 		pdnType,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Make GTP Session CMD of Create Session Request
 	cmd, err := gtpSessionCmd.NewCreateSessionReq(mcc, mnc, mei)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Send the CMD to the session's CMD chan
@@ -153,9 +153,8 @@ func (s *SgwCtrl) CreateSession(
 	session.cmdReqChan <- cmd
 
 	res := <-session.cmdResChan
-	fmt.Print(res)
 
-	return fmt.Errorf("Now be implementing")
+	return &res, fmt.Errorf("Now be implementing")
 }
 
 // sgwCtrlReceiverRoutine is for GoRoutine

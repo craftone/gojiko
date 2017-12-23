@@ -32,7 +32,7 @@
 
 - ~~gtpv2cのTEIDをgtp.Teidに変更~~
 
-- PPGW/gojiko でパケットのやり取りを実装
+- PGW/gojiko でパケットのやり取りを実装
   + ~~APN repo を実装~~
   + SgwCtrl.CreateSession() を実装
     + ~~Sender/Receiverとの連携チャンネルに宛先アドレスも入れるようにする~~
@@ -42,7 +42,8 @@
       + ~~connの保有者をOpSPgwからabsSPgwに移す~~
     + SgwCtrlReceiver を実装
       + ~~receiverで宛先TEIDを見てパケットを振り分ける~~ @ 2017/12/10
-      + 受け取ったパケットを解析してセッション情報をアップデートする
+      + ~~受け取ったパケットを解析してセッション情報をアップデートする~~ @ 2017/12/18
+      + ~~CreateSessionResのタイムアウトが機能していないので修正する~~ @ 2017/12/21
       + ECHOパケットを適切なECHOMgrへ振り分ける。
 
 
