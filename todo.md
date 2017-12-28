@@ -32,7 +32,7 @@
 
 - ~~gtpv2cのTEIDをgtp.Teidに変更~~
 
-- PGW/gojiko でパケットのやり取りを実装
+- SgwCtrl.CreateSession()を実装
   + ~~APN repo を実装~~
   + SgwCtrl.CreateSession() を実装
     + ~~Sender/Receiverとの連携チャンネルに宛先アドレスも入れるようにする~~
@@ -44,24 +44,26 @@
       + ~~receiverで宛先TEIDを見てパケットを振り分ける~~ @ 2017/12/10
       + ~~受け取ったパケットを解析してセッション情報をアップデートする~~ @ 2017/12/18
       + ~~CreateSessionResのタイムアウトが機能していないので修正する~~ @ 2017/12/21
-      + ECHOパケットを適切なECHOMgrへ振り分ける。
-
-
-  + PgwCtrl.CreateSession() を実装
-    + Sender/Receiver を実装
-
-  + SgwCtrl.DeleteSession() を実装
-  + PgwCtrl.DeleteSession() を実装
-
-  + ECHO-Cを実装する
-
-  + SgwData.SendUDP() を実装
-  + PgwData.RecvUDP() を実装
-
-  + SgwDataSender / SgwDataReceiver を実装
 
 - Config管理
-  + S5のtimeout, retry数をコンフィグで指定できるようにする
+  + ~~viper利用で進める~~ @ 2017/12/28
+  + ~~S5のtimeout, retry数をコンフィグで指定できるようにする~~ @ 2017/12/28
+
+- logを別レイヤに切り出し
+
+
+- SgwCtrl.DeleteSession() を実装
+
+- ECHO-Cを実装する
+  + ECHOパケットを適切なECHOMgrへ振り分ける。
+
+- UDP通信を実装する
+  + SgwData.SendUDP() を実装
+  + UdpResponser を実装
+
+
+- Webサービス部の作成
+  + goa利用で進める
 
 - SPgwのgoroutine終了。UDP read timeoutもさせる必要がある。
 

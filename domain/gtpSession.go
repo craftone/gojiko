@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/craftone/gojiko/config"
 	gsc "github.com/craftone/gojiko/domain/gtpSessionCmd"
 	"github.com/sirupsen/logrus"
 
@@ -122,7 +123,7 @@ func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq, myLog *log
 	session.toCtrlSenderChan <- UDPpacket{raddr, csReqBin}
 
 	var res gsc.Res
-	afterChan := time.After(1 * time.Second)
+	afterChan := time.After(config.Gtpv2cTimeoutDuration())
 	for {
 		select {
 		case recv := <-session.fromCtrlReceiverChan:

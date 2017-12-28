@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/craftone/gojiko/config"
+
 	"github.com/craftone/gojiko/domain/apns"
 	"github.com/craftone/gojiko/domain/gtpSessionCmd"
 	"github.com/craftone/gojiko/gtp"
@@ -83,6 +85,11 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 	pgwIP := net.IPv4(127, 1, 1, 1)
 	apn, _ := apns.NewApn("example.com", "440", "10", []net.IP{pgwIP})
 	apns.TheRepo().Post(apn)
+
+	// change Gtpv2cTimeout temporarily
+	defaultGtpv2cTimeout := config.Gtpv2cTimeout()
+	config.SetGtpv2cTimeout(1)
+	defer config.SetGtpv2cTimeout(defaultGtpv2cTimeout)
 
 	sgwCtrl := theSgwCtrlRepo.getCtrl(defaultSgwCtrlAddr)
 	imsi := "440101234567892"
