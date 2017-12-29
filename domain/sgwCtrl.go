@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/dustin/go-humanize"
+
+	"github.com/craftone/gojiko/config"
+
 	"github.com/craftone/gojiko/domain/gtpSessionCmd"
 	"github.com/craftone/gojiko/gtp"
 	"github.com/craftone/gojiko/gtpv2c"
@@ -150,9 +154,18 @@ func (s *SgwCtrl) CreateSession(
 
 	// Send the CMD to the session's CMD chan
 	session := s.gtpSessionRepo.findBySessionID(gsid)
-	session.cmdReqChan <- cmd
 
+	retryCount := 0
+retry:
+	session.cmdReqChan <- cmd
 	res := <-session.cmdResChan
+	if res.Code == gtpSessionCmd.ResTimeout {
+		retryCount++
+		if retryCount <= config.Gtpv2cRetry() {
+			log.Debugf("Create Session Response timed out and retry : %s time", humanize.Ordinal(retryCount))
+			goto retry
+		}
+	}
 
 	return &res, fmt.Errorf("Now be implementing")
 }

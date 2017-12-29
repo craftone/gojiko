@@ -160,7 +160,7 @@ func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq, myLog *log
 			res = gsc.Res{Code: gsc.ResOK, Msg: ""}
 			goto eof
 		case <-afterChan:
-			myLog.Error("Timeout to wait Create Session Response")
+			myLog.Error("The Create Session Response timed out")
 			res = gsc.Res{Code: gsc.ResTimeout, Msg: "Timeout"}
 			goto eof
 		}
