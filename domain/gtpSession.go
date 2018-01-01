@@ -151,14 +151,22 @@ func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq, myLog *log
 				continue
 			}
 
-			// Set PGW's F-TEIDs into the session
-			session.pgwCtrlFTEID = csres.PgwCtrlFteid()
-			session.pgwDataFTEID = csres.BearerContextCeated().PgwDataFteid()
-			// Set PDN Address Allocation into the session
-			session.paa = csres.Paa()
+			causeType, causeMsg := ie.CauseDetail(csres.Cause().Value())
+			switch causeType {
+			case ie.CauseTypeAcceptance:
+				// Set PGW's F-TEIDs into the session
+				session.pgwCtrlFTEID = csres.PgwCtrlFteid()
+				session.pgwDataFTEID = csres.BearerContextCeated().PgwDataFteid()
+				// Set PDN Address Allocation into the session
+				session.paa = csres.Paa()
 
-			res = gsc.Res{Code: gsc.ResOK, Msg: ""}
-			goto eof
+				res = gsc.Res{Code: gsc.ResOK, Msg: causeMsg}
+				goto eof
+			default:
+				res = gsc.Res{Code: gsc.ResNG, Msg: causeMsg}
+				goto eof
+			}
+
 		case <-afterChan:
 			myLog.Error("The Create Session Response timed out")
 			res = gsc.Res{Code: gsc.ResTimeout, Msg: "Timeout"}

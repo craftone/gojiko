@@ -64,3 +64,37 @@ func TestUnmarshal_cause(t *testing.T) {
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }
+
+func TestCauseDetail(t *testing.T) {
+	type args struct {
+		c CauseValue
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  CauseType
+		want1 string
+	}{
+		{"", args{CauseValue(0)}, CauseTypeOther, "Unknown cause"},
+		{"", args{CauseValue(1)}, CauseTypeRequestInitial, "Unknown cause"},
+		{"", args{CauseValue(2)}, CauseTypeRequestInitial, "Local Detach"},
+		{"", args{CauseValue(15)}, CauseTypeRequestInitial, "Unknown cause"},
+		{"", args{CauseValue(16)}, CauseTypeAcceptance, "Request accepted"},
+		{"", args{CauseValue(63)}, CauseTypeAcceptance, "Unknown cause"},
+		{"", args{CauseValue(64)}, CauseTypeRejection, "Context Not Found"},
+		{"", args{CauseValue(239)}, CauseTypeRejection, "Unknown cause"},
+		{"", args{CauseValue(240)}, CauseTypeRequestInitial, "Unknown cause"},
+		{"", args{CauseValue(255)}, CauseTypeRequestInitial, "Unknown cause"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := CauseDetail(tt.args.c)
+			if got != tt.want {
+				t.Errorf("CauseDetail() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("CauseDetail() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}

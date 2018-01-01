@@ -3,9 +3,10 @@ package gtpSessionCmd
 type ResCode int
 
 const (
-	ResOK      ResCode = 200
-	ResNG      ResCode = 400
-	ResTimeout ResCode = 500
+	ResOK ResCode = iota
+	ResNG
+	ResBusy
+	ResTimeout
 )
 
 // Res respresents the command message that

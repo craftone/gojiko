@@ -2,7 +2,6 @@ package domain
 
 import (
 	"encoding/binary"
-	"fmt"
 	"net"
 
 	"github.com/dustin/go-humanize"
@@ -165,9 +164,10 @@ retry:
 			log.Debugf("Create Session Response timed out and retry : %s time", humanize.Ordinal(retryCount))
 			goto retry
 		}
+		log.Debugf("Create Session Response timed out and retry out")
 	}
 
-	return &res, fmt.Errorf("Now be implementing")
+	return &res, nil
 }
 
 // sgwCtrlReceiverRoutine is for GoRoutine

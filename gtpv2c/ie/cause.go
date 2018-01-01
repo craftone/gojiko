@@ -7,6 +7,15 @@ import (
 	"github.com/craftone/gojiko/util"
 )
 
+type CauseType int
+
+const (
+	CauseTypeRequestInitial CauseType = iota
+	CauseTypeAcceptance
+	CauseTypeRejection
+	CauseTypeOther
+)
+
 type CauseValue byte
 
 const (
@@ -52,11 +61,12 @@ const (
 	CauseRelocationFailure                    CauseValue = 81
 	CauseDeniedInRAT                          CauseValue = 82
 	CausePreferredPDNTypeNotSupported         CauseValue = 83
-	CauseAllDynamicAddressesAreOccupied       CauseValue = 85
-	CauseUEContextWithoutTFTAlreadyActivated  CauseValue = 86
-	CauseProtocolTypeNotSupported             CauseValue = 87
-	CauseUENotResponding                      CauseValue = 88
-	CauseUERefuses                            CauseValue = 89
+	CauseAllDynamicAddressesAreOccupied       CauseValue = 84
+	CauseUEContextWithoutTFTAlreadyActivated  CauseValue = 85
+	CauseProtocolTypeNotSupported             CauseValue = 86
+	CauseUENotResponding                      CauseValue = 87
+	CauseUERefuses                            CauseValue = 88
+	CauseServiceDenied                        CauseValue = 89
 	CauseUnableToPageUE                       CauseValue = 90
 	CauseNoMemoryAvailable                    CauseValue = 91
 	CauseUserAuthenticationFailed             CauseValue = 92
@@ -66,7 +76,6 @@ const (
 	CauseIMSINotKnown                         CauseValue = 96
 	CauseSemanticErrorInTheTADOperation       CauseValue = 97
 	CauseSyntacticErrorInTheTADOperation      CauseValue = 98
-	CauseServiceDenied                        CauseValue = 99
 	CauseRemotePeerNotResponding              CauseValue = 100
 	CauseCollisionWithNetworkInitiatedRequest CauseValue = 101
 	CauseUnableToPageUEDueToSuspension        CauseValue = 102
@@ -157,4 +166,93 @@ func (c *Cause) Bce() bool {
 }
 func (c *Cause) Cs() bool {
 	return c.cs
+}
+
+var causeToStrMap = map[CauseValue]string{
+	// Request / Initial message
+
+	CauseLocalDetach:                          "Local Detach",
+	CauseCompleteDetach:                       "Complete Detach",
+	CauseRATChangedFrom3GPPtoNon3GPP:          "RAT change from 3GPP to Non-3GPP",
+	CauseISRDeactivation:                      "ISR deactivation",
+	CauseErrorIndicationReceivedFromRNCeNodeB: "Error Indication received from RNC/eNodeB",
+	CauseIMSIDetachOnly:                       "IMSI Detach Only",
+	CauseReactivationRequested:                "Reactivation Requested",
+	CausePDNReconnectionToThisAPNDisallowed:   "PDN reconnection to this APN disallowed",
+	CauseAccessChangedFromNon3GPPto3GPP:       "Access changed from Non-3GPP to 3GPP",
+	CausePDNConnectionInactivityTimerExpires:  "PDN connection inactivity timer expires",
+
+	// Acceptance in a Response / triggered message.
+
+	CauseRequestAccepted:                        "Request accepted",
+	CauseRequestAcceptedPartially:               "Request accepted partially",
+	CauseNewPDNTypeDueToNetworkPreference:       "New PDN type due to network preference",
+	CauseNewPDNTypeDueToSingleAddressBearerOnly: "New PDN type due to single address bearer only",
+
+	// Rejection in a Response / triggered message.
+
+	CauseContextNotFound:               "Context Not Found",
+	CauseInvalidMessageFormat:          "Invalid Message Format",
+	CauseVersionNotSupportedByNextPeer: "Version not supported by next peer",
+	CauseInvalidLength:                 "Invalid length",
+	CauseServiceNotSupported:           "Service not supported",
+	CauseMandatoryIEIncorrect:          "Mandatory IE incorrect",
+	CauseMandatoryIEMissing:            "Mandatory IE missing",
+
+	CauseSystemFailure:                   "System failure",
+	CauseNoResourcesAvailable:            "No resources available",
+	CauseSemanticErrorInTheTFTOperation:  "Semantic error in the TFT operation",
+	CauseSyntacticErrorInTheTFTOperation: "Syntactic error in the TFT operation",
+	CauseSemanticErrorsInPacketFilters:   "Semantic errors in packet filter(s)",
+	CauseSyntacticErrorsInPacketFilters:  "Syntactic errors in packet filter(s)",
+	CauseMissingOrUnknownAPN:             "Missing or unknown APN",
+
+	CauseGREKeyNotFound:                       "GRE key not found",
+	CauseRelocationFailure:                    "Relocation failure",
+	CauseDeniedInRAT:                          "Denied in RAT",
+	CausePreferredPDNTypeNotSupported:         "Preferred PDN type not supported",
+	CauseAllDynamicAddressesAreOccupied:       "All dynamic addresses are occupied",
+	CauseUEContextWithoutTFTAlreadyActivated:  "UE context without TFT already activated",
+	CauseProtocolTypeNotSupported:             "Protocol type not supported",
+	CauseUENotResponding:                      "UE not responding",
+	CauseUERefuses:                            "UE refuses",
+	CauseServiceDenied:                        "Service denied",
+	CauseUnableToPageUE:                       "Unable to page UE",
+	CauseNoMemoryAvailable:                    "No memory available",
+	CauseUserAuthenticationFailed:             "User authentication failed",
+	CauseAPNAccessDeniedNoSubscription:        "APN access denied – no subscription",
+	CauseRequestRejectedReasonNotSpecified:    "Request rejected (reason not specified)",
+	CausePTMSISignatureMismatch:               "P-TMSI Signature mismatch",
+	CauseIMSINotKnown:                         "IMSI not known",
+	CauseSemanticErrorInTheTADOperation:       "Semantic error in the TAD operation",
+	CauseSyntacticErrorInTheTADOperation:      "Syntactic error in the TAD operation",
+	CauseRemotePeerNotResponding:              "Remote peer not responding",
+	CauseCollisionWithNetworkInitiatedRequest: "Collision with network initiated request",
+	CauseUnableToPageUEDueToSuspension:        "Unable to page UE due to Suspension",
+	CauseConditionalIEMissing:                 "Conditional IE missing",
+
+	CauseAPNRestrictionTypeIncompatibleWithCurrentlyActivePDNConnection: "APN Restriction type Incompatible with currently active PDN connection",
+}
+
+func CauseDetail(c CauseValue) (CauseType, string) {
+	var t CauseType
+
+	switch {
+	case byte(c) == 0:
+		t = CauseTypeOther
+	case byte(c) <= 15:
+		t = CauseTypeRequestInitial
+	case byte(c) <= 63:
+		t = CauseTypeAcceptance
+	case byte(c) <= 239:
+		t = CauseTypeRejection
+	default:
+		t = CauseTypeRequestInitial
+	}
+
+	str, ok := causeToStrMap[c]
+	if ok {
+		return t, str
+	}
+	return t, "Unknown cause"
 }
