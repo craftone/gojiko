@@ -167,6 +167,9 @@ retry:
 		log.Debugf("Create Session Response timed out and retry out")
 	}
 
+	if res.Code != gtpSessionCmd.ResOK {
+		s.gtpSessionRepo.deleteSession(session.id)
+	}
 	return &res, nil
 }
 

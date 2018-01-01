@@ -72,6 +72,7 @@ func gtpSessionRoutine(session *gtpSession) {
 			}
 		}
 	}
+	myLog.Debug("Stop a GTP session goroutine")
 }
 
 func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq, myLog *logrus.Entry) error {

@@ -124,6 +124,38 @@ func (r *gtpSessionRepo) newSession(
 	return session.id, nil
 }
 
+func (r *gtpSessionRepo) deleteSession(sessionID SessionID) error {
+	r.mtx4Map.Lock()
+	defer r.mtx4Map.Unlock()
+	session, ok := r.sessionsByID[sessionID]
+	if !ok {
+		return fmt.Errorf("There is no session with that id : %0X", sessionID)
+	}
+	delete(r.sessionsByID, sessionID)
+
+	teid := session.sgwCtrlFTEID.Teid()
+	if _, ok := r.sessionsByCtrlTeid[teid]; ok {
+		delete(r.sessionsByCtrlTeid, teid)
+	} else {
+		log.Debugf("There is no session with that SGW Ctrl F-TEID : %0X", teid)
+	}
+
+	imsiEbi := session.imsi.Value() + "_" + strconv.Itoa(int(session.ebi.Value()))
+	if _, ok := r.sessionsByImsiEbi[imsiEbi]; ok {
+		delete(r.sessionsByImsiEbi, imsiEbi)
+	} else {
+		log.Debugf("There is no session with that IMSI and EBI : %s", imsiEbi)
+	}
+
+	close(session.cmdReqChan)           // tell the gtpSession to finish
+	close(session.cmdResChan)           // cmdResChan is used by gtpSession only
+	close(session.fromCtrlReceiverChan) // the sender should check if the channel is active
+	close(session.toDataSenderChan)     // tell the data sender to finish
+	close(session.fromDataReceiverChan) // the sender should check if the channel is active
+
+	return nil
+}
+
 func (r *gtpSessionRepo) nextID() SessionID {
 	r.mtx4Id.Lock()
 	defer r.mtx4Id.Unlock()
