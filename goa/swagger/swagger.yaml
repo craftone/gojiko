@@ -1,0 +1,270 @@
+consumes:
+- application/json
+- application/xml
+- application/gob
+- application/x-gob
+definitions:
+  CreateGtpsessionPayload:
+    example:
+      apn: example.com
+      ebi: 5
+      imsi: "440100123456780"
+      mcc: "440"
+      mei: "1212345612345612"
+      mnc: "10"
+      msisdn: "8101012345678"
+      sgwAddr: 127.0.0.1
+    properties:
+      apn:
+        description: PGW's Access Point Name
+        example: example.com
+        format: hostname
+        type: string
+      ebi:
+        default: 5
+        description: EPS Bearer ID
+        example: 5
+        maximum: 15
+        minimum: 5
+        type: integer
+      imsi:
+        example: "440100123456780"
+        pattern: ^[0-9]{14,15}$
+        type: string
+      mcc:
+        default: "440"
+        description: PGW's Mobile Country Code
+        example: "440"
+        pattern: ^[0-9]{3}$
+        type: string
+      mei:
+        description: Mobile Equipment Identifier
+        example: "1212345612345612"
+        pattern: ^[0-9]{15,16}$
+        type: string
+      mnc:
+        default: "10"
+        description: PGW's Mobile Network Code
+        example: "10"
+        pattern: ^[0-9]{2,3}$
+        type: string
+      msisdn:
+        example: "8101012345678"
+        pattern: ^[0-9]{12,15}$
+        type: string
+      sgwAddr:
+        default: 127.0.0.1
+        description: SGW GTPv2-C loopback address
+        example: 127.0.0.1
+        format: ipv4
+        type: string
+    required:
+    - sgwAddr
+    - apn
+    - mcc
+    - mnc
+    - msisdn
+    - mei
+    - imsi
+    - ebi
+    title: CreateGtpsessionPayload
+    type: object
+  FTEID:
+    example:
+      IPv4 Addr: 127.0.0.1
+      IPv4 Flag: true
+      IPv6 Flag: false
+      Interface: S5/S8 SGW GTP-U interface
+      TEID: "0x12345678"
+    properties:
+      IPv4 Addr:
+        example: 127.0.0.1
+        format: ipv4
+        type: string
+      IPv4 Flag:
+        example: true
+        type: boolean
+      IPv6 Flag:
+        example: false
+        type: boolean
+      Interface:
+        enum:
+        - S5/S8 SGW GTP-U interface
+        - S5/S8 PGW GTP-U interface
+        - S5/S8 SGW GTP-C interface
+        - S5/S8 PGW GTP-C interface
+        example: S5/S8 SGW GTP-U interface
+        type: string
+      TEID:
+        example: "0x12345678"
+        pattern: ^0x[0-9A-F]{8}$
+        type: string
+    title: FTEID
+    type: object
+  Gtpsession:
+    description: A gtp session (default view)
+    example:
+      apn: example.com
+      ebi: 5
+      fteid:
+        pgwCtrlFTEID:
+          IPv4 Addr: 127.0.0.1
+          IPv4 Flag: true
+          IPv6 Flag: false
+          Interface: S5/S8 SGW GTP-U interface
+          TEID: "0x12345678"
+        pgwDataFTEID:
+          IPv4 Addr: 127.0.0.1
+          IPv4 Flag: true
+          IPv6 Flag: false
+          Interface: S5/S8 SGW GTP-U interface
+          TEID: "0x12345678"
+        sgwCtrlFTEID:
+          IPv4 Addr: 127.0.0.1
+          IPv4 Flag: true
+          IPv6 Flag: false
+          Interface: S5/S8 SGW GTP-U interface
+          TEID: "0x12345678"
+        sgwDataFTEID:
+          IPv4 Addr: 127.0.0.1
+          IPv4 Flag: true
+          IPv6 Flag: false
+          Interface: S5/S8 SGW GTP-U interface
+          TEID: "0x12345678"
+      id: 1
+      imsi: "440100123456780"
+      mcc: "440"
+      mei: "1212345612345612"
+      mnc: "10"
+      msisdn: "8101012345678"
+    properties:
+      apn:
+        description: PGW's Access Point Name
+        example: example.com
+        format: hostname
+        type: string
+      ebi:
+        default: 5
+        description: EPS Bearer ID
+        example: 5
+        maximum: 15
+        minimum: 5
+        type: integer
+      fteid:
+        $ref: '#/definitions/gtpSessionFTEIDs'
+      id:
+        description: Session ID in this SGW
+        example: 1
+        minimum: 0
+        type: integer
+      imsi:
+        example: "440100123456780"
+        pattern: ^[0-9]{14,15}$
+        type: string
+      mcc:
+        default: "440"
+        description: PGW's Mobile Country Code
+        example: "440"
+        pattern: ^[0-9]{3}$
+        type: string
+      mei:
+        description: Mobile Equipment Identifier
+        example: "1212345612345612"
+        pattern: ^[0-9]{15,16}$
+        type: string
+      mnc:
+        default: "10"
+        description: PGW's Mobile Network Code
+        example: "10"
+        pattern: ^[0-9]{2,3}$
+        type: string
+      msisdn:
+        example: "8101012345678"
+        pattern: ^[0-9]{12,15}$
+        type: string
+    title: 'Mediatype identifier: application/vnd.gtpsession+json; view=default'
+    type: object
+  gtpSessionFTEIDs:
+    example:
+      pgwCtrlFTEID:
+        IPv4 Addr: 127.0.0.1
+        IPv4 Flag: true
+        IPv6 Flag: false
+        Interface: S5/S8 SGW GTP-U interface
+        TEID: "0x12345678"
+      pgwDataFTEID:
+        IPv4 Addr: 127.0.0.1
+        IPv4 Flag: true
+        IPv6 Flag: false
+        Interface: S5/S8 SGW GTP-U interface
+        TEID: "0x12345678"
+      sgwCtrlFTEID:
+        IPv4 Addr: 127.0.0.1
+        IPv4 Flag: true
+        IPv6 Flag: false
+        Interface: S5/S8 SGW GTP-U interface
+        TEID: "0x12345678"
+      sgwDataFTEID:
+        IPv4 Addr: 127.0.0.1
+        IPv4 Flag: true
+        IPv6 Flag: false
+        Interface: S5/S8 SGW GTP-U interface
+        TEID: "0x12345678"
+    properties:
+      pgwCtrlFTEID:
+        $ref: '#/definitions/FTEID'
+      pgwDataFTEID:
+        $ref: '#/definitions/FTEID'
+      sgwCtrlFTEID:
+        $ref: '#/definitions/FTEID'
+      sgwDataFTEID:
+        $ref: '#/definitions/FTEID'
+    title: gtpSessionFTEIDs
+    type: object
+host: localhost:8080
+info:
+  description: |-
+    Gojiko は日本のL2接続MVNOに適した簡素な疑似SGWシミュレータです。
+    Jmeter等で操作可能なため試験自動化に適しています。
+  title: Gojiko API
+  version: ""
+paths:
+  /gtpsessions:
+    post:
+      description: Create a new gtp sesseion
+      operationId: gtpsession#create
+      parameters:
+      - in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/CreateGtpsessionPayload'
+      produces:
+      - application/vnd.gtpsession+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Gtpsession'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      summary: create gtpsession
+      tags:
+      - gtpsession
+produces:
+- application/json
+- application/xml
+- application/gob
+- application/x-gob
+responses:
+  NotFound:
+    description: Not Found
+  OK:
+    description: OK
+    schema:
+      $ref: '#/definitions/Gtpsession'
+schemes:
+- http
+swagger: "2.0"

@@ -18,7 +18,7 @@ type gtpSessionStatus byte
 
 const (
 	gssIdle gtpSessionStatus = iota
-	gssCSReqSending
+	gssSendingCSReq
 	gssConnected
 )
 
@@ -76,7 +76,7 @@ func gtpSessionRoutine(session *gtpSession) {
 }
 
 func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq, myLog *logrus.Entry) error {
-	session.status = gssCSReqSending
+	session.status = gssSendingCSReq
 	seqNum := session.sgwCtrl.nextSeqNum()
 
 	recoveryIE, err := ie.NewRecovery(0, session.sgwCtrl.recovery)
