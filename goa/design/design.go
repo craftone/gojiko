@@ -37,15 +37,16 @@ var _ = Resource("gtpsession", func() {
 	})
 })
 
-var FTEID = Type("FTEID", func() {
-	Attribute("TEID", String, "", func() {
+var FTEID = Type("fteid", func() {
+	Attribute("teid", String, "", func() {
 		Pattern("^0x[0-9A-F]{8}$")
 		Example("0x12345678")
 	})
-	Attribute("IPv4 Addr", String, "", func() {
+	Attribute("ipv4", String, "", func() {
 		Format("ipv4")
 		Example("127.0.0.1")
 	})
+	Required("teid", "ipv4")
 })
 
 var GtpSessionFTEIDs = Type("gtpSessionFTEIDs", func() {
@@ -66,6 +67,7 @@ var GtpSessionMedia = MediaType("application/vnd.gtpsession+json", func() {
 		apnMccMncMember()
 		msisdnMeiMember()
 		imsiEbiMember()
+		Required("id", "apn", "mcc", "mnc", "msisdn", "mei", "imsi", "ebi", "fteid")
 	})
 	View("default", func() {
 		Attribute("id")

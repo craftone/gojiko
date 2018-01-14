@@ -7,7 +7,6 @@ import (
 
 	"github.com/craftone/gojiko/config"
 
-	"github.com/craftone/gojiko/domain/gtpSessionCmd"
 	"github.com/craftone/gojiko/gtp"
 	"github.com/craftone/gojiko/gtpv2c"
 	"github.com/craftone/gojiko/gtpv2c/ie"
@@ -15,7 +14,7 @@ import (
 )
 
 type csResStr struct {
-	res *gtpSessionCmd.Res
+	res *GscRes
 	err error
 }
 
@@ -68,7 +67,7 @@ func TestSgwCtrl_CreateSession_OK(t *testing.T) {
 
 	csres := <-resCh
 	assert.NoError(t, csres.err)
-	assert.Equal(t, gtpSessionCmd.ResOK, csres.res.Code)
+	assert.Equal(t, GscResOK, csres.res.Code)
 
 	assert.True(t, session.paa.IPv4().Equal(paaIP))
 	assert.Equal(t, pgwCtrlTEID, session.pgwCtrlFTEID.Teid())
@@ -130,7 +129,7 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 	session = sgwCtrl.gtpSessionRepo.findByImsiEbi(imsi, ebi)
 	assert.Nil(t, session)
 	assert.NoError(t, csres.err)
-	assert.Equal(t, gtpSessionCmd.ResRetryableNG, csres.res.Code)
+	assert.Equal(t, GscResRetryableNG, csres.res.Code)
 }
 
 func TestSgwCtrl_CreateSession_NG(t *testing.T) {
@@ -176,7 +175,7 @@ func TestSgwCtrl_CreateSession_NG(t *testing.T) {
 	session = sgwCtrl.gtpSessionRepo.findByImsiEbi(imsi, ebi)
 	assert.Nil(t, session)
 	assert.NoError(t, csres.err)
-	assert.Equal(t, gtpSessionCmd.ResNG, csres.res.Code)
+	assert.Equal(t, GscResNG, csres.res.Code)
 }
 
 func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
@@ -195,5 +194,5 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 
 	// No Create Sessin Response and the session should be timed out.
 
-	assert.Equal(t, *res, gtpSessionCmd.Res{Code: gtpSessionCmd.ResTimeout, Msg: "Timeout"})
+	assert.Equal(t, *res, GscRes{Code: GscResTimeout, Msg: "Timeout"})
 }

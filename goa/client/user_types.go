@@ -15,66 +15,74 @@ import (
 	"github.com/goadesign/goa"
 )
 
-// fTEID user type.
-type fTEID struct {
-	IPv4Addr *string `form:"IPv4 Addr,omitempty" json:"IPv4 Addr,omitempty" xml:"IPv4 Addr,omitempty"`
-	TEID     *string `form:"TEID,omitempty" json:"TEID,omitempty" xml:"TEID,omitempty"`
+// fteid user type.
+type fteid struct {
+	Ipv4 *string `form:"ipv4,omitempty" json:"ipv4,omitempty" xml:"ipv4,omitempty"`
+	Teid *string `form:"teid,omitempty" json:"teid,omitempty" xml:"teid,omitempty"`
 }
 
-// Validate validates the fTEID type instance.
-func (ut *fTEID) Validate() (err error) {
-	if ut.IPv4Addr != nil {
-		if err2 := goa.ValidateFormat(goa.FormatIPv4, *ut.IPv4Addr); err2 != nil {
-			err = goa.MergeErrors(err, goa.InvalidFormatError(`request.IPv4 Addr`, *ut.IPv4Addr, goa.FormatIPv4, err2))
+// Validate validates the fteid type instance.
+func (ut *fteid) Validate() (err error) {
+	if ut.Teid == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "teid"))
+	}
+	if ut.Ipv4 == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "ipv4"))
+	}
+	if ut.Ipv4 != nil {
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, *ut.Ipv4); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`request.ipv4`, *ut.Ipv4, goa.FormatIPv4, err2))
 		}
 	}
-	if ut.TEID != nil {
-		if ok := goa.ValidatePattern(`^0x[0-9A-F]{8}$`, *ut.TEID); !ok {
-			err = goa.MergeErrors(err, goa.InvalidPatternError(`request.TEID`, *ut.TEID, `^0x[0-9A-F]{8}$`))
+	if ut.Teid != nil {
+		if ok := goa.ValidatePattern(`^0x[0-9A-F]{8}$`, *ut.Teid); !ok {
+			err = goa.MergeErrors(err, goa.InvalidPatternError(`request.teid`, *ut.Teid, `^0x[0-9A-F]{8}$`))
 		}
 	}
 	return
 }
 
-// Publicize creates FTEID from fTEID
-func (ut *fTEID) Publicize() *FTEID {
-	var pub FTEID
-	if ut.IPv4Addr != nil {
-		pub.IPv4Addr = ut.IPv4Addr
+// Publicize creates Fteid from fteid
+func (ut *fteid) Publicize() *Fteid {
+	var pub Fteid
+	if ut.Ipv4 != nil {
+		pub.Ipv4 = *ut.Ipv4
 	}
-	if ut.TEID != nil {
-		pub.TEID = ut.TEID
+	if ut.Teid != nil {
+		pub.Teid = *ut.Teid
 	}
 	return &pub
 }
 
-// FTEID user type.
-type FTEID struct {
-	IPv4Addr *string `form:"IPv4 Addr,omitempty" json:"IPv4 Addr,omitempty" xml:"IPv4 Addr,omitempty"`
-	TEID     *string `form:"TEID,omitempty" json:"TEID,omitempty" xml:"TEID,omitempty"`
+// Fteid user type.
+type Fteid struct {
+	Ipv4 string `form:"ipv4" json:"ipv4" xml:"ipv4"`
+	Teid string `form:"teid" json:"teid" xml:"teid"`
 }
 
-// Validate validates the FTEID type instance.
-func (ut *FTEID) Validate() (err error) {
-	if ut.IPv4Addr != nil {
-		if err2 := goa.ValidateFormat(goa.FormatIPv4, *ut.IPv4Addr); err2 != nil {
-			err = goa.MergeErrors(err, goa.InvalidFormatError(`type.IPv4 Addr`, *ut.IPv4Addr, goa.FormatIPv4, err2))
-		}
+// Validate validates the Fteid type instance.
+func (ut *Fteid) Validate() (err error) {
+	if ut.Teid == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "teid"))
 	}
-	if ut.TEID != nil {
-		if ok := goa.ValidatePattern(`^0x[0-9A-F]{8}$`, *ut.TEID); !ok {
-			err = goa.MergeErrors(err, goa.InvalidPatternError(`type.TEID`, *ut.TEID, `^0x[0-9A-F]{8}$`))
-		}
+	if ut.Ipv4 == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "ipv4"))
+	}
+	if err2 := goa.ValidateFormat(goa.FormatIPv4, ut.Ipv4); err2 != nil {
+		err = goa.MergeErrors(err, goa.InvalidFormatError(`type.ipv4`, ut.Ipv4, goa.FormatIPv4, err2))
+	}
+	if ok := goa.ValidatePattern(`^0x[0-9A-F]{8}$`, ut.Teid); !ok {
+		err = goa.MergeErrors(err, goa.InvalidPatternError(`type.teid`, ut.Teid, `^0x[0-9A-F]{8}$`))
 	}
 	return
 }
 
 // gtpSessionFTEIDs user type.
 type gtpSessionFTEIDs struct {
-	PgwCtrlFTEID *fTEID `form:"pgwCtrlFTEID,omitempty" json:"pgwCtrlFTEID,omitempty" xml:"pgwCtrlFTEID,omitempty"`
-	PgwDataFTEID *fTEID `form:"pgwDataFTEID,omitempty" json:"pgwDataFTEID,omitempty" xml:"pgwDataFTEID,omitempty"`
-	SgwCtrlFTEID *fTEID `form:"sgwCtrlFTEID,omitempty" json:"sgwCtrlFTEID,omitempty" xml:"sgwCtrlFTEID,omitempty"`
-	SgwDataFTEID *fTEID `form:"sgwDataFTEID,omitempty" json:"sgwDataFTEID,omitempty" xml:"sgwDataFTEID,omitempty"`
+	PgwCtrlFTEID *fteid `form:"pgwCtrlFTEID,omitempty" json:"pgwCtrlFTEID,omitempty" xml:"pgwCtrlFTEID,omitempty"`
+	PgwDataFTEID *fteid `form:"pgwDataFTEID,omitempty" json:"pgwDataFTEID,omitempty" xml:"pgwDataFTEID,omitempty"`
+	SgwCtrlFTEID *fteid `form:"sgwCtrlFTEID,omitempty" json:"sgwCtrlFTEID,omitempty" xml:"sgwCtrlFTEID,omitempty"`
+	SgwDataFTEID *fteid `form:"sgwDataFTEID,omitempty" json:"sgwDataFTEID,omitempty" xml:"sgwDataFTEID,omitempty"`
 }
 
 // Validate validates the gtpSessionFTEIDs type instance.
@@ -122,10 +130,10 @@ func (ut *gtpSessionFTEIDs) Publicize() *GtpSessionFTEIDs {
 
 // GtpSessionFTEIDs user type.
 type GtpSessionFTEIDs struct {
-	PgwCtrlFTEID *FTEID `form:"pgwCtrlFTEID,omitempty" json:"pgwCtrlFTEID,omitempty" xml:"pgwCtrlFTEID,omitempty"`
-	PgwDataFTEID *FTEID `form:"pgwDataFTEID,omitempty" json:"pgwDataFTEID,omitempty" xml:"pgwDataFTEID,omitempty"`
-	SgwCtrlFTEID *FTEID `form:"sgwCtrlFTEID,omitempty" json:"sgwCtrlFTEID,omitempty" xml:"sgwCtrlFTEID,omitempty"`
-	SgwDataFTEID *FTEID `form:"sgwDataFTEID,omitempty" json:"sgwDataFTEID,omitempty" xml:"sgwDataFTEID,omitempty"`
+	PgwCtrlFTEID *Fteid `form:"pgwCtrlFTEID,omitempty" json:"pgwCtrlFTEID,omitempty" xml:"pgwCtrlFTEID,omitempty"`
+	PgwDataFTEID *Fteid `form:"pgwDataFTEID,omitempty" json:"pgwDataFTEID,omitempty" xml:"pgwDataFTEID,omitempty"`
+	SgwCtrlFTEID *Fteid `form:"sgwCtrlFTEID,omitempty" json:"sgwCtrlFTEID,omitempty" xml:"sgwCtrlFTEID,omitempty"`
+	SgwDataFTEID *Fteid `form:"sgwDataFTEID,omitempty" json:"sgwDataFTEID,omitempty" xml:"sgwDataFTEID,omitempty"`
 }
 
 // Validate validates the GtpSessionFTEIDs type instance.

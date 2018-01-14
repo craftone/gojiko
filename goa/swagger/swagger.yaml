@@ -69,21 +69,6 @@ definitions:
     - ebi
     title: CreateGtpsessionPayload
     type: object
-  FTEID:
-    example:
-      IPv4 Addr: 127.0.0.1
-      TEID: "0x12345678"
-    properties:
-      IPv4 Addr:
-        example: 127.0.0.1
-        format: ipv4
-        type: string
-      TEID:
-        example: "0x12345678"
-        pattern: ^0x[0-9A-F]{8}$
-        type: string
-    title: FTEID
-    type: object
   Gtpsession:
     description: A gtp session (default view)
     example:
@@ -91,17 +76,17 @@ definitions:
       ebi: 5
       fteid:
         pgwCtrlFTEID:
-          IPv4 Addr: 127.0.0.1
-          TEID: "0x12345678"
+          ipv4: 127.0.0.1
+          teid: "0x12345678"
         pgwDataFTEID:
-          IPv4 Addr: 127.0.0.1
-          TEID: "0x12345678"
+          ipv4: 127.0.0.1
+          teid: "0x12345678"
         sgwCtrlFTEID:
-          IPv4 Addr: 127.0.0.1
-          TEID: "0x12345678"
+          ipv4: 127.0.0.1
+          teid: "0x12345678"
         sgwDataFTEID:
-          IPv4 Addr: 127.0.0.1
-          TEID: "0x12345678"
+          ipv4: 127.0.0.1
+          teid: "0x12345678"
       id: 1
       imsi: "440100123456780"
       mcc: "440"
@@ -153,31 +138,59 @@ definitions:
         example: "8101012345678"
         pattern: ^[0-9]{12,15}$
         type: string
+    required:
+    - id
+    - apn
+    - mcc
+    - mnc
+    - msisdn
+    - mei
+    - imsi
+    - ebi
+    - fteid
     title: 'Mediatype identifier: application/vnd.gtpsession+json; view=default'
+    type: object
+  fteid:
+    example:
+      ipv4: 127.0.0.1
+      teid: "0x12345678"
+    properties:
+      ipv4:
+        example: 127.0.0.1
+        format: ipv4
+        type: string
+      teid:
+        example: "0x12345678"
+        pattern: ^0x[0-9A-F]{8}$
+        type: string
+    required:
+    - teid
+    - ipv4
+    title: fteid
     type: object
   gtpSessionFTEIDs:
     example:
       pgwCtrlFTEID:
-        IPv4 Addr: 127.0.0.1
-        TEID: "0x12345678"
+        ipv4: 127.0.0.1
+        teid: "0x12345678"
       pgwDataFTEID:
-        IPv4 Addr: 127.0.0.1
-        TEID: "0x12345678"
+        ipv4: 127.0.0.1
+        teid: "0x12345678"
       sgwCtrlFTEID:
-        IPv4 Addr: 127.0.0.1
-        TEID: "0x12345678"
+        ipv4: 127.0.0.1
+        teid: "0x12345678"
       sgwDataFTEID:
-        IPv4 Addr: 127.0.0.1
-        TEID: "0x12345678"
+        ipv4: 127.0.0.1
+        teid: "0x12345678"
     properties:
       pgwCtrlFTEID:
-        $ref: '#/definitions/FTEID'
+        $ref: '#/definitions/fteid'
       pgwDataFTEID:
-        $ref: '#/definitions/FTEID'
+        $ref: '#/definitions/fteid'
       sgwCtrlFTEID:
-        $ref: '#/definitions/FTEID'
+        $ref: '#/definitions/fteid'
       sgwDataFTEID:
-        $ref: '#/definitions/FTEID'
+        $ref: '#/definitions/fteid'
     title: gtpSessionFTEIDs
     type: object
 host: localhost:8080

@@ -8,7 +8,6 @@ import (
 
 	"github.com/craftone/gojiko/config"
 
-	"github.com/craftone/gojiko/domain/gtpSessionCmd"
 	"github.com/craftone/gojiko/gtp"
 	"github.com/craftone/gojiko/gtpv2c"
 
@@ -52,7 +51,7 @@ func newSgwCtrl(addr net.UDPAddr, dataPort int, recovery byte) (*SgwCtrl, error)
 func (s *SgwCtrl) CreateSession(
 	imsi, msisdn, mei, mcc, mnc, apnNI string,
 	ebi byte,
-) (*gtpSessionCmd.Res, error) {
+) (*GscRes, error) {
 	// Query APN's IP address
 	apn, err := apns.TheRepo().Find(apnNI, mcc, mnc)
 	if err != nil {
@@ -146,7 +145,7 @@ func (s *SgwCtrl) CreateSession(
 	}
 
 	// Make GTP Session CMD of Create Session Request
-	cmd, err := gtpSessionCmd.NewCreateSessionReq(mcc, mnc, mei)
+	cmd, err := NewCreateSessionReq(mcc, mnc, mei)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +157,7 @@ func (s *SgwCtrl) CreateSession(
 retry:
 	session.cmdReqChan <- cmd
 	res := <-session.cmdResChan
-	if res.Code == gtpSessionCmd.ResTimeout {
+	if res.Code == GscResTimeout {
 		retryCount++
 		if retryCount <= config.Gtpv2cRetry() {
 			log.Debugf("Create Session Response timed out and retry : %s time", humanize.Ordinal(retryCount))
@@ -167,7 +166,7 @@ retry:
 		log.Debugf("Create Session Response timed out and retry out")
 	}
 
-	if res.Code != gtpSessionCmd.ResOK {
+	if res.Code != GscResOK {
 		s.gtpSessionRepo.deleteSession(session.id)
 	}
 	return &res, nil

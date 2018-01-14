@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"net"
+
+	"github.com/craftone/gojiko/gtp"
+
 	"github.com/craftone/gojiko/domain"
-	"github.com/craftone/gojiko/domain/gtpSessionCmd"
 	"github.com/craftone/gojiko/goa/app"
 	"github.com/goadesign/goa"
-	"net"
 )
 
 // GtpsessionController implements the gtpsession resource.
@@ -16,6 +19,13 @@ type GtpsessionController struct {
 // NewGtpsessionController creates a gtpsession controller.
 func NewGtpsessionController(service *goa.Service) *GtpsessionController {
 	return &GtpsessionController{Controller: service.NewController("GtpsessionController")}
+}
+
+func newFteid(ipv4 net.IP, teid gtp.Teid) *app.Fteid {
+	return &app.Fteid{
+		Ipv4: ipv4.String(),
+		Teid: fmt.Sprintf("0x%08X", teid),
+	}
 }
 
 // Create runs the create action.
@@ -33,10 +43,22 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 		return goa.ErrInternal(err)
 	}
 	switch csRes.Code {
-	case gtpSessionCmd.ResOK:
-		res := &app.Gtpsession{}
+	case domain.GscResOK:
+		sess := csRes.Session
+
+		res := &app.Gtpsession{
+			Apn: sess.Apn(),
+			Ebi: int(sess.Ebi()),
+			Fteid: &app.GtpSessionFTEIDs{
+				PgwCtrlFTEID: newFteid(sess.PgwCtrlFTEID()),
+				PgwDataFTEID: newFteid(sess.PgwDataFTEID()),
+				SgwCtrlFTEID: newFteid(sess.SgwCtrlFTEID()),
+				SgwDataFTEID: newFteid(sess.SgwDataFTEID()),
+			},
+			// ID: sess.ID(),
+		}
 		return ctx.OK(res)
-	case gtpSessionCmd.ResTimeout:
+	case domain.GscResTimeout:
 		return goa.ErrInternal("Request timed out")
 	}
 	return goa.ErrInvalidRequest("Invalid request")

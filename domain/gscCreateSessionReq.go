@@ -1,4 +1,4 @@
-package gtpSessionCmd
+package domain
 
 import (
 	"fmt"
@@ -8,28 +8,28 @@ import (
 	"github.com/craftone/gojiko/gtpv2c/ie/pco"
 )
 
-// CreateSessionReq respresents the command message that
+// createSessionReq respresents the command message that
 // asks the session routine to send a Create Session Request.
-type CreateSessionReq struct {
-	Mei            *ie.Mei
-	Indication     *ie.Indication
-	Pco            *ie.PcoMsToNetwork
-	Uli            *ie.Uli
-	BearerQoS      *ie.BearerQoS
-	ApnRestriction *ie.ApnRestriction
-	SelectionMode  *ie.SelectionMode
+type createSessionReq struct {
+	mei            *ie.Mei
+	indication     *ie.Indication
+	pco            *ie.PcoMsToNetwork
+	uli            *ie.Uli
+	bearerQoS      *ie.BearerQoS
+	apnRestriction *ie.ApnRestriction
+	selectionMode  *ie.SelectionMode
 }
 
-func (g CreateSessionReq) GscType() string {
+func (g createSessionReq) gscType() string {
 	return "CreateSession"
 }
 
-func (g CreateSessionReq) String() string {
-	return fmt.Sprintf("TYPE=%s MEI=%s", g.GscType(), g.Mei.Value())
+func (g createSessionReq) String() string {
+	return fmt.Sprintf("TYPE=%s MEI=%s", g.gscType(), g.mei.Value())
 }
 
-func NewCreateSessionReq(mcc, mnc, mei string) (CreateSessionReq, error) {
-	dummy := CreateSessionReq{}
+func NewCreateSessionReq(mcc, mnc, mei string) (createSessionReq, error) {
+	dummy := createSessionReq{}
 
 	meiIE, err := ie.NewMei(0, mei)
 	if err != nil {
@@ -72,13 +72,13 @@ func NewCreateSessionReq(mcc, mnc, mei string) (CreateSessionReq, error) {
 	apnRestriction, _ := ie.NewApnRestriction(0, 0)
 	selectionMode, _ := ie.NewSelectionMode(0, 1)
 
-	return CreateSessionReq{
-		Mei:            meiIE,
-		Indication:     indicationIE,
-		Pco:            pcoMsToNetwork,
-		Uli:            uliIE,
-		BearerQoS:      bearerQoS,
-		ApnRestriction: apnRestriction,
-		SelectionMode:  selectionMode,
+	return createSessionReq{
+		mei:            meiIE,
+		indication:     indicationIE,
+		pco:            pcoMsToNetwork,
+		uli:            uliIE,
+		bearerQoS:      bearerQoS,
+		apnRestriction: apnRestriction,
+		selectionMode:  selectionMode,
 	}, nil
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/craftone/gojiko/gtp"
 
 	"github.com/craftone/gojiko/config"
-	gsc "github.com/craftone/gojiko/domain/gtpSessionCmd"
 	"github.com/sirupsen/logrus"
 
 	"github.com/craftone/gojiko/gtpv2c"
@@ -29,8 +28,8 @@ type GtpSession struct {
 	status GtpSessionStatus
 	mtx    sync.RWMutex
 
-	cmdReqChan           chan gsc.Cmd
-	cmdResChan           chan gsc.Res
+	cmdReqChan           chan gtpSessionCmd
+	cmdResChan           chan GscRes
 	toCtrlSenderChan     chan UDPpacket
 	fromCtrlReceiverChan chan UDPpacket
 	toDataSenderChan     chan UDPpacket
@@ -67,7 +66,7 @@ func gtpSessionRoutine(session *GtpSession) {
 		myLog.Debugf("Received CMD : %v", msg)
 
 		switch cmd := msg.(type) {
-		case gsc.CreateSessionReq:
+		case createSessionReq:
 			err := session.procCreateSession(cmd, myLog)
 			if err != nil {
 				log.Error(err)
@@ -77,7 +76,7 @@ func gtpSessionRoutine(session *GtpSession) {
 	myLog.Debug("Stop a GTP session goroutine")
 }
 
-func (session *GtpSession) procCreateSession(cmd gsc.CreateSessionReq, myLog *logrus.Entry) error {
+func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus.Entry) error {
 	session.status = GssSendingCSReq
 	seqNum := session.sgwCtrl.nextSeqNum()
 
@@ -88,7 +87,7 @@ func (session *GtpSession) procCreateSession(cmd gsc.CreateSessionReq, myLog *lo
 	bearerContextTBCIE, err := ie.NewBearerContextToBeCreatedWithinCSReq(
 		ie.BearerContextToBeCreatedWithinCSReqArg{
 			Ebi:          session.ebi,
-			BearerQoS:    cmd.BearerQoS,
+			BearerQoS:    cmd.bearerQoS,
 			SgwDataFteid: session.sgwDataFTEID,
 		})
 	if err != nil {
@@ -98,19 +97,19 @@ func (session *GtpSession) procCreateSession(cmd gsc.CreateSessionReq, myLog *lo
 	csReqArg := gtpv2c.CreateSessionRequestArg{
 		Imsi:             session.imsi,
 		Msisdn:           session.msisdn,
-		Mei:              cmd.Mei,
-		Uli:              cmd.Uli,
+		Mei:              cmd.mei,
+		Uli:              cmd.uli,
 		ServingNetwork:   session.servingNetwork,
 		RatType:          session.ratType,
-		Indication:       cmd.Indication,
+		Indication:       cmd.indication,
 		SgwCtrlFteid:     session.sgwCtrlFTEID,
 		Apn:              session.apn,
-		SelectionMode:    cmd.SelectionMode,
+		SelectionMode:    cmd.selectionMode,
 		PdnType:          session.pdnType,
 		Paa:              session.paa,
-		ApnRestriction:   cmd.ApnRestriction,
+		ApnRestriction:   cmd.apnRestriction,
 		ApnAmbr:          session.ambr,
-		Pco:              cmd.Pco,
+		Pco:              cmd.pco,
 		BearerContextTBC: bearerContextTBCIE,
 		Recovery:         recoveryIE,
 	}
@@ -125,7 +124,7 @@ func (session *GtpSession) procCreateSession(cmd gsc.CreateSessionReq, myLog *lo
 	raddr := session.pgwCtrlAddr
 	session.toCtrlSenderChan <- UDPpacket{raddr, csReqBin}
 
-	var res gsc.Res
+	var res GscRes
 	afterChan := time.After(config.Gtpv2cTimeoutDuration())
 retry:
 	select {
@@ -163,16 +162,16 @@ retry:
 			// Set PDN Address Allocation into the session
 			session.paa = csres.Paa()
 
-			res = gsc.Res{Code: gsc.ResOK, Msg: causeMsg}
+			res = GscRes{Code: GscResOK, Msg: causeMsg, Session: session}
 		case ie.CauseTypeRetryableRejection:
-			res = gsc.Res{Code: gsc.ResRetryableNG, Msg: causeMsg}
+			res = GscRes{Code: GscResRetryableNG, Msg: causeMsg}
 		default:
-			res = gsc.Res{Code: gsc.ResNG, Msg: causeMsg}
+			res = GscRes{Code: GscResNG, Msg: causeMsg}
 		}
 
 	case <-afterChan:
 		myLog.Error("The Create Session Response timed out")
-		res = gsc.Res{Code: gsc.ResTimeout, Msg: "Timeout"}
+		res = GscRes{Code: GscResTimeout, Msg: "Timeout"}
 	}
 	session.cmdResChan <- res
 
@@ -238,5 +237,5 @@ func (s *GtpSession) ServingNetwork() string {
 }
 
 func (s *GtpSession) PdnType() string {
-	return s.pdnType
+	return s.pdnType.String()
 }
