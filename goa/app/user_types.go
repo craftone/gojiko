@@ -6,6 +6,7 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
+// --regen=true
 // --version=v1.3.0
 
 package app
@@ -21,6 +22,14 @@ type fTEID struct {
 	IPv6Flag  *bool   `form:"IPv6 Flag,omitempty" json:"IPv6 Flag,omitempty" xml:"IPv6 Flag,omitempty"`
 	Interface *string `form:"Interface,omitempty" json:"Interface,omitempty" xml:"Interface,omitempty"`
 	TEID      *string `form:"TEID,omitempty" json:"TEID,omitempty" xml:"TEID,omitempty"`
+}
+
+// Finalize sets the default values for fTEID type instance.
+func (ut *fTEID) Finalize() {
+	var defaultIPv6Flag = false
+	if ut.IPv6Flag == nil {
+		ut.IPv6Flag = &defaultIPv6Flag
+	}
 }
 
 // Validate validates the fTEID type instance.
@@ -53,7 +62,7 @@ func (ut *fTEID) Publicize() *FTEID {
 		pub.IPv4Flag = ut.IPv4Flag
 	}
 	if ut.IPv6Flag != nil {
-		pub.IPv6Flag = ut.IPv6Flag
+		pub.IPv6Flag = *ut.IPv6Flag
 	}
 	if ut.Interface != nil {
 		pub.Interface = ut.Interface
@@ -68,7 +77,7 @@ func (ut *fTEID) Publicize() *FTEID {
 type FTEID struct {
 	IPv4Addr  *string `form:"IPv4 Addr,omitempty" json:"IPv4 Addr,omitempty" xml:"IPv4 Addr,omitempty"`
 	IPv4Flag  *bool   `form:"IPv4 Flag,omitempty" json:"IPv4 Flag,omitempty" xml:"IPv4 Flag,omitempty"`
-	IPv6Flag  *bool   `form:"IPv6 Flag,omitempty" json:"IPv6 Flag,omitempty" xml:"IPv6 Flag,omitempty"`
+	IPv6Flag  bool    `form:"IPv6 Flag" json:"IPv6 Flag" xml:"IPv6 Flag"`
 	Interface *string `form:"Interface,omitempty" json:"Interface,omitempty" xml:"Interface,omitempty"`
 	TEID      *string `form:"TEID,omitempty" json:"TEID,omitempty" xml:"TEID,omitempty"`
 }
@@ -99,6 +108,34 @@ type gtpSessionFTEIDs struct {
 	PgwDataFTEID *fTEID `form:"pgwDataFTEID,omitempty" json:"pgwDataFTEID,omitempty" xml:"pgwDataFTEID,omitempty"`
 	SgwCtrlFTEID *fTEID `form:"sgwCtrlFTEID,omitempty" json:"sgwCtrlFTEID,omitempty" xml:"sgwCtrlFTEID,omitempty"`
 	SgwDataFTEID *fTEID `form:"sgwDataFTEID,omitempty" json:"sgwDataFTEID,omitempty" xml:"sgwDataFTEID,omitempty"`
+}
+
+// Finalize sets the default values for gtpSessionFTEIDs type instance.
+func (ut *gtpSessionFTEIDs) Finalize() {
+	if ut.PgwCtrlFTEID != nil {
+		var defaultIPv6Flag = false
+		if ut.PgwCtrlFTEID.IPv6Flag == nil {
+			ut.PgwCtrlFTEID.IPv6Flag = &defaultIPv6Flag
+		}
+	}
+	if ut.PgwDataFTEID != nil {
+		var defaultIPv6Flag = false
+		if ut.PgwDataFTEID.IPv6Flag == nil {
+			ut.PgwDataFTEID.IPv6Flag = &defaultIPv6Flag
+		}
+	}
+	if ut.SgwCtrlFTEID != nil {
+		var defaultIPv6Flag = false
+		if ut.SgwCtrlFTEID.IPv6Flag == nil {
+			ut.SgwCtrlFTEID.IPv6Flag = &defaultIPv6Flag
+		}
+	}
+	if ut.SgwDataFTEID != nil {
+		var defaultIPv6Flag = false
+		if ut.SgwDataFTEID.IPv6Flag == nil {
+			ut.SgwDataFTEID.IPv6Flag = &defaultIPv6Flag
+		}
+	}
 }
 
 // Validate validates the gtpSessionFTEIDs type instance.

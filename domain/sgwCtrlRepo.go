@@ -10,7 +10,7 @@ func newSgwCtrlRepo() *sgwCtrlRepo {
 	return &sgwCtrlRepo{newSPgwRepo()}
 }
 
-func (s *sgwCtrlRepo) getCtrl(addr net.UDPAddr) *SgwCtrl {
+func (s *sgwCtrlRepo) GetSgwCtrl(addr net.UDPAddr) *SgwCtrl {
 	sgwCtrl := s.spgwRepo.GetCtrl(addr)
 	return sgwCtrl.(*SgwCtrl)
 }

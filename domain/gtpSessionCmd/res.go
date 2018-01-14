@@ -5,13 +5,14 @@ type ResCode int
 const (
 	ResOK ResCode = iota
 	ResNG
-	ResBusy
+	ResRetryableNG
 	ResTimeout
 )
 
 // Res respresents the command message that
 // replying from the session routine.
 type Res struct {
-	Code ResCode
-	Msg  string
+	Code      ResCode
+	Msg       string
+	SessionID uint32
 }

@@ -85,6 +85,7 @@ definitions:
         example: true
         type: boolean
       IPv6 Flag:
+        default: false
         example: false
         type: boolean
       Interface:

@@ -125,56 +125,53 @@ func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq, myLog *log
 
 	var res gsc.Res
 	afterChan := time.After(config.Gtpv2cTimeoutDuration())
-	for {
-		select {
-		case recv := <-session.fromCtrlReceiverChan:
-			myLog.Debugf("received packet from %v body: %v", recv.raddr, recv.body)
+retry:
+	select {
+	case recv := <-session.fromCtrlReceiverChan:
+		myLog.Debugf("received packet from %v body: %v", recv.raddr, recv.body)
 
-			// Ensure received packet has sent from correct PGW address
-			if !recv.raddr.IP.Equal(session.pgwCtrlAddr.IP) ||
-				recv.raddr.Port != session.pgwCtrlAddr.Port {
-				myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %v , expected : %v", recv.raddr, session.pgwCtrlAddr)
-				continue
-			}
-
-			// Unmarchal received packet
-			msg, _, err := gtpv2c.Unmarshal(recv.body)
-			if err != nil {
-				myLog.Debugf("Received invalid GTPv2-C packet")
-				continue
-			}
-			myLog.Debugf("received GTPv2-C packet : %v", msg)
-
-			// Ensure received packete is a Create Session Response
-			csres, ok := msg.(*gtpv2c.CreateSessionResponse)
-			if !ok {
-				myLog.Debugf("Received packet is not a Create Session Response message.")
-				continue
-			}
-
-			causeType, causeMsg := ie.CauseDetail(csres.Cause().Value())
-			switch causeType {
-			case ie.CauseTypeAcceptance:
-				// Set PGW's F-TEIDs into the session
-				session.pgwCtrlFTEID = csres.PgwCtrlFteid()
-				session.pgwDataFTEID = csres.BearerContextCeated().PgwDataFteid()
-				// Set PDN Address Allocation into the session
-				session.paa = csres.Paa()
-
-				res = gsc.Res{Code: gsc.ResOK, Msg: causeMsg}
-				goto eof
-			default:
-				res = gsc.Res{Code: gsc.ResNG, Msg: causeMsg}
-				goto eof
-			}
-
-		case <-afterChan:
-			myLog.Error("The Create Session Response timed out")
-			res = gsc.Res{Code: gsc.ResTimeout, Msg: "Timeout"}
-			goto eof
+		// Ensure received packet has sent from correct PGW address
+		if !recv.raddr.IP.Equal(session.pgwCtrlAddr.IP) ||
+			recv.raddr.Port != session.pgwCtrlAddr.Port {
+			myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %v , expected : %v", recv.raddr, session.pgwCtrlAddr)
+			goto retry
 		}
+
+		// Unmarchal received packet
+		msg, _, err := gtpv2c.Unmarshal(recv.body)
+		if err != nil {
+			myLog.Debugf("Received invalid GTPv2-C packet")
+			goto retry
+		}
+		myLog.Debugf("received GTPv2-C packet : %v", msg)
+
+		// Ensure received packete is a Create Session Response
+		csres, ok := msg.(*gtpv2c.CreateSessionResponse)
+		if !ok {
+			myLog.Debugf("Received packet is not a Create Session Response message.")
+			goto retry
+		}
+
+		causeType, causeMsg := ie.CauseDetail(csres.Cause().Value())
+		switch causeType {
+		case ie.CauseTypeAcceptance:
+			// Set PGW's F-TEIDs into the session
+			session.pgwCtrlFTEID = csres.PgwCtrlFteid()
+			session.pgwDataFTEID = csres.BearerContextCeated().PgwDataFteid()
+			// Set PDN Address Allocation into the session
+			session.paa = csres.Paa()
+
+			res = gsc.Res{Code: gsc.ResOK, Msg: causeMsg}
+		case ie.CauseTypeRetryableRejection:
+			res = gsc.Res{Code: gsc.ResRetryableNG, Msg: causeMsg}
+		default:
+			res = gsc.Res{Code: gsc.ResNG, Msg: causeMsg}
+		}
+
+	case <-afterChan:
+		myLog.Error("The Create Session Response timed out")
+		res = gsc.Res{Code: gsc.ResTimeout, Msg: "Timeout"}
 	}
-eof:
 	session.cmdResChan <- res
 
 	return nil

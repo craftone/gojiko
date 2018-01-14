@@ -12,6 +12,7 @@ type CauseType int
 const (
 	CauseTypeRequestInitial CauseType = iota
 	CauseTypeAcceptance
+	CauseTypeRetryableRejection
 	CauseTypeRejection
 	CauseTypeOther
 )
@@ -244,6 +245,13 @@ func CauseDetail(c CauseValue) (CauseType, string) {
 		t = CauseTypeRequestInitial
 	case byte(c) <= 63:
 		t = CauseTypeAcceptance
+	case c == CauseNoResourcesAvailable ||
+		c == CauseAllDynamicAddressesAreOccupied ||
+		c == CauseNoMemoryAvailable ||
+		c == CauseMissingOrUnknownAPN ||
+		c == CauseAPNAccessDeniedNoSubscription ||
+		c == CauseRequestRejectedReasonNotSpecified:
+		t = CauseTypeRetryableRejection
 	case byte(c) <= 239:
 		t = CauseTypeRejection
 	default:

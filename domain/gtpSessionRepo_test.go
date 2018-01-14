@@ -12,7 +12,7 @@ import (
 
 func TestGtpSessionsRepo_newSession(t *testing.T) {
 	fmt.Println(theSgwCtrlRepo)
-	theGtpSessionRepo := theSgwCtrlRepo.getCtrl(defaultSgwCtrlAddr).gtpSessionRepo
+	theGtpSessionRepo := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr).gtpSessionRepo
 	// at the first, there should be no session.
 	assert.Equal(t, 0, theGtpSessionRepo.numOfSessions())
 

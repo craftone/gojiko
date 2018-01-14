@@ -41,7 +41,7 @@
       + ~~OpSPgw関連のFindOrCreate等をSgwCtrlではなくAbsSPgwに実装する~~
       + ~~connの保有者をOpSPgwからabsSPgwに移す~~
     + SgwCtrlReceiver を実装
-      + ~~receiverで宛先TEIDを見てパケットを振り分ける~~ @ 2017/12/10
+      + ~~receiverで宛先TEIDを見てパケットを振り分ける~~ @ 2017/12/10n
       + ~~受け取ったパケットを解析してセッション情報をアップデートする~~ @ 2017/12/18
       + ~~CreateSessionResのタイムアウトが機能していないので修正する~~ @ 2017/12/21
     + ~~リトライする~~ @2017/12/29
@@ -52,8 +52,14 @@
   + ~~viper利用で進める~~ @ 2017/12/28
   + ~~S5のtimeout, retry数をコンフィグで指定できるようにする~~ @ 2017/12/28
 
+- Webサービス部の作成
+  + ~~goa利用で進める~~ @ 2018/01/13
+  + createSession部作成
+
 - logを別レイヤに切り出し
 
+- gtpSessionCmdパッケージをdomainに戻す
+  (resでsessionを戻したいので)
 
 - SgwCtrl.DeleteSession() を実装
 
