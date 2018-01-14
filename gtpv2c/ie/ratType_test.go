@@ -40,3 +40,16 @@ func TestUnmarshal_RatType(t *testing.T) {
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }
+
+func TestRatType_String(t *testing.T) {
+	rt, _ := NewRatType(0, 0)
+	assert.Equal(t, "<reserved> (0)", rt.String())
+	rt, _ = NewRatType(0, 1)
+	assert.Equal(t, "UTRAN (1)", rt.String())
+	rt, _ = NewRatType(0, 6)
+	assert.Equal(t, "EUTRAN (6)", rt.String())
+	rt, _ = NewRatType(0, 7)
+	assert.Equal(t, "Virtual (7)", rt.String())
+	rt, _ = NewRatType(0, 255)
+	assert.Equal(t, "<reserved> (255)", rt.String())
+}

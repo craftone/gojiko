@@ -33,3 +33,10 @@ func TestUnmarshal_servingNetwork(t *testing.T) {
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }
+
+func TestServingNetwork_String(t *testing.T) {
+	sn, _ := NewServingNetwork(1, "440", "10")
+	assert.Equal(t, "MCC: 440, MNC: 10", sn.String())
+	sn, _ = NewServingNetwork(1, "449", "111")
+	assert.Equal(t, "MCC: 449, MNC: 111", sn.String())
+}

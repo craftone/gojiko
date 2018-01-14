@@ -66,3 +66,15 @@ func unmarshalPdnType(h header, buf []byte) (*PdnType, error) {
 func (p PdnType) Value() PdnTypeValue {
 	return p.value
 }
+
+func (p PdnType) String() string {
+	switch int(p.value) {
+	case 1:
+		return "IPv4"
+	case 2:
+		return "IPv6"
+	case 3:
+		return "IPv4v6"
+	}
+	return "Unkown"
+}

@@ -22,9 +22,9 @@ type SessionID uint32
 // by a tuple of SgwCtrlAddr, PgwCtrlAddr, imsi and ebi or
 // by SgwCtrlFTEID.
 type gtpSessionRepo struct {
-	sessionsByID       map[SessionID]*gtpSession
-	sessionsByCtrlTeid map[gtp.Teid]*gtpSession
-	sessionsByImsiEbi  map[string]*gtpSession
+	sessionsByID       map[SessionID]*GtpSession
+	sessionsByCtrlTeid map[gtp.Teid]*GtpSession
+	sessionsByImsiEbi  map[string]*GtpSession
 	mtx4Map            sync.RWMutex
 
 	nextSessionID SessionID
@@ -34,9 +34,9 @@ type gtpSessionRepo struct {
 func newGtpSessionRepo() *gtpSessionRepo {
 	log.Info("Initialize GTP Sessions Repository")
 	return &gtpSessionRepo{
-		sessionsByID:       make(map[SessionID]*gtpSession),
-		sessionsByCtrlTeid: make(map[gtp.Teid]*gtpSession),
-		sessionsByImsiEbi:  make(map[string]*gtpSession),
+		sessionsByID:       make(map[SessionID]*GtpSession),
+		sessionsByCtrlTeid: make(map[gtp.Teid]*GtpSession),
+		sessionsByImsiEbi:  make(map[string]*GtpSession),
 	}
 }
 
@@ -61,9 +61,9 @@ func (r *gtpSessionRepo) newSession(
 		return 0, err
 	}
 
-	session := &gtpSession{
+	session := &GtpSession{
 		id:     r.nextID(),
-		status: gssIdle,
+		status: GssIdle,
 		mtx:    sync.RWMutex{},
 
 		cmdReqChan:           make(chan gtpSessionCmd.Cmd),
@@ -165,7 +165,7 @@ func (r *gtpSessionRepo) nextID() SessionID {
 }
 
 // findBySessionID returns nil when the id does not exist.
-func (r *gtpSessionRepo) findBySessionID(id SessionID) *gtpSession {
+func (r *gtpSessionRepo) findBySessionID(id SessionID) *GtpSession {
 	r.mtx4Map.RLock()
 	defer r.mtx4Map.RUnlock()
 	if val, ok := r.sessionsByID[id]; ok {
@@ -175,7 +175,7 @@ func (r *gtpSessionRepo) findBySessionID(id SessionID) *gtpSession {
 }
 
 // findByTeid returns nil when the id does not exist.
-func (r *gtpSessionRepo) findByTeid(teid gtp.Teid) *gtpSession {
+func (r *gtpSessionRepo) findByTeid(teid gtp.Teid) *GtpSession {
 	r.mtx4Map.RLock()
 	defer r.mtx4Map.RUnlock()
 	if val, ok := r.sessionsByCtrlTeid[teid]; ok {
@@ -184,7 +184,7 @@ func (r *gtpSessionRepo) findByTeid(teid gtp.Teid) *gtpSession {
 	return nil
 }
 
-func (r *gtpSessionRepo) findByImsiEbi(imsi string, ebi byte) *gtpSession {
+func (r *gtpSessionRepo) findByImsiEbi(imsi string, ebi byte) *GtpSession {
 	r.mtx4Map.RLock()
 	defer r.mtx4Map.RUnlock()
 	imsiEbi := imsi + "_" + strconv.Itoa(int(ebi))

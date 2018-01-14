@@ -1,8 +1,11 @@
 package ie
 
-import "log"
-import "errors"
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"log"
+)
 
 type Ambr struct {
 	header
@@ -53,4 +56,8 @@ func (a *Ambr) UplinkKbps() uint32 {
 
 func (a *Ambr) DownlinkKbps() uint32 {
 	return a.downlinkKbps
+}
+
+func (a *Ambr) String() string {
+	return fmt.Sprintf("Uplink AMBR: %d kbps, Downlink AMBR: %d kbps", a.uplinkKbps, a.downlinkKbps)
 }

@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/craftone/gojiko/gtp"
+
 	"github.com/craftone/gojiko/config"
 	gsc "github.com/craftone/gojiko/domain/gtpSessionCmd"
 	"github.com/sirupsen/logrus"
@@ -14,17 +16,17 @@ import (
 	"github.com/craftone/gojiko/gtpv2c/ie"
 )
 
-type gtpSessionStatus byte
+type GtpSessionStatus byte
 
 const (
-	gssIdle gtpSessionStatus = iota
-	gssSendingCSReq
-	gssConnected
+	GssIdle GtpSessionStatus = iota
+	GssSendingCSReq
+	GssConnected
 )
 
-type gtpSession struct {
+type GtpSession struct {
 	id     SessionID
-	status gtpSessionStatus
+	status GtpSessionStatus
 	mtx    sync.RWMutex
 
 	cmdReqChan           chan gsc.Cmd
@@ -57,7 +59,7 @@ type gtpSession struct {
 }
 
 // this function is for GoRoutine
-func gtpSessionRoutine(session *gtpSession) {
+func gtpSessionRoutine(session *GtpSession) {
 	myLog := log.WithField("SessionID", session.id)
 	myLog.Debug("Start a GTP session goroutine")
 
@@ -66,7 +68,7 @@ func gtpSessionRoutine(session *gtpSession) {
 
 		switch cmd := msg.(type) {
 		case gsc.CreateSessionReq:
-			err := procCreateSession(session, cmd, myLog)
+			err := session.procCreateSession(cmd, myLog)
 			if err != nil {
 				log.Error(err)
 			}
@@ -75,8 +77,8 @@ func gtpSessionRoutine(session *gtpSession) {
 	myLog.Debug("Stop a GTP session goroutine")
 }
 
-func procCreateSession(session *gtpSession, cmd gsc.CreateSessionReq, myLog *logrus.Entry) error {
-	session.status = gssSendingCSReq
+func (session *GtpSession) procCreateSession(cmd gsc.CreateSessionReq, myLog *logrus.Entry) error {
+	session.status = GssSendingCSReq
 	seqNum := session.sgwCtrl.nextSeqNum()
 
 	recoveryIE, err := ie.NewRecovery(0, session.sgwCtrl.recovery)
@@ -175,4 +177,66 @@ retry:
 	session.cmdResChan <- res
 
 	return nil
+}
+
+// setter & getter
+
+func (s *GtpSession) ID() SessionID {
+	return s.id
+}
+
+func (s *GtpSession) Status() GtpSessionStatus {
+	return s.status
+}
+
+func (s *GtpSession) SgwCtrlFTEID() (net.IP, gtp.Teid) {
+	return s.sgwCtrlFTEID.Ipv4(), s.sgwCtrlFTEID.Teid()
+}
+
+func (s *GtpSession) SgwDataFTEID() (net.IP, gtp.Teid) {
+	return s.sgwDataFTEID.Ipv4(), s.sgwDataFTEID.Teid()
+}
+
+func (s *GtpSession) PgwCtrlFTEID() (net.IP, gtp.Teid) {
+	return s.pgwCtrlFTEID.Ipv4(), s.pgwCtrlFTEID.Teid()
+}
+
+func (s *GtpSession) PgwDataFTEID() (net.IP, gtp.Teid) {
+	return s.pgwDataFTEID.Ipv4(), s.pgwDataFTEID.Teid()
+}
+
+func (s *GtpSession) Imsi() string {
+	return s.imsi.Value()
+}
+
+func (s *GtpSession) Msisdn() string {
+	return s.msisdn.Value()
+}
+
+func (s *GtpSession) Ebi() byte {
+	return s.ebi.Value()
+}
+
+func (s *GtpSession) Paa() net.IP {
+	return s.paa.IPv4()
+}
+
+func (s *GtpSession) Apn() string {
+	return s.apn.Value()
+}
+
+func (s *GtpSession) Ambr() string {
+	return s.ambr.String()
+}
+
+func (s *GtpSession) RatType() string {
+	return s.ratType.String()
+}
+
+func (s *GtpSession) ServingNetwork() string {
+	return s.servingNetwork.String()
+}
+
+func (s *GtpSession) PdnType() string {
+	return s.pdnType
 }

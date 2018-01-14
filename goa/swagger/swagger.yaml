@@ -72,29 +72,11 @@ definitions:
   FTEID:
     example:
       IPv4 Addr: 127.0.0.1
-      IPv4 Flag: true
-      IPv6 Flag: false
-      Interface: S5/S8 SGW GTP-U interface
       TEID: "0x12345678"
     properties:
       IPv4 Addr:
         example: 127.0.0.1
         format: ipv4
-        type: string
-      IPv4 Flag:
-        example: true
-        type: boolean
-      IPv6 Flag:
-        default: false
-        example: false
-        type: boolean
-      Interface:
-        enum:
-        - S5/S8 SGW GTP-U interface
-        - S5/S8 PGW GTP-U interface
-        - S5/S8 SGW GTP-C interface
-        - S5/S8 PGW GTP-C interface
-        example: S5/S8 SGW GTP-U interface
         type: string
       TEID:
         example: "0x12345678"
@@ -110,27 +92,15 @@ definitions:
       fteid:
         pgwCtrlFTEID:
           IPv4 Addr: 127.0.0.1
-          IPv4 Flag: true
-          IPv6 Flag: false
-          Interface: S5/S8 SGW GTP-U interface
           TEID: "0x12345678"
         pgwDataFTEID:
           IPv4 Addr: 127.0.0.1
-          IPv4 Flag: true
-          IPv6 Flag: false
-          Interface: S5/S8 SGW GTP-U interface
           TEID: "0x12345678"
         sgwCtrlFTEID:
           IPv4 Addr: 127.0.0.1
-          IPv4 Flag: true
-          IPv6 Flag: false
-          Interface: S5/S8 SGW GTP-U interface
           TEID: "0x12345678"
         sgwDataFTEID:
           IPv4 Addr: 127.0.0.1
-          IPv4 Flag: true
-          IPv6 Flag: false
-          Interface: S5/S8 SGW GTP-U interface
           TEID: "0x12345678"
       id: 1
       imsi: "440100123456780"
@@ -189,27 +159,15 @@ definitions:
     example:
       pgwCtrlFTEID:
         IPv4 Addr: 127.0.0.1
-        IPv4 Flag: true
-        IPv6 Flag: false
-        Interface: S5/S8 SGW GTP-U interface
         TEID: "0x12345678"
       pgwDataFTEID:
         IPv4 Addr: 127.0.0.1
-        IPv4 Flag: true
-        IPv6 Flag: false
-        Interface: S5/S8 SGW GTP-U interface
         TEID: "0x12345678"
       sgwCtrlFTEID:
         IPv4 Addr: 127.0.0.1
-        IPv4 Flag: true
-        IPv6 Flag: false
-        Interface: S5/S8 SGW GTP-U interface
         TEID: "0x12345678"
       sgwDataFTEID:
         IPv4 Addr: 127.0.0.1
-        IPv4 Flag: true
-        IPv6 Flag: false
-        Interface: S5/S8 SGW GTP-U interface
         TEID: "0x12345678"
     properties:
       pgwCtrlFTEID:

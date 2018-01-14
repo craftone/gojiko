@@ -38,14 +38,6 @@ var _ = Resource("gtpsession", func() {
 })
 
 var FTEID = Type("FTEID", func() {
-	Attribute("Interface", String, "", func() {
-		Enum("S5/S8 SGW GTP-U interface", "S5/S8 PGW GTP-U interface", "S5/S8 SGW GTP-C interface", "S5/S8 PGW GTP-C interface")
-	})
-	Attribute("IPv4 Flag", Boolean)
-	Attribute("IPv6 Flag", Boolean, "", func() {
-		Default(false)
-		Example(false)
-	})
 	Attribute("TEID", String, "", func() {
 		Pattern("^0x[0-9A-F]{8}$")
 		Example("0x12345678")

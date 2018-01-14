@@ -30,3 +30,10 @@ func TestUnmambrshal_Ambr(t *testing.T) {
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }
+
+func TestAmbr_String(t *testing.T) {
+	ambr, _ := NewAmbr(0, 0, 1)
+	assert.Equal(t, "Uplink AMBR: 0 kbps, Downlink AMBR: 1 kbps", ambr.String())
+	ambr, _ = NewAmbr(0, 4294967, 4294960)
+	assert.Equal(t, "Uplink AMBR: 4294967 kbps, Downlink AMBR: 4294960 kbps", ambr.String())
+}

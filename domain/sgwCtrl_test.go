@@ -75,7 +75,7 @@ func TestSgwCtrl_CreateSession_OK(t *testing.T) {
 	assert.Equal(t, pgwDataTEID, session.pgwDataFTEID.Teid())
 }
 
-func ensureTheSession(sgwCtrl *SgwCtrl, imsi string, ebi byte) *gtpSession {
+func ensureTheSession(sgwCtrl *SgwCtrl, imsi string, ebi byte) *GtpSession {
 retry:
 	session := sgwCtrl.gtpSessionRepo.findByImsiEbi(imsi, ebi)
 	if session == nil {

@@ -1,12 +1,11 @@
 package main
 
 import (
-	"net"
-
 	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/domain/gtpSessionCmd"
 	"github.com/craftone/gojiko/goa/app"
 	"github.com/goadesign/goa"
+	"net"
 )
 
 // GtpsessionController implements the gtpsession resource.

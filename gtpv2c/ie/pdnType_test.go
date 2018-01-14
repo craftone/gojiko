@@ -42,3 +42,12 @@ func TestUnmarshal_pdnType(t *testing.T) {
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 }
+
+func TestPdnType_String(t *testing.T) {
+	pt, _ := NewPdnType(0, PdnTypeIPv4)
+	assert.Equal(t, "IPv4", pt.String())
+	pt, _ = NewPdnType(0, PdnTypeIPv6)
+	assert.Equal(t, "IPv6", pt.String())
+	pt, _ = NewPdnType(0, PdnTypeIPv4v6)
+	assert.Equal(t, "IPv4v6", pt.String())
+}

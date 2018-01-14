@@ -1,6 +1,9 @@
 package ie
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 type ServingNetwork struct {
 	header
@@ -41,4 +44,8 @@ func unmarshalServingNetwork(h header, buf []byte) (*ServingNetwork, error) {
 		return nil, err
 	}
 	return sn, nil
+}
+
+func (s *ServingNetwork) String() string {
+	return fmt.Sprintf("MCC: %s, MNC: %s", s.mcc, s.mnc)
 }

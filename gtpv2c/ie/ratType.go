@@ -1,7 +1,10 @@
 package ie
 
-import "log"
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"log"
+)
 
 type RatType struct {
 	header
@@ -42,4 +45,27 @@ func unmarshalRatType(h header, buf []byte) (*RatType, error) {
 
 func (r *RatType) Value() byte {
 	return r.value
+}
+
+func (r *RatType) String() string {
+	var str string
+	switch int(r.value) {
+	case 1:
+		str = "UTRAN"
+	case 2:
+		str = "GERAN"
+	case 3:
+		str = "WLAN"
+	case 4:
+		str = "GAN"
+	case 5:
+		str = "HSPA Evolution"
+	case 6:
+		str = "EUTRAN"
+	case 7:
+		str = "Virtual"
+	default:
+		str = "<reserved>"
+	}
+	return fmt.Sprintf("%s (%d)", str, r.value)
 }
