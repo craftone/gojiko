@@ -21,21 +21,14 @@ func NewGtpsessionController(service *goa.Service) *GtpsessionController {
 	return &GtpsessionController{Controller: service.NewController("GtpsessionController")}
 }
 
-func newFteid(ipv4 net.IP, teid gtp.Teid) *app.Fteid {
-	return &app.Fteid{
-		Ipv4: ipv4.String(),
-		Teid: fmt.Sprintf("0x%08X", teid),
-	}
-}
-
 // Create runs the create action.
 func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 	// GtpsessionController_Create: start_implement
 
-	sgwCtrlAddr := net.UDPAddr{IP: net.ParseIP(ctx.Payload.SgwAddr), Port: domain.GtpControlPort}
+	payload := ctx.Payload
+	sgwCtrlAddr := net.UDPAddr{IP: net.ParseIP(payload.SgwAddr), Port: domain.GtpControlPort}
 	theSgwCtrlRepo := domain.TheSgwCtrlRepo()
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(sgwCtrlAddr)
-	payload := ctx.Payload
 	csRes, err := sgwCtrl.CreateSession(
 		payload.Imsi, payload.Msisdn, payload.Mei, payload.Mcc, payload.Mnc,
 		payload.Apn, byte(payload.Ebi))
@@ -55,7 +48,12 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 				SgwCtrlFTEID: newFteid(sess.SgwCtrlFTEID()),
 				SgwDataFTEID: newFteid(sess.SgwDataFTEID()),
 			},
-			// ID: sess.ID(),
+			ID:     int(sess.ID()),
+			Imsi:   sess.Imsi(),
+			Mcc:    sess.Mcc(),
+			Mei:    sess.Mei(),
+			Mnc:    sess.Mnc(),
+			Msisdn: sess.Msisdn(),
 		}
 		return ctx.OK(res)
 	case domain.GscResTimeout:
@@ -64,4 +62,8 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 	return goa.ErrInvalidRequest("Invalid request")
 
 	// GtpsessionController_Create: end_implement
+}
+
+func newFteid(ip net.IP, teid gtp.Teid) *app.Fteid {
+	return &app.Fteid{Ipv4: ip.String(), Teid: fmt.Sprintf("0x%08X", teid)}
 }

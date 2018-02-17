@@ -6,16 +6,16 @@ import (
 )
 
 var apnMccMncMember = func() {
-	Member("apn", String, "PGW's Access Point Name", func() {
+	Member("apn", String, "Access Point Name", func() {
 		Format("hostname")
 		Example("example.com")
 	})
-	Member("mcc", String, "PGW's Mobile Country Code", func() {
+	Member("mcc", String, "Mobile Country Code", func() {
 		Pattern(`^[0-9]{3}$`)
 		Default("440")
 		Example("440")
 	})
-	Member("mnc", String, "PGW's Mobile Network Code", func() {
+	Member("mnc", String, "Mobile Network Code", func() {
 		Pattern(`^[0-9]{2,3}$`)
 		Default("10")
 		Example("10")

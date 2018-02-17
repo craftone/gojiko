@@ -48,6 +48,7 @@ type GtpSession struct {
 
 	imsi           *ie.Imsi
 	msisdn         *ie.Msisdn
+	mei            *ie.Mei
 	ebi            *ie.Ebi
 	paa            *ie.Paa // at first, 0.0.0.0
 	apn            *ie.Apn
@@ -212,6 +213,10 @@ func (s *GtpSession) Msisdn() string {
 	return s.msisdn.Value()
 }
 
+func (s *GtpSession) Mei() string {
+	return s.mei.Value()
+}
+
 func (s *GtpSession) Ebi() byte {
 	return s.ebi.Value()
 }
@@ -234,6 +239,14 @@ func (s *GtpSession) RatType() string {
 
 func (s *GtpSession) ServingNetwork() string {
 	return s.servingNetwork.String()
+}
+
+func (s *GtpSession) Mcc() string {
+	return s.servingNetwork.Mcc()
+}
+
+func (s *GtpSession) Mnc() string {
+	return s.servingNetwork.Mnc()
 }
 
 func (s *GtpSession) PdnType() string {

@@ -46,6 +46,7 @@ func (r *gtpSessionRepo) newSession(
 	sgwDataFTEID *ie.Fteid,
 	imsi *ie.Imsi,
 	msisdn *ie.Msisdn,
+	mei *ie.Mei,
 	ebi *ie.Ebi,
 	paa *ie.Paa,
 	apn *ie.Apn,

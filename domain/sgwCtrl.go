@@ -89,6 +89,11 @@ func (s *SgwCtrl) CreateSession(
 		return nil, err
 	}
 
+	meiIE, err := ie.NewMei(0, mei)
+	if err != nil {
+		return nil, err
+	}
+
 	ebiIE, err := ie.NewEbi(0, ebi)
 	if err != nil {
 		return nil, err
@@ -132,6 +137,7 @@ func (s *SgwCtrl) CreateSession(
 		sgwDataFTEID,
 		imsiIE,
 		msisdnIE,
+		meiIE,
 		ebiIE,
 		paaIE,
 		apnIE,

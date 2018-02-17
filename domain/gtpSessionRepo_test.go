@@ -30,6 +30,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	imsi2 := "22342345239"
 	imsi2Ie, _ := ie.NewImsi(0, imsi2)
 	msisdnIe, _ := ie.NewMsisdn(0, "819012345678")
+	meiIe, _ := ie.NewMei(0, "490154203237518")
 	ebi1 := byte(5)
 	ebi1Ie, _ := ie.NewEbi(0, ebi1)
 	ebi2 := byte(6)
@@ -46,7 +47,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		net.IPv4(100, 100, 100, 100),
 		sgwCtrlSendChan,
 		sgwCtrlFTEID, sgwDataFTEID,
-		imsi1Ie, msisdnIe, ebi1Ie, paaIe, apnIe, ambrIe,
+		imsi1Ie, msisdnIe, meiIe, ebi1Ie, paaIe, apnIe, ambrIe,
 		ratTypeIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.Equal(t, SessionID(0), sid)
@@ -62,7 +63,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		net.IPv4(100, 100, 100, 100),
 		sgwCtrlSendChan,
 		sgwCtrlFTEID, sgwDataFTEID,
-		imsi2Ie, msisdnIe, ebi2Ie, paaIe, apnIe, ambrIe,
+		imsi2Ie, msisdnIe, meiIe, ebi2Ie, paaIe, apnIe, ambrIe,
 		ratTypeIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.Error(t, err)
@@ -76,7 +77,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		net.IPv4(100, 100, 100, 100),
 		sgwCtrlSendChan,
 		sgwCtrlFTEID2, sgwDataFTEID,
-		imsi1Ie, msisdnIe, ebi1Ie, paaIe, apnIe, ambrIe,
+		imsi1Ie, msisdnIe, meiIe, ebi1Ie, paaIe, apnIe, ambrIe,
 		ratTypeIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.Error(t, err)
@@ -88,7 +89,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		net.IPv4(100, 100, 100, 100),
 		sgwCtrlSendChan,
 		sgwCtrlFTEID2, sgwDataFTEID,
-		imsi2Ie, msisdnIe, ebi1Ie, paaIe, apnIe, ambrIe,
+		imsi2Ie, msisdnIe, meiIe, ebi1Ie, paaIe, apnIe, ambrIe,
 		ratTypeIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.NoError(t, err)

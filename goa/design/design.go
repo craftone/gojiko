@@ -7,8 +7,8 @@ import (
 
 var _ = API("gojiko api", func() {
 	Title("Gojiko API")
-	Description(`Gojiko は日本のL2接続MVNOに適した簡素な疑似SGWシミュレータです。
-Jmeter等で操作可能なため試験自動化に適しています。`)
+	Description(`Gojiko は日本のL2接続MVNOでの利用に適した簡素な疑似SGWシミュレータです。
+Jmeter等で操作可能であるため、試験自動化に適しています。`)
 	Scheme("http")
 	Host("localhost:8080")
 })
