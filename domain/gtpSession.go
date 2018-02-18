@@ -226,7 +226,7 @@ func (s *GtpSession) Paa() net.IP {
 }
 
 func (s *GtpSession) Apn() string {
-	return s.apn.Value()
+	return s.apn.String()
 }
 
 func (s *GtpSession) Ambr() string {

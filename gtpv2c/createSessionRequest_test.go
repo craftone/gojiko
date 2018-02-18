@@ -24,7 +24,7 @@ func TestCreateSessionRequest_Marshal(t *testing.T) {
 	assert.Equal(t, []byte{
 		0x48,   // First octet
 		0x20,   // CSReq(32)
-		0, 220, // Length
+		0, 221, // Length
 		0, 0, 0, 0, // TEID
 		0x00, 0x12, 0x34, // Seq Num
 		0,          // Spare
@@ -41,7 +41,7 @@ func TestCreateSessionRequest_Marshal(t *testing.T) {
 		0x4d, 0, 3, 0, 0, 0, 0, // Indication
 		0x57, 0, 9, 0, // Sender F-TEID header
 		0x86, 0x01, 0x23, 0x45, 0x67, 1, 2, 3, 4,
-		0x47, 0, 6, 0, 0x61, 0x70, 0x6e, 0x2e, 0x6a, 0x70, // APN
+		0x47, 0, 7, 0, 3, 0x61, 0x70, 0x6e, 2, 0x6a, 0x70, // APN
 		0x80, 0, 1, 0, 1, // Selection Mode
 		0x63, 0, 1, 0, 1, // PDN Type
 		0x4f, 0, 5, 0, 1, 0, 0, 0, 0, // PAA
@@ -98,7 +98,7 @@ func TestUnmarshal_CreateSessionRequest(t *testing.T) {
 	assert.Equal(t, byte(6), csReq.RatType().Value())
 	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), csReq.SgwCtrlFteid().Ipv4())
 	assert.Equal(t, gtp.Teid(0x01234567), csReq.SgwCtrlFteid().Teid())
-	assert.Equal(t, "apn.jp", csReq.Apn().Value())
+	assert.Equal(t, "apn.jp", csReq.Apn().String())
 	assert.Equal(t, byte(5), csReq.BearerContextTBC().Ebi().Value())
 	assert.Equal(t, net.IPv4(5, 6, 7, 8).To4(), csReq.BearerContextTBC().SgwDataFteid().Ipv4())
 	assert.Equal(t, gtp.Teid(0x76543210), csReq.BearerContextTBC().SgwDataFteid().Teid())
