@@ -4,6 +4,8 @@ import (
 	"net"
 	"os"
 
+	"github.com/craftone/gojiko/config"
+
 	"github.com/craftone/gojiko/domain/apns"
 	"github.com/sirupsen/logrus"
 )
@@ -17,12 +19,16 @@ func Init() error {
 	log.Info("Initialize domain package")
 
 	apns.Init(log)
-	sgwCtrl, err := newSgwCtrl(defaultSgwCtrlAddr, GtpUserPort, 0)
-	if err != nil {
-		return err
-	}
+
 	theSgwCtrlRepo = newSgwCtrlRepo()
-	theSgwCtrlRepo.AddCtrl(sgwCtrl)
+	for _, sgw := range config.GetSGWs() {
+		sgwCtrlAddr := net.UDPAddr{IP: sgw.IP, Port: GtpControlPort}
+		sgwCtrl, err := newSgwCtrl(sgwCtrlAddr, GtpUserPort, 0)
+		if err != nil {
+			return err
+		}
+		theSgwCtrlRepo.AddCtrl(sgwCtrl)
+	}
 
 	return nil
 }

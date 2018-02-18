@@ -16,17 +16,17 @@ func TestMain(m *testing.M) {
 
 func TestInit_Gtpv2cTimeout(t *testing.T) {
 	// test default value
-	assert.Equal(t, 3000*time.Millisecond, Gtpv2cTimeoutDuration())
+	assert.Equal(t, 1000*time.Millisecond, Gtpv2cTimeoutDuration())
 
 	// test update
-	SetGtpv2cTimeout(1000)
-	assert.Equal(t, 1000, Gtpv2cTimeout())
-	assert.Equal(t, 1000*time.Millisecond, Gtpv2cTimeoutDuration())
+	SetGtpv2cTimeout(3000)
+	assert.Equal(t, 3000, Gtpv2cTimeout())
+	assert.Equal(t, 3000*time.Millisecond, Gtpv2cTimeoutDuration())
 }
 
 func TestInit_Gtpv2cRetry(t *testing.T) {
 	// test default value
-	assert.Equal(t, 3, Gtpv2cRetry())
+	assert.Equal(t, 2, Gtpv2cRetry())
 
 	// test update
 	SetGtpv2cRetry(5)
