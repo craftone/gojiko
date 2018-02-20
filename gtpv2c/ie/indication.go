@@ -79,7 +79,9 @@ func NewIndication(instance byte, indicationArg IndicationArg) (*Indication, err
 }
 
 func (i *Indication) Marshal() []byte {
-	body := make([]byte, 3)
+	// on 3gpp R10 indication size is 3 + alpha
+	// on 3gpp R14 indication size is 7 + alpha
+	body := make([]byte, 7)
 	body[0] = util.SetBit(body[0], 7, i.daf)
 	body[0] = util.SetBit(body[0], 6, i.dtf)
 	body[0] = util.SetBit(body[0], 5, i.hi)

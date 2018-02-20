@@ -33,7 +33,7 @@ func TestIndication_Marshal(t *testing.T) {
 	}
 	idc, _ := NewIndication(1, ida)
 	idcBin := idc.Marshal()
-	assert.Equal(t, []byte{0x4d, 0, 3, 1, 0xaa, 0xaa, 2}, idcBin)
+	assert.Equal(t, []byte{0x4d, 0, 7, 1, 0xaa, 0xaa, 2, 0, 0, 0, 0}, idcBin)
 }
 
 func TestUnmarshal_indication(t *testing.T) {

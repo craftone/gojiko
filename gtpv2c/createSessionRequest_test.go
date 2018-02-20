@@ -24,7 +24,7 @@ func TestCreateSessionRequest_Marshal(t *testing.T) {
 	assert.Equal(t, []byte{
 		0x48,   // First octet
 		0x20,   // CSReq(32)
-		0, 221, // Length
+		0, 225, // Length
 		0, 0, 0, 0, // TEID
 		0x00, 0x12, 0x34, // Seq Num
 		0,          // Spare
@@ -38,7 +38,7 @@ func TestCreateSessionRequest_Marshal(t *testing.T) {
 		0x18, 0x44, 0xf0, 0x01, 0, 0, 0x44, 0xf0, 0x1, 0, 0, 0, 0,
 		0x53, 0, 3, 0, 0x44, 0xf0, 0x01, // Serving Network
 		0x52, 0, 1, 0, 6, // RAT Type
-		0x4d, 0, 3, 0, 0, 0, 0, // Indication
+		0x4d, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, // Indication
 		0x57, 0, 9, 0, // Sender F-TEID header
 		0x86, 0x01, 0x23, 0x45, 0x67, 1, 2, 3, 4,
 		0x47, 0, 7, 0, 3, 0x61, 0x70, 0x6e, 2, 0x6a, 0x70, // APN
