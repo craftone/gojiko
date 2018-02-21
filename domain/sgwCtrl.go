@@ -182,9 +182,9 @@ retry:
 func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
 	myLog := log.WithFields(logrus.Fields{
 		"laddr":   sgwCtrl.addr,
-		"routine": "SPgwReceiver",
+		"routine": "SgwReceiver",
 	})
-	myLog.Info("Start a SPgw Receiver goroutine")
+	myLog.Info("Start a SGW Receiver goroutine")
 
 	buf := make([]byte, 2000)
 	for {
@@ -193,7 +193,7 @@ func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
 			log.Error(err)
 			continue
 		}
-		myLog.Debug("Received packet from %s : %v", buf[:n], raddr.String())
+		myLog.Debugf("Received packet from %s : %v", raddr.String(), buf[:n])
 
 		if n < 8 {
 			log.Errorf("Too short packet : %v", buf[:n])
