@@ -55,7 +55,16 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 
 	assert.Equal(t, 1, theGtpSessionRepo.numOfSessions())
 	session := theGtpSessionRepo.findBySessionID(sid)
-	assert.Equal(t, "22342345234", session.imsi.Value())
+	assert.Equal(t, "22342345234", session.Imsi())
+	assert.Equal(t, "819012345678", session.Msisdn())
+	assert.Equal(t, "490154203237518", session.Mei())
+	assert.Equal(t, byte(5), session.Ebi())
+	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), session.Paa())
+	assert.Equal(t, "apn.example.com", session.Apn())
+	assert.Equal(t, "Uplink AMBR: 4294967 kbps, Downlink AMBR: 4294967 kbps", session.Ambr())
+	assert.Equal(t, "EUTRAN (6)", session.RatType())
+	assert.Equal(t, "MCC: 440, MNC: 10", session.ServingNetwork())
+	assert.Equal(t, "IPv4", session.PdnType())
 
 	// Error when same SGW-CTRL-TEID
 	_, err = theGtpSessionRepo.newSession(

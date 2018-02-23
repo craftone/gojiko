@@ -130,8 +130,6 @@ func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus
 retry:
 	select {
 	case recv := <-session.fromCtrlReceiverChan:
-		myLog.Debugf("Received packet from %v body: %v", recv.raddr, recv.body)
-
 		// Ensure received packet has sent from correct PGW address
 		if !recv.raddr.IP.Equal(session.pgwCtrlAddr.IP) ||
 			recv.raddr.Port != session.pgwCtrlAddr.Port {
@@ -145,7 +143,7 @@ retry:
 			myLog.Debugf("Received invalid GTPv2-C packet : %v", err)
 			goto retry
 		}
-		myLog.Debugf("received GTPv2-C packet : %v", msg)
+		myLog.Debugf("Received GTPv2-C packet : %v", msg)
 
 		// Ensure received packete is a Create Session Response
 		csres, ok := msg.(*gtpv2c.CreateSessionResponse)

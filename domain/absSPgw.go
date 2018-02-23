@@ -47,6 +47,7 @@ func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) 
 		addr:      addr,
 		conn:      conn,
 		recovery:  recovery,
+		teidVal:   gtp.Teid(1),
 		pair:      pair,
 		toSender:  make(chan UDPpacket),
 		opSpgwMap: make(map[string]*opSPgw),

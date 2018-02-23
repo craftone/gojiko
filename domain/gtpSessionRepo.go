@@ -84,6 +84,7 @@ func (r *gtpSessionRepo) newSession(
 
 		imsi:           imsi,
 		msisdn:         msisdn,
+		mei:            mei,
 		ebi:            ebi,
 		paa:            paa,
 		apn:            apn,
