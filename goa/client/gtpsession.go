@@ -6,7 +6,6 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
-// --regen=true
 // --version=v1.3.0
 
 package client
@@ -21,16 +20,16 @@ import (
 
 // CreateGtpsessionPayload is the gtpsession create action payload.
 type CreateGtpsessionPayload struct {
-	// PGW's Access Point Name
+	// Access Point Name
 	Apn string `form:"apn" json:"apn" xml:"apn"`
 	// EPS Bearer ID
 	Ebi  int    `form:"ebi" json:"ebi" xml:"ebi"`
 	Imsi string `form:"imsi" json:"imsi" xml:"imsi"`
-	// PGW's Mobile Country Code
+	// Mobile Country Code
 	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
 	// Mobile Equipment Identifier
 	Mei string `form:"mei" json:"mei" xml:"mei"`
-	// PGW's Mobile Network Code
+	// Mobile Network Code
 	Mnc    string `form:"mnc" json:"mnc" xml:"mnc"`
 	Msisdn string `form:"msisdn" json:"msisdn" xml:"msisdn"`
 	// SGW GTPv2-C loopback address

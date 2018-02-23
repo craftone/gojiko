@@ -56,15 +56,13 @@
 - Webサービス部の作成
   + ~~goa利用で進める~~ @ 2018/01/13
   + ~~createSession部作成~~ @ 2018/02/15
+  + Error時にJSONで返せるようにする
 
 - バグ修正
   + ~~APN IEが間違っていたので修正~~ @ 2018/02/18
   + APIでsgwが存在しない場合に落ちてしまう
 
 - logを別レイヤに切り出し
-
-- gtpSessionCmdパッケージをdomainに戻す
-  (resでsessionを戻したいので)
 
 - SgwCtrl.DeleteSession() を実装
 

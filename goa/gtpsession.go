@@ -33,7 +33,7 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 		payload.Imsi, payload.Msisdn, payload.Mei, payload.Mcc, payload.Mnc,
 		payload.Apn, byte(payload.Ebi))
 	if err != nil {
-		return goa.ErrInternal(err)
+		return ctx.InternalServerError(goa.ErrInternal(err))
 	}
 	switch csRes.Code {
 	case domain.GscResOK:
@@ -56,10 +56,8 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 			Msisdn: sess.Msisdn(),
 		}
 		return ctx.OK(res)
-	case domain.GscResTimeout:
-		return goa.ErrInternal("Request timed out")
 	}
-	return goa.ErrInvalidRequest("Invalid request")
+	return ctx.InternalServerError(goa.ErrInternal(csRes.Msg))
 
 	// GtpsessionController_Create: end_implement
 }

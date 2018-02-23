@@ -53,7 +53,6 @@ definitions:
         pattern: ^[0-9]{12,15}$
         type: string
       sgwAddr:
-        default: 127.0.0.1
         description: SGW GTPv2-C loopback address
         example: 127.0.0.1
         format: ipv4
@@ -150,6 +149,43 @@ definitions:
     - fteid
     title: 'Mediatype identifier: application/vnd.gtpsession+json; view=default'
     type: object
+  error:
+    description: Error response media type (default view)
+    example:
+      code: invalid_value
+      detail: Value of ID must be an integer
+      id: 3F1FKVRR
+      meta:
+        timestamp: 1.458609e+09
+      status: "400"
+    properties:
+      code:
+        description: an application-specific error code, expressed as a string value.
+        example: invalid_value
+        type: string
+      detail:
+        description: a human-readable explanation specific to this occurrence of the
+          problem.
+        example: Value of ID must be an integer
+        type: string
+      id:
+        description: a unique identifier for this particular occurrence of the problem.
+        example: 3F1FKVRR
+        type: string
+      meta:
+        additionalProperties: true
+        description: a meta object containing non-standard meta-information about
+          the error.
+        example:
+          timestamp: 1.458609e+09
+        type: object
+      status:
+        description: the HTTP status code applicable to this problem, expressed as
+          a string value.
+        example: "400"
+        type: string
+    title: 'Mediatype identifier: application/vnd.goa.error; view=default'
+    type: object
   fteid:
     example:
       ipv4: 127.0.0.1
@@ -212,6 +248,7 @@ paths:
         schema:
           $ref: '#/definitions/CreateGtpsessionPayload'
       produces:
+      - application/vnd.goa.error
       - application/vnd.gtpsession+json
       responses:
         "200":
@@ -220,6 +257,10 @@ paths:
             $ref: '#/definitions/Gtpsession'
         "404":
           description: Not Found
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/error'
       schemes:
       - http
       summary: create gtpsession

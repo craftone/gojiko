@@ -6,7 +6,6 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
-// --regen=true
 // --version=v1.3.0
 
 package app
@@ -39,16 +38,16 @@ func NewCreateGtpsessionContext(ctx context.Context, r *http.Request, service *g
 
 // createGtpsessionPayload is the gtpsession create action payload.
 type createGtpsessionPayload struct {
-	// PGW's Access Point Name
+	// Access Point Name
 	Apn *string `form:"apn,omitempty" json:"apn,omitempty" xml:"apn,omitempty"`
 	// EPS Bearer ID
 	Ebi  *int    `form:"ebi,omitempty" json:"ebi,omitempty" xml:"ebi,omitempty"`
 	Imsi *string `form:"imsi,omitempty" json:"imsi,omitempty" xml:"imsi,omitempty"`
-	// PGW's Mobile Country Code
+	// Mobile Country Code
 	Mcc *string `form:"mcc,omitempty" json:"mcc,omitempty" xml:"mcc,omitempty"`
 	// Mobile Equipment Identifier
 	Mei *string `form:"mei,omitempty" json:"mei,omitempty" xml:"mei,omitempty"`
-	// PGW's Mobile Network Code
+	// Mobile Network Code
 	Mnc    *string `form:"mnc,omitempty" json:"mnc,omitempty" xml:"mnc,omitempty"`
 	Msisdn *string `form:"msisdn,omitempty" json:"msisdn,omitempty" xml:"msisdn,omitempty"`
 	// SGW GTPv2-C loopback address
@@ -68,10 +67,6 @@ func (payload *createGtpsessionPayload) Finalize() {
 	var defaultMnc = "10"
 	if payload.Mnc == nil {
 		payload.Mnc = &defaultMnc
-	}
-	var defaultSgwAddr = "127.0.0.1"
-	if payload.SgwAddr == nil {
-		payload.SgwAddr = &defaultSgwAddr
 	}
 }
 
@@ -181,16 +176,16 @@ func (payload *createGtpsessionPayload) Publicize() *CreateGtpsessionPayload {
 
 // CreateGtpsessionPayload is the gtpsession create action payload.
 type CreateGtpsessionPayload struct {
-	// PGW's Access Point Name
+	// Access Point Name
 	Apn string `form:"apn" json:"apn" xml:"apn"`
 	// EPS Bearer ID
 	Ebi  int    `form:"ebi" json:"ebi" xml:"ebi"`
 	Imsi string `form:"imsi" json:"imsi" xml:"imsi"`
-	// PGW's Mobile Country Code
+	// Mobile Country Code
 	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
 	// Mobile Equipment Identifier
 	Mei string `form:"mei" json:"mei" xml:"mei"`
-	// PGW's Mobile Network Code
+	// Mobile Network Code
 	Mnc    string `form:"mnc" json:"mnc" xml:"mnc"`
 	Msisdn string `form:"msisdn" json:"msisdn" xml:"msisdn"`
 	// SGW GTPv2-C loopback address
@@ -263,4 +258,12 @@ func (ctx *CreateGtpsessionContext) OK(r *Gtpsession) error {
 func (ctx *CreateGtpsessionContext) NotFound() error {
 	ctx.ResponseData.WriteHeader(404)
 	return nil
+}
+
+// InternalServerError sends a HTTP response with status code 500.
+func (ctx *CreateGtpsessionContext) InternalServerError(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 500, r)
 }

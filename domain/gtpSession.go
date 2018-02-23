@@ -145,7 +145,7 @@ retry:
 		}
 		myLog.Debugf("Received GTPv2-C packet : %v", msg)
 
-		// Ensure received packete is a Create Session Response
+		// Ensure the received packete is a Create Session Response
 		csres, ok := msg.(*gtpv2c.CreateSessionResponse)
 		if !ok {
 			myLog.Debugf("Received packet is not a Create Session Response message.")

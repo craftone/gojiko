@@ -6,7 +6,6 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
-// --regen=true
 // --version=v1.3.0
 
 package client
@@ -16,11 +15,18 @@ import (
 	"net/http"
 )
 
+// DecodeErrorResponse decodes the ErrorResponse instance encoded in resp body.
+func (c *Client) DecodeErrorResponse(resp *http.Response) (*goa.ErrorResponse, error) {
+	var decoded goa.ErrorResponse
+	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
+	return &decoded, err
+}
+
 // A gtp session (default view)
 //
 // Identifier: application/vnd.gtpsession+json; view=default
 type Gtpsession struct {
-	// PGW's Access Point Name
+	// Access Point Name
 	Apn string `form:"apn" json:"apn" xml:"apn"`
 	// EPS Bearer ID
 	Ebi   int               `form:"ebi" json:"ebi" xml:"ebi"`
@@ -28,11 +34,11 @@ type Gtpsession struct {
 	// Session ID in this SGW
 	ID   int    `form:"id" json:"id" xml:"id"`
 	Imsi string `form:"imsi" json:"imsi" xml:"imsi"`
-	// PGW's Mobile Country Code
+	// Mobile Country Code
 	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
 	// Mobile Equipment Identifier
 	Mei string `form:"mei" json:"mei" xml:"mei"`
-	// PGW's Mobile Network Code
+	// Mobile Network Code
 	Mnc    string `form:"mnc" json:"mnc" xml:"mnc"`
 	Msisdn string `form:"msisdn" json:"msisdn" xml:"msisdn"`
 }

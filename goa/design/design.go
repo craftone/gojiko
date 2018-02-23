@@ -23,7 +23,6 @@ var _ = Resource("gtpsession", func() {
 		Payload(func() {
 			Member("sgwAddr", String, "SGW GTPv2-C loopback address", func() {
 				Format("ipv4")
-				Default("127.0.0.1")
 				Example("127.0.0.1")
 			})
 
@@ -34,6 +33,7 @@ var _ = Resource("gtpsession", func() {
 		})
 		Response(OK)
 		Response(NotFound)
+		Response(InternalServerError, ErrorMedia)
 	})
 })
 
