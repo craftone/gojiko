@@ -58,7 +58,7 @@
   + ~~createSession部作成~~ @ 2018/02/15
   + ~~Error時にJSONで返せるようにする~~ @ 2018/02/23
     + 中身はJSON だが Media Type が application/vnd.goa.error になっていて、
-      それを変えるのは面倒。そのままとする。
+      それを+jsonに変えるのは generator を変える必要があり面倒。そのままとする。
 
 - バグ修正
   + ~~APN IEが間違っていたので修正~~ @ 2018/02/18
@@ -76,9 +76,6 @@
   + SgwData.SendUDP() を実装
   + UdpResponser を実装
 
-
-- Webサービス部の作成
-  + goa利用で進める
 
 - SPgwのgoroutine終了。UDP read timeoutもさせる必要がある。
 
