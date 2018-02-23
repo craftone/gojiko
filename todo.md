@@ -56,7 +56,9 @@
 - Webサービス部の作成
   + ~~goa利用で進める~~ @ 2018/01/13
   + ~~createSession部作成~~ @ 2018/02/15
-  + Error時にJSONで返せるようにする
+  + ~~Error時にJSONで返せるようにする~~ @ 2018/02/23
+    + 中身はJSON だが Media Type が application/vnd.goa.error になっていて、
+      それを変えるのは面倒。そのままとする。
 
 - バグ修正
   + ~~APN IEが間違っていたので修正~~ @ 2018/02/18

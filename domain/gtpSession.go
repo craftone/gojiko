@@ -170,7 +170,7 @@ retry:
 
 	case <-afterChan:
 		myLog.Error("The Create Session Response timed out")
-		res = GscRes{Code: GscResTimeout, Msg: "Timeout"}
+		res = GscRes{Code: GscResTimeout, Msg: "Create Session Request timed out"}
 	}
 	session.cmdResChan <- res
 
