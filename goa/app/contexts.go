@@ -254,10 +254,12 @@ func (ctx *CreateGtpsessionContext) OK(r *Gtpsession) error {
 	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
 }
 
-// NotFound sends a HTTP response with status code 404.
-func (ctx *CreateGtpsessionContext) NotFound() error {
-	ctx.ResponseData.WriteHeader(404)
-	return nil
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *CreateGtpsessionContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
 }
 
 // InternalServerError sends a HTTP response with status code 500.

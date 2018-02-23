@@ -255,8 +255,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/Gtpsession'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
         "500":
           description: Internal Server Error
           schema:
@@ -272,8 +274,6 @@ produces:
 - application/gob
 - application/x-gob
 responses:
-  NotFound:
-    description: Not Found
   OK:
     description: OK
     schema:

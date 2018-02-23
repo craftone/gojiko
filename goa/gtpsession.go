@@ -29,6 +29,9 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 	sgwCtrlAddr := net.UDPAddr{IP: net.ParseIP(payload.SgwAddr), Port: domain.GtpControlPort}
 	theSgwCtrlRepo := domain.TheSgwCtrlRepo()
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(sgwCtrlAddr)
+	if sgwCtrl == nil {
+		return ctx.BadRequest(goa.ErrBadRequest(fmt.Errorf("There are no SGW that's IP address is %s", sgwCtrlAddr.String())))
+	}
 	csRes, err := sgwCtrl.CreateSession(
 		payload.Imsi, payload.Msisdn, payload.Mei, payload.Mcc, payload.Mnc,
 		payload.Apn, byte(payload.Ebi))

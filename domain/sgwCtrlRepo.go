@@ -12,5 +12,8 @@ func newSgwCtrlRepo() *sgwCtrlRepo {
 
 func (s *sgwCtrlRepo) GetSgwCtrl(addr net.UDPAddr) *SgwCtrl {
 	sgwCtrl := s.spgwRepo.GetCtrl(addr)
+	if sgwCtrl == nil {
+		return nil
+	}
 	return sgwCtrl.(*SgwCtrl)
 }

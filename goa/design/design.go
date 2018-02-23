@@ -32,7 +32,7 @@ var _ = Resource("gtpsession", func() {
 			Required("sgwAddr", "apn", "mcc", "mnc", "msisdn", "mei", "imsi", "ebi")
 		})
 		Response(OK)
-		Response(NotFound)
+		Response(BadRequest, ErrorMedia)
 		Response(InternalServerError, ErrorMedia)
 	})
 })
