@@ -201,14 +201,16 @@ func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
 		}
 		msgType := gtpv2c.MessageTypeNum(buf[1])
 		switch msgType {
-		case gtpv2c.EchoRequestNum, gtpv2c.EchoResponseNum:
-			log.Error("Not yet be implemented!")
+		case gtpv2c.EchoRequestNum:
+			sgwCtrl.toEchoReceiver <- UDPpacket{*raddr, buf[:n]}
+		case gtpv2c.EchoResponseNum:
+			log.Error("Not yet implemented!")
 			// Not yet be implemented
 		case gtpv2c.CreateSessionResponseNum:
 			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
 			sess := sgwCtrl.findByTeid(teid)
 			if sess == nil {
-				log.Debug("No session that have the teid : %d", teid)
+				log.Debug("No session that have the teid : %04x", teid)
 				continue
 			}
 			sess.fromCtrlReceiverChan <- UDPpacket{*raddr, buf[:n]}

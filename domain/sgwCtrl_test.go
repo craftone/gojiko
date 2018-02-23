@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/craftone/gojiko/config"
-
 	"github.com/craftone/gojiko/gtp"
 	"github.com/craftone/gojiko/gtpv2c"
 	"github.com/craftone/gojiko/gtpv2c/ie"
@@ -195,4 +194,24 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 	// No Create Sessin Response and the session should be timed out.
 
 	assert.Equal(t, *res, GscRes{Code: GscResTimeout, Msg: "Timeout"})
+}
+
+func TestSgwCtrl_EchoResponse(t *testing.T) {
+	// preparing
+	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
+	toSender := make(chan UDPpacket, 10)
+	sgwCtrl.toSender = toSender
+
+	// receive valid echo-request
+	echoReq, _ := gtpv2c.NewEchoRequest(1, 1)
+	echoReqBin := echoReq.Marshal()
+	raddr := net.UDPAddr{IP: net.IPv4(127, 0, 0, 2), Port: GtpControlPort}
+	udpPacket := UDPpacket{raddr, echoReqBin}
+	sgwCtrl.toEchoReceiver <- udpPacket
+
+	// send echo-response
+	sendPacket := <-toSender
+	assert.Equal(t, raddr, sendPacket.raddr)
+	echoRes, _ := gtpv2c.NewEchoResponse(sgwCtrl.seqNum-1, sgwCtrl.recovery)
+	assert.Equal(t, echoRes.Marshal(), sendPacket.body)
 }

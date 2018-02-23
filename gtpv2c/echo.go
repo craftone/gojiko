@@ -46,7 +46,7 @@ func NewEchoResponse(seqNum uint32, recoveryValue byte) (*EchoResponse, error) {
 	return &EchoResponse{echo}, nil
 }
 
-func (e echo) Marshal() []byte {
+func (e *echo) Marshal() []byte {
 	body := e.recovery.Marshal()
 	return e.header.marshal(body)
 }

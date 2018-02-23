@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/craftone/gojiko/gtp"
+	"github.com/craftone/gojiko/gtpv2c"
 )
 
 type UDPpacket struct {
@@ -24,7 +25,8 @@ type absSPgw struct {
 	mtxTeidSeq sync.Mutex
 	pair       SPgwIf
 
-	toSender chan UDPpacket
+	toSender       chan UDPpacket
+	toEchoReceiver chan UDPpacket
 
 	opSpgwMap map[string]*opSPgw //Key : UDPAddr.toString()
 	mtxOp     sync.RWMutex
@@ -44,15 +46,17 @@ func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) 
 		return nil, err
 	}
 	spgw := &absSPgw{
-		addr:      addr,
-		conn:      conn,
-		recovery:  recovery,
-		teidVal:   gtp.Teid(1),
-		pair:      pair,
-		toSender:  make(chan UDPpacket),
-		opSpgwMap: make(map[string]*opSPgw),
+		addr:           addr,
+		conn:           conn,
+		recovery:       recovery,
+		teidVal:        gtp.Teid(1),
+		pair:           pair,
+		toSender:       make(chan UDPpacket, 100),
+		toEchoReceiver: make(chan UDPpacket, 10),
+		opSpgwMap:      make(map[string]*opSPgw),
 	}
 	go absSPgwSenderRoutine(spgw, spgw.toSender)
+	go spgw.echoReceiver()
 	return spgw, nil
 }
 
@@ -72,6 +76,38 @@ func absSPgwSenderRoutine(spgw *absSPgw, sendChan <-chan UDPpacket) {
 			myLog.Error(err)
 			continue
 		}
+	}
+}
+
+// echoReceiver is for GoRoutine
+func (sp *absSPgw) echoReceiver() {
+	myLog := log.WithFields(logrus.Fields{
+		"laddr":   sp.addr,
+		"routine": "SPgwEchoReceiver",
+	})
+	myLog.Info("Start a SPgw ECHO Receiver goroutine")
+
+	for pkt := range sp.toEchoReceiver {
+		myLog.Debugf("Received packet : %v", pkt)
+
+		// ensure valid GTPv2 ECHO Request
+		_, _, err := gtpv2c.Unmarshal(pkt.body)
+		if err != nil {
+			myLog.Debugf("Received an invalid ECHO-C Request from %s", pkt.raddr.String())
+			continue
+		}
+		// make ECHO Response
+		seq := sp.nextSeqNum()
+		rec := sp.recovery
+		echoRes, err := gtpv2c.NewEchoResponse(seq, rec)
+		if err != nil {
+			myLog.Fatalf("Making ECHO Response Failure : %v", err)
+		}
+		res := UDPpacket{
+			raddr: pkt.raddr,
+			body:  echoRes.Marshal(),
+		}
+		sp.toSender <- res
 	}
 }
 

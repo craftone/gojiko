@@ -64,12 +64,11 @@
   + ~~APN IEが間違っていたので修正~~ @ 2018/02/18
   + ~~APIでsgwが存在しない場合に落ちてしまう~~ @ 2018/02/23
 
-- logを別レイヤに切り出し
-
 - SgwCtrl.DeleteSession() を実装
+- SgwCtrl.DeleteBearer() を実装
 
 - ECHO-Cを実装する
-  + ECHOパケットを適切なECHOMgrへ振り分ける。
+  + ~~ECHOパケットを適切なECHOMgrへ振り分ける。~~ @ 2018/02/24
   + 定期的にECHO-Cパケットを送出し、死活監視を行う。
 
 - UDP通信を実装する
@@ -77,6 +76,10 @@
   + UdpResponser を実装
 
 
-- SPgwのgoroutine終了。UDP read timeoutもさせる必要がある。
 
 - Monitor を実装
+
+- logを別レイヤに切り出し
+
+- SPgwのgoroutine終了。UDP read timeoutもさせる必要がある。
+
