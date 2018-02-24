@@ -193,7 +193,7 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 
 	// No Create Sessin Response and the session should be timed out.
 
-	assert.Equal(t, *res, GscRes{Code: GscResTimeout, Msg: "Timeout"})
+	assert.Equal(t, *res, GscRes{Code: GscResTimeout, Msg: "Create Session Request timed out"})
 }
 
 func TestSgwCtrl_EchoResponse(t *testing.T) {
