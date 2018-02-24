@@ -60,8 +60,8 @@ func MountGtpsessionController(service *goa.Service, ctrl GtpsessionController) 
 		}
 		return ctrl.Create(rctx)
 	}
-	service.Mux.Handle("POST", "/gtpsessions", ctrl.MuxHandler("create", h, unmarshalCreateGtpsessionPayload))
-	service.LogInfo("mount", "ctrl", "Gtpsession", "action", "Create", "route", "POST /gtpsessions")
+	service.Mux.Handle("POST", "/sgw/:sgwAddr/gtpsessions", ctrl.MuxHandler("create", h, unmarshalCreateGtpsessionPayload))
+	service.LogInfo("mount", "ctrl", "Gtpsession", "action", "Create", "route", "POST /sgw/:sgwAddr/gtpsessions")
 }
 
 // unmarshalCreateGtpsessionPayload unmarshals the request body into the context request data Payload field.

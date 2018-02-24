@@ -28,7 +28,7 @@ import (
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func CreateGtpsessionBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, error) {
+func CreateGtpsessionBadRequest(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, sgwAddr string, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -59,13 +59,14 @@ func CreateGtpsessionBadRequest(t goatest.TInterface, ctx context.Context, servi
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/gtpsessions"),
+		Path: fmt.Sprintf("/sgw/%v/gtpsessions", sgwAddr),
 	}
 	req, _err := http.NewRequest("POST", u.String(), nil)
 	if _err != nil {
 		panic("invalid test " + _err.Error()) // bug
 	}
 	prms := url.Values{}
+	prms["sgwAddr"] = []string{fmt.Sprintf("%v", sgwAddr)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -107,7 +108,7 @@ func CreateGtpsessionBadRequest(t goatest.TInterface, ctx context.Context, servi
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func CreateGtpsessionInternalServerError(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, error) {
+func CreateGtpsessionInternalServerError(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, sgwAddr string, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, error) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -138,13 +139,14 @@ func CreateGtpsessionInternalServerError(t goatest.TInterface, ctx context.Conte
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/gtpsessions"),
+		Path: fmt.Sprintf("/sgw/%v/gtpsessions", sgwAddr),
 	}
 	req, _err := http.NewRequest("POST", u.String(), nil)
 	if _err != nil {
 		panic("invalid test " + _err.Error()) // bug
 	}
 	prms := url.Values{}
+	prms["sgwAddr"] = []string{fmt.Sprintf("%v", sgwAddr)}
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -186,7 +188,7 @@ func CreateGtpsessionInternalServerError(t goatest.TInterface, ctx context.Conte
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func CreateGtpsessionOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, *app.Gtpsession) {
+func CreateGtpsessionOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, sgwAddr string, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, *app.Gtpsession) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -218,13 +220,14 @@ func CreateGtpsessionOK(t goatest.TInterface, ctx context.Context, service *goa.
 	// Setup request context
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/gtpsessions"),
+		Path: fmt.Sprintf("/sgw/%v/gtpsessions", sgwAddr),
 	}
 	req, _err := http.NewRequest("POST", u.String(), nil)
 	if _err != nil {
 		panic("invalid test " + _err.Error()) // bug
 	}
 	prms := url.Values{}
+	prms["sgwAddr"] = []string{fmt.Sprintf("%v", sgwAddr)}
 	if ctx == nil {
 		ctx = context.Background()
 	}

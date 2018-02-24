@@ -25,13 +25,14 @@ func NewGtpsessionController(service *goa.Service) *GtpsessionController {
 func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 	// GtpsessionController_Create: start_implement
 
-	payload := ctx.Payload
-	sgwCtrlAddr := net.UDPAddr{IP: net.ParseIP(payload.SgwAddr), Port: domain.GtpControlPort}
+	sgwCtrlAddr := net.UDPAddr{IP: net.ParseIP(ctx.SgwAddr), Port: domain.GtpControlPort}
 	theSgwCtrlRepo := domain.TheSgwCtrlRepo()
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(sgwCtrlAddr)
 	if sgwCtrl == nil {
 		return ctx.BadRequest(goa.ErrBadRequest(fmt.Errorf("There are no SGW that's IP address is %s", sgwCtrlAddr.String())))
 	}
+
+	payload := ctx.Payload
 	csRes, err := sgwCtrl.CreateSession(
 		payload.Imsi, payload.Msisdn, payload.Mei, payload.Mcc, payload.Mnc,
 		payload.Apn, byte(payload.Ebi))

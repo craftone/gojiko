@@ -20,6 +20,7 @@ import (
 	uuid "github.com/goadesign/goa/uuid"
 	"github.com/spf13/cobra"
 	"log"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -31,6 +32,8 @@ type (
 	CreateGtpsessionCommand struct {
 		Payload     string
 		ContentType string
+		// SGW GTPv2-C loopback address
+		SgwAddr     string
 		PrettyPrint bool
 	}
 )
@@ -44,7 +47,7 @@ func RegisterCommands(app *cobra.Command, c *client.Client) {
 	}
 	tmp1 := new(CreateGtpsessionCommand)
 	sub = &cobra.Command{
-		Use:   `gtpsession ["/gtpsessions"]`,
+		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions"]`,
 		Short: ``,
 		Long: `
 
@@ -57,8 +60,7 @@ Payload example:
    "mcc": "440",
    "mei": "1212345612345612",
    "mnc": "10",
-   "msisdn": "8101012345678",
-   "sgwAddr": "127.0.0.1"
+   "msisdn": "8101012345678"
 }`,
 		RunE: func(cmd *cobra.Command, args []string) error { return tmp1.Run(c, args) },
 	}
@@ -227,7 +229,7 @@ func (cmd *CreateGtpsessionCommand) Run(c *client.Client, args []string) error {
 	if len(args) > 0 {
 		path = args[0]
 	} else {
-		path = "/gtpsessions"
+		path = fmt.Sprintf("/sgw/%v/gtpsessions", url.QueryEscape(cmd.SgwAddr))
 	}
 	var payload client.CreateGtpsessionPayload
 	if cmd.Payload != "" {
@@ -252,4 +254,6 @@ func (cmd *CreateGtpsessionCommand) Run(c *client.Client, args []string) error {
 func (cmd *CreateGtpsessionCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
 	cc.Flags().StringVar(&cmd.Payload, "payload", "", "Request body encoded in JSON")
 	cc.Flags().StringVar(&cmd.ContentType, "content", "", "Request content type override, e.g. 'application/x-www-form-urlencoded'")
+	var sgwAddr string
+	cc.Flags().StringVar(&cmd.SgwAddr, "sgwAddr", sgwAddr, `SGW GTPv2-C loopback address`)
 }

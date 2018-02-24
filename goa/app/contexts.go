@@ -21,6 +21,7 @@ type CreateGtpsessionContext struct {
 	context.Context
 	*goa.ResponseData
 	*goa.RequestData
+	SgwAddr string
 	Payload *CreateGtpsessionPayload
 }
 
@@ -33,6 +34,14 @@ func NewCreateGtpsessionContext(ctx context.Context, r *http.Request, service *g
 	req := goa.ContextRequest(ctx)
 	req.Request = r
 	rctx := CreateGtpsessionContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramSgwAddr := req.Params["sgwAddr"]
+	if len(paramSgwAddr) > 0 {
+		rawSgwAddr := paramSgwAddr[0]
+		rctx.SgwAddr = rawSgwAddr
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, rctx.SgwAddr); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`sgwAddr`, rctx.SgwAddr, goa.FormatIPv4, err2))
+		}
+	}
 	return &rctx, err
 }
 
@@ -50,8 +59,6 @@ type createGtpsessionPayload struct {
 	// Mobile Network Code
 	Mnc    *string `form:"mnc,omitempty" json:"mnc,omitempty" xml:"mnc,omitempty"`
 	Msisdn *string `form:"msisdn,omitempty" json:"msisdn,omitempty" xml:"msisdn,omitempty"`
-	// SGW GTPv2-C loopback address
-	SgwAddr *string `form:"sgwAddr,omitempty" json:"sgwAddr,omitempty" xml:"sgwAddr,omitempty"`
 }
 
 // Finalize sets the default values defined in the design.
@@ -72,9 +79,6 @@ func (payload *createGtpsessionPayload) Finalize() {
 
 // Validate runs the validation rules defined in the design.
 func (payload *createGtpsessionPayload) Validate() (err error) {
-	if payload.SgwAddr == nil {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "sgwAddr"))
-	}
 	if payload.Apn == nil {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "apn"))
 	}
@@ -136,11 +140,6 @@ func (payload *createGtpsessionPayload) Validate() (err error) {
 			err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.msisdn`, *payload.Msisdn, `^[0-9]{12,15}$`))
 		}
 	}
-	if payload.SgwAddr != nil {
-		if err2 := goa.ValidateFormat(goa.FormatIPv4, *payload.SgwAddr); err2 != nil {
-			err = goa.MergeErrors(err, goa.InvalidFormatError(`raw.sgwAddr`, *payload.SgwAddr, goa.FormatIPv4, err2))
-		}
-	}
 	return
 }
 
@@ -168,9 +167,6 @@ func (payload *createGtpsessionPayload) Publicize() *CreateGtpsessionPayload {
 	if payload.Msisdn != nil {
 		pub.Msisdn = *payload.Msisdn
 	}
-	if payload.SgwAddr != nil {
-		pub.SgwAddr = *payload.SgwAddr
-	}
 	return &pub
 }
 
@@ -188,15 +184,10 @@ type CreateGtpsessionPayload struct {
 	// Mobile Network Code
 	Mnc    string `form:"mnc" json:"mnc" xml:"mnc"`
 	Msisdn string `form:"msisdn" json:"msisdn" xml:"msisdn"`
-	// SGW GTPv2-C loopback address
-	SgwAddr string `form:"sgwAddr" json:"sgwAddr" xml:"sgwAddr"`
 }
 
 // Validate runs the validation rules defined in the design.
 func (payload *CreateGtpsessionPayload) Validate() (err error) {
-	if payload.SgwAddr == "" {
-		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "sgwAddr"))
-	}
 	if payload.Apn == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "apn"))
 	}
@@ -239,9 +230,6 @@ func (payload *CreateGtpsessionPayload) Validate() (err error) {
 	}
 	if ok := goa.ValidatePattern(`^[0-9]{12,15}$`, payload.Msisdn); !ok {
 		err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.msisdn`, payload.Msisdn, `^[0-9]{12,15}$`))
-	}
-	if err2 := goa.ValidateFormat(goa.FormatIPv4, payload.SgwAddr); err2 != nil {
-		err = goa.MergeErrors(err, goa.InvalidFormatError(`raw.sgwAddr`, payload.SgwAddr, goa.FormatIPv4, err2))
 	}
 	return
 }

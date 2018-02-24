@@ -32,14 +32,13 @@ type CreateGtpsessionPayload struct {
 	// Mobile Network Code
 	Mnc    string `form:"mnc" json:"mnc" xml:"mnc"`
 	Msisdn string `form:"msisdn" json:"msisdn" xml:"msisdn"`
-	// SGW GTPv2-C loopback address
-	SgwAddr string `form:"sgwAddr" json:"sgwAddr" xml:"sgwAddr"`
 }
 
 // CreateGtpsessionPath computes a request path to the create action of gtpsession.
-func CreateGtpsessionPath() string {
+func CreateGtpsessionPath(sgwAddr string) string {
+	param0 := sgwAddr
 
-	return fmt.Sprintf("/gtpsessions")
+	return fmt.Sprintf("/sgw/%s/gtpsessions", param0)
 }
 
 // Create a new gtp sesseion

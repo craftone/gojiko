@@ -14,22 +14,23 @@ Jmeter等で操作可能であるため、試験自動化に適しています�
 })
 
 var _ = Resource("gtpsession", func() {
-	BasePath("/gtpsessions")
+	BasePath("/sgw/:sgwAddr/gtpsessions")
 	DefaultMedia(GtpSessionMedia)
+	Params(func() {
+		Param("sgwAddr", String, "SGW GTPv2-C loopback address", func() {
+			Format("ipv4")
+			Example("127.0.0.1")
+		})
+	})
 
 	Action("create", func() {
 		Description("Create a new gtp sesseion")
 		Routing(POST(""))
 		Payload(func() {
-			Member("sgwAddr", String, "SGW GTPv2-C loopback address", func() {
-				Format("ipv4")
-				Example("127.0.0.1")
-			})
-
 			apnMccMncMember()
 			msisdnMeiMember()
 			imsiEbiMember()
-			Required("sgwAddr", "apn", "mcc", "mnc", "msisdn", "mei", "imsi", "ebi")
+			Required("apn", "mcc", "mnc", "msisdn", "mei", "imsi", "ebi")
 		})
 		Response(OK)
 		Response(BadRequest, ErrorMedia)

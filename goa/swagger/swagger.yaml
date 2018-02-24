@@ -13,7 +13,6 @@ definitions:
       mei: "1212345612345612"
       mnc: "10"
       msisdn: "8101012345678"
-      sgwAddr: 127.0.0.1
     properties:
       apn:
         description: Access Point Name
@@ -52,13 +51,7 @@ definitions:
         example: "8101012345678"
         pattern: ^[0-9]{12,15}$
         type: string
-      sgwAddr:
-        description: SGW GTPv2-C loopback address
-        example: 127.0.0.1
-        format: ipv4
-        type: string
     required:
-    - sgwAddr
     - apn
     - mcc
     - mnc
@@ -237,11 +230,17 @@ info:
   title: Gojiko API
   version: ""
 paths:
-  /gtpsessions:
+  /sgw/{sgwAddr}/gtpsessions:
     post:
       description: Create a new gtp sesseion
       operationId: gtpsession#create
       parameters:
+      - description: SGW GTPv2-C loopback address
+        format: ipv4
+        in: path
+        name: sgwAddr
+        required: true
+        type: string
       - in: body
         name: payload
         required: true
