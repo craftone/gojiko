@@ -203,7 +203,7 @@ func TestSgwCtrl_EchoResponse(t *testing.T) {
 	sgwCtrl.toSender = toSender
 
 	// receive valid echo-request
-	echoReq, _ := gtpv2c.NewEchoRequest(1, 1)
+	echoReq, _ := gtpv2c.NewEchoRequest(100, 1)
 	echoReqBin := echoReq.Marshal()
 	raddr := net.UDPAddr{IP: net.IPv4(127, 0, 0, 2), Port: GtpControlPort}
 	udpPacket := UDPpacket{raddr, echoReqBin}
@@ -212,6 +212,6 @@ func TestSgwCtrl_EchoResponse(t *testing.T) {
 	// send echo-response
 	sendPacket := <-toSender
 	assert.Equal(t, raddr, sendPacket.raddr)
-	echoRes, _ := gtpv2c.NewEchoResponse(sgwCtrl.seqNum-1, sgwCtrl.recovery)
+	echoRes, _ := gtpv2c.NewEchoResponse(100, sgwCtrl.recovery)
 	assert.Equal(t, echoRes.Marshal(), sendPacket.body)
 }

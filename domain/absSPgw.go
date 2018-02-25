@@ -88,18 +88,17 @@ func (sp *absSPgw) echoReceiver() {
 	myLog.Info("Start a SPgw ECHO Receiver goroutine")
 
 	for pkt := range sp.toEchoReceiver {
-		myLog.Debugf("Received packet : %v", pkt)
-
 		// ensure valid GTPv2 ECHO Request
-		_, _, err := gtpv2c.Unmarshal(pkt.body)
+		req, _, err := gtpv2c.Unmarshal(pkt.body)
 		if err != nil {
 			myLog.Debugf("Received an invalid ECHO-C Request from %s", pkt.raddr.String())
 			continue
 		}
+
+		myLog.Debugf("Received ECHO Request : %#v", req)
+
 		// make ECHO Response
-		seq := sp.nextSeqNum()
-		rec := sp.recovery
-		echoRes, err := gtpv2c.NewEchoResponse(seq, rec)
+		echoRes, err := gtpv2c.NewEchoResponse(req.SeqNum(), sp.recovery)
 		if err != nil {
 			myLog.Fatalf("Making ECHO Response Failure : %v", err)
 		}

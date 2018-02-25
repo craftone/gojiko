@@ -43,7 +43,7 @@ type header struct {
 
 func newHeader(messageType MessageTypeNum, piggybakingFlag, teidFlag bool, teid gtp.Teid, seqNum uint32) header {
 	if seqNum > 0xffffff {
-		log.Fatal("GTPv2-C's sequence number must be unit24")
+		log.Fatalf("GTPv2-C's sequence number must be unit24 but %d", seqNum)
 	}
 	return header{
 		version:          2,
