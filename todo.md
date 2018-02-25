@@ -79,7 +79,7 @@
 
 - Monitor を実装
 
-- logを別レイヤに切り出し
+- logを別レイヤに切り出し。gtpv2c や ie パッケージをどうlogrus対応するか？
 
 - SPgwのgoroutine終了。UDP read timeoutもさせる必要がある。
 

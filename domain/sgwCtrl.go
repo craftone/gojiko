@@ -190,13 +190,13 @@ func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
 	for {
 		n, raddr, err := sgwCtrl.conn.ReadFromUDP(buf)
 		if err != nil {
-			log.Error(err)
+			myLog.Error(err)
 			continue
 		}
 		myLog.Debugf("Received packet from %s : %v", raddr.String(), buf[:n])
 
 		if n < 8 {
-			log.Errorf("Too short packet : %v", buf[:n])
+			myLog.Errorf("Too short packet : %v", buf[:n])
 			continue
 		}
 		msgType := gtpv2c.MessageTypeNum(buf[1])
@@ -204,18 +204,18 @@ func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
 		case gtpv2c.EchoRequestNum:
 			sgwCtrl.toEchoReceiver <- UDPpacket{*raddr, buf[:n]}
 		case gtpv2c.EchoResponseNum:
-			log.Error("Not yet implemented!")
+			myLog.Error("Not yet implemented!")
 			// Not yet be implemented
 		case gtpv2c.CreateSessionResponseNum:
 			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
 			sess := sgwCtrl.FindByTeid(teid)
 			if sess == nil {
-				log.Debug("No session that have the teid : %04x", teid)
+				myLog.Debug("No session that have the teid : %04x", teid)
 				continue
 			}
 			sess.fromCtrlReceiverChan <- UDPpacket{*raddr, buf[:n]}
 		default:
-			log.Debug("Unkown Message Type : %d", msgType)
+			myLog.Debugf("Unkown Message Type : %d", msgType)
 		}
 	}
 }

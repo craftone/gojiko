@@ -139,6 +139,10 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 		msg, err = unmarshalCreateSessionRequest(h, body)
 	case CreateSessionResponseNum:
 		msg, err = unmarshalCreateSessionResponse(h, body)
+	case DeleteBearerRequestNum:
+		msg, err = unmarshalDeleteBearerRequest(h, body)
+	case DeleteBearerResponseNum:
+		msg, err = unmarshalDeleteBearerResponse(h, body)
 	default:
 		return nil, buf, fmt.Errorf("Unkown message type : %d", h.messageType)
 	}
