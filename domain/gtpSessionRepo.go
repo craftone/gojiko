@@ -15,11 +15,11 @@ import (
 
 type SessionID uint32
 
-// gtpSessionRepo manages all GTP sessions.
+// GtpSessionRepo manages all GTP sessions.
 // A GTP session is identified by session id or
 // by a tuple of SgwCtrlAddr, PgwCtrlAddr, imsi and ebi or
 // by SgwCtrlFTEID.
-type gtpSessionRepo struct {
+type GtpSessionRepo struct {
 	sessionsByID       map[SessionID]*GtpSession
 	sessionsByCtrlTeid map[gtp.Teid]*GtpSession
 	sessionsByImsiEbi  map[string]*GtpSession
@@ -29,16 +29,16 @@ type gtpSessionRepo struct {
 	mtx4Id        sync.RWMutex
 }
 
-func newGtpSessionRepo() *gtpSessionRepo {
+func newGtpSessionRepo() *GtpSessionRepo {
 	log.Info("Initialize GTP Sessions Repository")
-	return &gtpSessionRepo{
+	return &GtpSessionRepo{
 		sessionsByID:       make(map[SessionID]*GtpSession),
 		sessionsByCtrlTeid: make(map[gtp.Teid]*GtpSession),
 		sessionsByImsiEbi:  make(map[string]*GtpSession),
 	}
 }
 
-func (r *gtpSessionRepo) newSession(
+func (r *GtpSessionRepo) newSession(
 	sgwCtrl *SgwCtrl,
 	pgwCtrlIPv4 net.IP,
 	sgwCtrlSendChan chan UDPpacket,
@@ -124,7 +124,7 @@ func (r *gtpSessionRepo) newSession(
 	return session.id, nil
 }
 
-func (r *gtpSessionRepo) deleteSession(sessionID SessionID) error {
+func (r *GtpSessionRepo) deleteSession(sessionID SessionID) error {
 	r.mtx4Map.Lock()
 	defer r.mtx4Map.Unlock()
 	session, ok := r.sessionsByID[sessionID]
@@ -156,7 +156,7 @@ func (r *gtpSessionRepo) deleteSession(sessionID SessionID) error {
 	return nil
 }
 
-func (r *gtpSessionRepo) nextID() SessionID {
+func (r *GtpSessionRepo) nextID() SessionID {
 	r.mtx4Id.Lock()
 	defer r.mtx4Id.Unlock()
 	res := r.nextSessionID
@@ -164,8 +164,8 @@ func (r *gtpSessionRepo) nextID() SessionID {
 	return res
 }
 
-// findBySessionID returns nil when the id does not exist.
-func (r *gtpSessionRepo) findBySessionID(id SessionID) *GtpSession {
+// FindBySessionID returns nil when the id does not exist.
+func (r *GtpSessionRepo) FindBySessionID(id SessionID) *GtpSession {
 	r.mtx4Map.RLock()
 	defer r.mtx4Map.RUnlock()
 	if val, ok := r.sessionsByID[id]; ok {
@@ -174,8 +174,8 @@ func (r *gtpSessionRepo) findBySessionID(id SessionID) *GtpSession {
 	return nil
 }
 
-// findByTeid returns nil when the id does not exist.
-func (r *gtpSessionRepo) findByTeid(teid gtp.Teid) *GtpSession {
+// FindByTeid returns nil when the id does not exist.
+func (r *GtpSessionRepo) FindByTeid(teid gtp.Teid) *GtpSession {
 	r.mtx4Map.RLock()
 	defer r.mtx4Map.RUnlock()
 	if val, ok := r.sessionsByCtrlTeid[teid]; ok {
@@ -184,7 +184,7 @@ func (r *gtpSessionRepo) findByTeid(teid gtp.Teid) *GtpSession {
 	return nil
 }
 
-func (r *gtpSessionRepo) findByImsiEbi(imsi string, ebi byte) *GtpSession {
+func (r *GtpSessionRepo) FindByImsiEbi(imsi string, ebi byte) *GtpSession {
 	r.mtx4Map.RLock()
 	defer r.mtx4Map.RUnlock()
 	imsiEbi := imsi + "_" + strconv.Itoa(int(ebi))
@@ -194,6 +194,19 @@ func (r *gtpSessionRepo) findByImsiEbi(imsi string, ebi byte) *GtpSession {
 	return nil
 }
 
-func (r *gtpSessionRepo) numOfSessions() int {
+func (r *GtpSessionRepo) NumOfSessions() int {
 	return len(r.sessionsByID)
+}
+
+func (r *GtpSessionRepo) GetSessions(maxNum int) []*GtpSession {
+	res := make([]*GtpSession, r.NumOfSessions())
+	n := 0
+	for _, v := range r.sessionsByID {
+		res = append(res, v)
+		n++
+		if n == maxNum {
+			break
+		}
+	}
+	return res
 }

@@ -6,6 +6,7 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
+// --regen=true
 // --version=v1.3.0
 
 package client
@@ -16,6 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 // CreateGtpsessionPayload is the gtpsession create action payload.
@@ -74,6 +76,69 @@ func (c *Client) NewCreateGtpsessionRequest(ctx context.Context, path string, pa
 		header.Set("Content-Type", "application/json")
 	} else {
 		header.Set("Content-Type", contentType)
+	}
+	return req, nil
+}
+
+// ShowByIDGtpsessionPath computes a request path to the showByID action of gtpsession.
+func ShowByIDGtpsessionPath(sgwAddr string, sid int) string {
+	param0 := sgwAddr
+	param1 := strconv.Itoa(sid)
+
+	return fmt.Sprintf("/sgw/%s/gtpsessions/id/%s", param0, param1)
+}
+
+// Show the gtp session by session ID
+func (c *Client) ShowByIDGtpsession(ctx context.Context, path string) (*http.Response, error) {
+	req, err := c.NewShowByIDGtpsessionRequest(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	return c.Client.Do(ctx, req)
+}
+
+// NewShowByIDGtpsessionRequest create the request corresponding to the showByID action endpoint of the gtpsession resource.
+func (c *Client) NewShowByIDGtpsessionRequest(ctx context.Context, path string) (*http.Request, error) {
+	scheme := c.Scheme
+	if scheme == "" {
+		scheme = "http"
+	}
+	u := url.URL{Host: c.Host, Scheme: scheme, Path: path}
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
+}
+
+// ShowByIMSIandEBIGtpsessionPath computes a request path to the showByIMSIandEBI action of gtpsession.
+func ShowByIMSIandEBIGtpsessionPath(sgwAddr string, imsi string, ebi int) string {
+	param0 := sgwAddr
+	param1 := imsi
+	param2 := strconv.Itoa(ebi)
+
+	return fmt.Sprintf("/sgw/%s/gtpsessions/imsi/%s/ebi/%s", param0, param1, param2)
+}
+
+// Show the gtp session by IMSI and EBI
+func (c *Client) ShowByIMSIandEBIGtpsession(ctx context.Context, path string) (*http.Response, error) {
+	req, err := c.NewShowByIMSIandEBIGtpsessionRequest(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	return c.Client.Do(ctx, req)
+}
+
+// NewShowByIMSIandEBIGtpsessionRequest create the request corresponding to the showByIMSIandEBI action endpoint of the gtpsession resource.
+func (c *Client) NewShowByIMSIandEBIGtpsessionRequest(ctx context.Context, path string) (*http.Request, error) {
+	scheme := c.Scheme
+	if scheme == "" {
+		scheme = "http"
+	}
+	u := url.URL{Host: c.Host, Scheme: scheme, Path: path}
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
 	}
 	return req, nil
 }

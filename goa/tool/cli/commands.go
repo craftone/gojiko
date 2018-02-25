@@ -6,6 +6,7 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
+// --regen=true
 // --version=v1.3.0
 
 package cli
@@ -32,6 +33,25 @@ type (
 	CreateGtpsessionCommand struct {
 		Payload     string
 		ContentType string
+		// SGW GTPv2-C loopback address
+		SgwAddr     string
+		PrettyPrint bool
+	}
+
+	// ShowByIDGtpsessionCommand is the command line data structure for the showByID action of gtpsession
+	ShowByIDGtpsessionCommand struct {
+		// SGW GTPv2-C loopback address
+		SgwAddr string
+		// Session ID
+		Sid         int
+		PrettyPrint bool
+	}
+
+	// ShowByIMSIandEBIGtpsessionCommand is the command line data structure for the showByIMSIandEBI action of gtpsession
+	ShowByIMSIandEBIGtpsessionCommand struct {
+		// EPS Bearer ID
+		Ebi  int
+		Imsi string
 		// SGW GTPv2-C loopback address
 		SgwAddr     string
 		PrettyPrint bool
@@ -66,6 +86,34 @@ Payload example:
 	}
 	tmp1.RegisterFlags(sub, c)
 	sub.PersistentFlags().BoolVar(&tmp1.PrettyPrint, "pp", false, "Pretty print response body")
+	command.AddCommand(sub)
+	app.AddCommand(command)
+	command = &cobra.Command{
+		Use:   "show-byid",
+		Short: `Show the gtp session by session ID`,
+	}
+	tmp2 := new(ShowByIDGtpsessionCommand)
+	sub = &cobra.Command{
+		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions/id/SID"]`,
+		Short: ``,
+		RunE:  func(cmd *cobra.Command, args []string) error { return tmp2.Run(c, args) },
+	}
+	tmp2.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp2.PrettyPrint, "pp", false, "Pretty print response body")
+	command.AddCommand(sub)
+	app.AddCommand(command)
+	command = &cobra.Command{
+		Use:   "show-byims-iandebi",
+		Short: `Show the gtp session by IMSI and EBI`,
+	}
+	tmp3 := new(ShowByIMSIandEBIGtpsessionCommand)
+	sub = &cobra.Command{
+		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions/imsi/IMSI/ebi/EBI"]`,
+		Short: ``,
+		RunE:  func(cmd *cobra.Command, args []string) error { return tmp3.Run(c, args) },
+	}
+	tmp3.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp3.PrettyPrint, "pp", false, "Pretty print response body")
 	command.AddCommand(sub)
 	app.AddCommand(command)
 }
@@ -254,6 +302,63 @@ func (cmd *CreateGtpsessionCommand) Run(c *client.Client, args []string) error {
 func (cmd *CreateGtpsessionCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
 	cc.Flags().StringVar(&cmd.Payload, "payload", "", "Request body encoded in JSON")
 	cc.Flags().StringVar(&cmd.ContentType, "content", "", "Request content type override, e.g. 'application/x-www-form-urlencoded'")
+	var sgwAddr string
+	cc.Flags().StringVar(&cmd.SgwAddr, "sgwAddr", sgwAddr, `SGW GTPv2-C loopback address`)
+}
+
+// Run makes the HTTP request corresponding to the ShowByIDGtpsessionCommand command.
+func (cmd *ShowByIDGtpsessionCommand) Run(c *client.Client, args []string) error {
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	} else {
+		path = fmt.Sprintf("/sgw/%v/gtpsessions/id/%v", url.QueryEscape(cmd.SgwAddr), cmd.Sid)
+	}
+	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
+	ctx := goa.WithLogger(context.Background(), logger)
+	resp, err := c.ShowByIDGtpsession(ctx, path)
+	if err != nil {
+		goa.LogError(ctx, "failed", "err", err)
+		return err
+	}
+
+	goaclient.HandleResponse(c.Client, resp, cmd.PrettyPrint)
+	return nil
+}
+
+// RegisterFlags registers the command flags with the command line.
+func (cmd *ShowByIDGtpsessionCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+	var sgwAddr string
+	cc.Flags().StringVar(&cmd.SgwAddr, "sgwAddr", sgwAddr, `SGW GTPv2-C loopback address`)
+	var sid int
+	cc.Flags().IntVar(&cmd.Sid, "sid", sid, `Session ID`)
+}
+
+// Run makes the HTTP request corresponding to the ShowByIMSIandEBIGtpsessionCommand command.
+func (cmd *ShowByIMSIandEBIGtpsessionCommand) Run(c *client.Client, args []string) error {
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	} else {
+		path = fmt.Sprintf("/sgw/%v/gtpsessions/imsi/%v/ebi/%v", url.QueryEscape(cmd.SgwAddr), url.QueryEscape(cmd.Imsi), cmd.Ebi)
+	}
+	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
+	ctx := goa.WithLogger(context.Background(), logger)
+	resp, err := c.ShowByIMSIandEBIGtpsession(ctx, path)
+	if err != nil {
+		goa.LogError(ctx, "failed", "err", err)
+		return err
+	}
+
+	goaclient.HandleResponse(c.Client, resp, cmd.PrettyPrint)
+	return nil
+}
+
+// RegisterFlags registers the command flags with the command line.
+func (cmd *ShowByIMSIandEBIGtpsessionCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+	cc.Flags().IntVar(&cmd.Ebi, "ebi", 5, `EPS Bearer ID`)
+	var imsi string
+	cc.Flags().StringVar(&cmd.Imsi, "imsi", imsi, ``)
 	var sgwAddr string
 	cc.Flags().StringVar(&cmd.SgwAddr, "sgwAddr", sgwAddr, `SGW GTPv2-C loopback address`)
 }

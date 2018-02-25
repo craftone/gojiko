@@ -6,6 +6,7 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
+// --regen=true
 // --version=v1.3.0
 
 package app
@@ -35,6 +36,8 @@ func initService(service *goa.Service) {
 type GtpsessionController interface {
 	goa.Muxer
 	Create(*CreateGtpsessionContext) error
+	ShowByID(*ShowByIDGtpsessionContext) error
+	ShowByIMSIandEBI(*ShowByIMSIandEBIGtpsessionContext) error
 }
 
 // MountGtpsessionController "mounts" a Gtpsession resource controller on the given service.
@@ -62,6 +65,36 @@ func MountGtpsessionController(service *goa.Service, ctrl GtpsessionController) 
 	}
 	service.Mux.Handle("POST", "/sgw/:sgwAddr/gtpsessions", ctrl.MuxHandler("create", h, unmarshalCreateGtpsessionPayload))
 	service.LogInfo("mount", "ctrl", "Gtpsession", "action", "Create", "route", "POST /sgw/:sgwAddr/gtpsessions")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewShowByIDGtpsessionContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.ShowByID(rctx)
+	}
+	service.Mux.Handle("GET", "/sgw/:sgwAddr/gtpsessions/id/:sid", ctrl.MuxHandler("showByID", h, nil))
+	service.LogInfo("mount", "ctrl", "Gtpsession", "action", "ShowByID", "route", "GET /sgw/:sgwAddr/gtpsessions/id/:sid")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewShowByIMSIandEBIGtpsessionContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.ShowByIMSIandEBI(rctx)
+	}
+	service.Mux.Handle("GET", "/sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi", ctrl.MuxHandler("showByIMSIandEBI", h, nil))
+	service.LogInfo("mount", "ctrl", "Gtpsession", "action", "ShowByIMSIandEBI", "route", "GET /sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi")
 }
 
 // unmarshalCreateGtpsessionPayload unmarshals the request body into the context request data Payload field.

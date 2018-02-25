@@ -12,9 +12,9 @@ import (
 
 func TestGtpSessionsRepo_newSession(t *testing.T) {
 	fmt.Println(theSgwCtrlRepo)
-	theGtpSessionRepo := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr).gtpSessionRepo
+	theGtpSessionRepo := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr).GtpSessionRepo
 	// at the first, there should be no session.
-	assert.Equal(t, 0, theGtpSessionRepo.numOfSessions())
+	assert.Equal(t, 0, theGtpSessionRepo.NumOfSessions())
 
 	// add first session
 	sgwCtrl := theSgwCtrlRepo.GetCtrl(defaultSgwCtrlAddr).(*SgwCtrl)
@@ -53,8 +53,8 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	assert.Equal(t, SessionID(0), sid)
 	assert.NoError(t, err)
 
-	assert.Equal(t, 1, theGtpSessionRepo.numOfSessions())
-	session := theGtpSessionRepo.findBySessionID(sid)
+	assert.Equal(t, 1, theGtpSessionRepo.NumOfSessions())
+	session := theGtpSessionRepo.FindBySessionID(sid)
 	assert.Equal(t, "22342345234", session.Imsi())
 	assert.Equal(t, "819012345678", session.Msisdn())
 	assert.Equal(t, "490154203237518", session.Mei())
@@ -76,7 +76,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		ratTypeIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.Error(t, err)
-	assert.Equal(t, 1, theGtpSessionRepo.numOfSessions())
+	assert.Equal(t, 1, theGtpSessionRepo.NumOfSessions())
 
 	// Error when same IMSI and EBI
 	sgwCtrlTEID2 := sgwCtrl.nextTeid()
@@ -90,7 +90,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		ratTypeIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.Error(t, err)
-	assert.Equal(t, 1, theGtpSessionRepo.numOfSessions())
+	assert.Equal(t, 1, theGtpSessionRepo.NumOfSessions())
 
 	// No error when other SGW-CTRL-TEID and IMSI and EBI
 	sid2, err := theGtpSessionRepo.newSession(
@@ -102,19 +102,19 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		ratTypeIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.NoError(t, err)
-	assert.Equal(t, 2, theGtpSessionRepo.numOfSessions())
+	assert.Equal(t, 2, theGtpSessionRepo.NumOfSessions())
 
 	// Assert to find 2nd session by SessionID
-	session2 := theGtpSessionRepo.findBySessionID(sid2)
+	session2 := theGtpSessionRepo.FindBySessionID(sid2)
 	assert.Equal(t, imsi2, session2.imsi.Value())
 	// Assert to find 2nd session by TEID
-	session2t := theGtpSessionRepo.findByTeid(sgwCtrlTEID2)
+	session2t := theGtpSessionRepo.FindByTeid(sgwCtrlTEID2)
 	assert.Equal(t, imsi2, session2t.imsi.Value())
 	// Assert to find 2nd session by IMSI and EBI
-	session2i := theGtpSessionRepo.findByImsiEbi(imsi2, ebi1)
+	session2i := theGtpSessionRepo.FindByImsiEbi(imsi2, ebi1)
 	assert.Equal(t, imsi2, session2i.imsi.Value())
 
 	// find nil when the sid does not exist
-	session = theGtpSessionRepo.findBySessionID(SessionID(2343242))
+	session = theGtpSessionRepo.FindBySessionID(SessionID(2343242))
 	assert.Nil(t, session)
 }

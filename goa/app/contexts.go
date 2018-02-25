@@ -6,6 +6,7 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
+// --regen=true
 // --version=v1.3.0
 
 package app
@@ -14,6 +15,7 @@ import (
 	"context"
 	"github.com/goadesign/goa"
 	"net/http"
+	"strconv"
 )
 
 // CreateGtpsessionContext provides the gtpsession create action context.
@@ -250,10 +252,143 @@ func (ctx *CreateGtpsessionContext) BadRequest(r error) error {
 	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
 }
 
+// NotFound sends a HTTP response with status code 404.
+func (ctx *CreateGtpsessionContext) NotFound(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 404, r)
+}
+
 // InternalServerError sends a HTTP response with status code 500.
 func (ctx *CreateGtpsessionContext) InternalServerError(r error) error {
 	if ctx.ResponseData.Header().Get("Content-Type") == "" {
 		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
 	}
 	return ctx.ResponseData.Service.Send(ctx.Context, 500, r)
+}
+
+// ShowByIDGtpsessionContext provides the gtpsession showByID action context.
+type ShowByIDGtpsessionContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	SgwAddr string
+	Sid     int
+}
+
+// NewShowByIDGtpsessionContext parses the incoming request URL and body, performs validations and creates the
+// context used by the gtpsession controller showByID action.
+func NewShowByIDGtpsessionContext(ctx context.Context, r *http.Request, service *goa.Service) (*ShowByIDGtpsessionContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := ShowByIDGtpsessionContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramSgwAddr := req.Params["sgwAddr"]
+	if len(paramSgwAddr) > 0 {
+		rawSgwAddr := paramSgwAddr[0]
+		rctx.SgwAddr = rawSgwAddr
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, rctx.SgwAddr); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`sgwAddr`, rctx.SgwAddr, goa.FormatIPv4, err2))
+		}
+	}
+	paramSid := req.Params["sid"]
+	if len(paramSid) > 0 {
+		rawSid := paramSid[0]
+		if sid, err2 := strconv.Atoi(rawSid); err2 == nil {
+			rctx.Sid = sid
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("sid", rawSid, "integer"))
+		}
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *ShowByIDGtpsessionContext) OK(r *Gtpsession) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.gtpsession+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *ShowByIDGtpsessionContext) NotFound(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 404, r)
+}
+
+// ShowByIMSIandEBIGtpsessionContext provides the gtpsession showByIMSIandEBI action context.
+type ShowByIMSIandEBIGtpsessionContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	Ebi     int
+	Imsi    string
+	SgwAddr string
+}
+
+// NewShowByIMSIandEBIGtpsessionContext parses the incoming request URL and body, performs validations and creates the
+// context used by the gtpsession controller showByIMSIandEBI action.
+func NewShowByIMSIandEBIGtpsessionContext(ctx context.Context, r *http.Request, service *goa.Service) (*ShowByIMSIandEBIGtpsessionContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := ShowByIMSIandEBIGtpsessionContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramEbi := req.Params["ebi"]
+	if len(paramEbi) == 0 {
+		rctx.Ebi = 5
+	} else {
+		rawEbi := paramEbi[0]
+		if ebi, err2 := strconv.Atoi(rawEbi); err2 == nil {
+			rctx.Ebi = ebi
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("ebi", rawEbi, "integer"))
+		}
+		if rctx.Ebi < 5 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`ebi`, rctx.Ebi, 5, true))
+		}
+		if rctx.Ebi > 15 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`ebi`, rctx.Ebi, 15, false))
+		}
+	}
+	paramImsi := req.Params["imsi"]
+	if len(paramImsi) > 0 {
+		rawImsi := paramImsi[0]
+		rctx.Imsi = rawImsi
+		if ok := goa.ValidatePattern(`^[0-9]{14,15}$`, rctx.Imsi); !ok {
+			err = goa.MergeErrors(err, goa.InvalidPatternError(`imsi`, rctx.Imsi, `^[0-9]{14,15}$`))
+		}
+	}
+	paramSgwAddr := req.Params["sgwAddr"]
+	if len(paramSgwAddr) > 0 {
+		rawSgwAddr := paramSgwAddr[0]
+		rctx.SgwAddr = rawSgwAddr
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, rctx.SgwAddr); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`sgwAddr`, rctx.SgwAddr, goa.FormatIPv4, err2))
+		}
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *ShowByIMSIandEBIGtpsessionContext) OK(r *Gtpsession) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.gtpsession+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *ShowByIMSIandEBIGtpsessionContext) NotFound(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 404, r)
 }

@@ -75,7 +75,7 @@ func TestSgwCtrl_CreateSession_OK(t *testing.T) {
 
 func ensureTheSession(sgwCtrl *SgwCtrl, imsi string, ebi byte) *GtpSession {
 retry:
-	session := sgwCtrl.gtpSessionRepo.findByImsiEbi(imsi, ebi)
+	session := sgwCtrl.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
 	if session == nil {
 		// fmt.Println("waiting")
 		time.Sleep(50 * time.Microsecond)
@@ -125,7 +125,7 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 
 	csres := <-resCh
 
-	session = sgwCtrl.gtpSessionRepo.findByImsiEbi(imsi, ebi)
+	session = sgwCtrl.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
 	assert.Nil(t, session)
 	assert.NoError(t, csres.err)
 	assert.Equal(t, GscResRetryableNG, csres.res.Code)
@@ -171,7 +171,7 @@ func TestSgwCtrl_CreateSession_NG(t *testing.T) {
 
 	csres := <-resCh
 
-	session = sgwCtrl.gtpSessionRepo.findByImsiEbi(imsi, ebi)
+	session = sgwCtrl.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
 	assert.Nil(t, session)
 	assert.NoError(t, csres.err)
 	assert.Equal(t, GscResNG, csres.res.Code)

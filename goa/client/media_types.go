@@ -6,6 +6,7 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
+// --regen=true
 // --version=v1.3.0
 
 package client
@@ -22,7 +23,7 @@ func (c *Client) DecodeErrorResponse(resp *http.Response) (*goa.ErrorResponse, e
 	return &decoded, err
 }
 
-// A gtp session (default view)
+// A GTP session (default view)
 //
 // Identifier: application/vnd.gtpsession+json; view=default
 type Gtpsession struct {
@@ -106,6 +107,33 @@ func (mt *Gtpsession) Validate() (err error) {
 // DecodeGtpsession decodes the Gtpsession instance encoded in resp body.
 func (c *Client) DecodeGtpsession(resp *http.Response) (*Gtpsession, error) {
 	var decoded Gtpsession
+	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
+	return &decoded, err
+}
+
+// List of GTP sessions (default view)
+//
+// Identifier: application/vnd.gtpsessions+json; view=default
+type Gtpsessions struct {
+	Count    *int          `form:"count,omitempty" json:"count,omitempty" xml:"count,omitempty"`
+	Sessions []*Gtpsession `form:"sessions,omitempty" json:"sessions,omitempty" xml:"sessions,omitempty"`
+}
+
+// Validate validates the Gtpsessions media type instance.
+func (mt *Gtpsessions) Validate() (err error) {
+	for _, e := range mt.Sessions {
+		if e != nil {
+			if err2 := e.Validate(); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
+}
+
+// DecodeGtpsessions decodes the Gtpsessions instance encoded in resp body.
+func (c *Client) DecodeGtpsessions(resp *http.Response) (*Gtpsessions, error) {
+	var decoded Gtpsessions
 	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
 	return &decoded, err
 }

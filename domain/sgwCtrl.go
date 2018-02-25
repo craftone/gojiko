@@ -18,7 +18,7 @@ import (
 
 type SgwCtrl struct {
 	*absSPgw
-	*gtpSessionRepo
+	*GtpSessionRepo
 }
 
 // newSgwCtrl creates a SgwCtrl and a paired SgwData that have same
@@ -130,7 +130,7 @@ func (s *SgwCtrl) CreateSession(
 	}
 
 	// make a new session to the GTP Session Repo
-	gsid, err := s.gtpSessionRepo.newSession(
+	gsid, err := s.GtpSessionRepo.newSession(
 		s, pgwCtrlIPv4,
 		s.toSender,
 		sgwCtrlFTEID,
@@ -157,7 +157,7 @@ func (s *SgwCtrl) CreateSession(
 	}
 
 	// Send the CMD to the session's CMD chan
-	session := s.gtpSessionRepo.findBySessionID(gsid)
+	session := s.GtpSessionRepo.FindBySessionID(gsid)
 
 	retryCount := 0
 retry:
@@ -173,7 +173,7 @@ retry:
 	}
 
 	if res.Code != GscResOK {
-		s.gtpSessionRepo.deleteSession(session.id)
+		s.GtpSessionRepo.deleteSession(session.id)
 	}
 	return &res, nil
 }
@@ -208,7 +208,7 @@ func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
 			// Not yet be implemented
 		case gtpv2c.CreateSessionResponseNum:
 			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
-			sess := sgwCtrl.findByTeid(teid)
+			sess := sgwCtrl.FindByTeid(teid)
 			if sess == nil {
 				log.Debug("No session that have the teid : %04x", teid)
 				continue

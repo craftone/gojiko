@@ -62,7 +62,7 @@ definitions:
     title: CreateGtpsessionPayload
     type: object
   Gtpsession:
-    description: A gtp session (default view)
+    description: A GTP session (default view)
     example:
       apn: example.com
       ebi: 5
@@ -258,6 +258,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/error'
         "500":
           description: Internal Server Error
           schema:
@@ -265,6 +269,80 @@ paths:
       schemes:
       - http
       summary: create gtpsession
+      tags:
+      - gtpsession
+  /sgw/{sgwAddr}/gtpsessions/id/{sid}:
+    get:
+      description: Show the gtp session by session ID
+      operationId: gtpsession#showByID
+      parameters:
+      - description: SGW GTPv2-C loopback address
+        format: ipv4
+        in: path
+        name: sgwAddr
+        required: true
+        type: string
+      - description: Session ID
+        in: path
+        name: sid
+        required: true
+        type: integer
+      produces:
+      - application/vnd.goa.error
+      - application/vnd.gtpsession+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Gtpsession'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/error'
+      schemes:
+      - http
+      summary: showByID gtpsession
+      tags:
+      - gtpsession
+  /sgw/{sgwAddr}/gtpsessions/imsi/{imsi}/ebi/{ebi}:
+    get:
+      description: Show the gtp session by IMSI and EBI
+      operationId: gtpsession#showByIMSIandEBI
+      parameters:
+      - default: 5
+        description: EPS Bearer ID
+        in: path
+        maximum: 15
+        minimum: 5
+        name: ebi
+        required: true
+        type: integer
+      - in: path
+        name: imsi
+        pattern: ^[0-9]{14,15}$
+        required: true
+        type: string
+      - description: SGW GTPv2-C loopback address
+        format: ipv4
+        in: path
+        name: sgwAddr
+        required: true
+        type: string
+      produces:
+      - application/vnd.goa.error
+      - application/vnd.gtpsession+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Gtpsession'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/error'
+      schemes:
+      - http
+      summary: showByIMSIandEBI gtpsession
       tags:
       - gtpsession
 produces:

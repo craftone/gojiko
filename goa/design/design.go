@@ -33,8 +33,30 @@ var _ = Resource("gtpsession", func() {
 			Required("apn", "mcc", "mnc", "msisdn", "mei", "imsi", "ebi")
 		})
 		Response(OK)
+		Response(NotFound, ErrorMedia)
 		Response(BadRequest, ErrorMedia)
 		Response(InternalServerError, ErrorMedia)
+	})
+
+	Action("showByID", func() {
+		Description("Show the gtp session by session ID")
+		Routing(GET("/id/:sid"))
+		Params(func() {
+			Param("sid", Integer, "Session ID")
+		})
+		Response(OK)
+		Response(NotFound, ErrorMedia)
+	})
+
+	Action("showByIMSIandEBI", func() {
+		Description("Show the gtp session by IMSI and EBI")
+		Routing(GET("/imsi/:imsi/ebi/:ebi"))
+		Params(func() {
+			Param("imsi")
+			Param("ebi")
+		})
+		Response(OK)
+		Response(NotFound, ErrorMedia)
 	})
 })
 
@@ -57,8 +79,20 @@ var GtpSessionFTEIDs = Type("gtpSessionFTEIDs", func() {
 	Attribute("pgwDataFTEID", FTEID)
 })
 
+var GtpSessionsMedia = MediaType("application/vnd.gtpsessions+json", func() {
+	Description("List of GTP sessions")
+	Attributes(func() {
+		Attribute("count", Integer)
+		Attribute("sessions", ArrayOf(GtpSessionMedia))
+	})
+	View("default", func() {
+		Attribute("count")
+		Attribute("sessions")
+	})
+})
+
 var GtpSessionMedia = MediaType("application/vnd.gtpsession+json", func() {
-	Description("A gtp session")
+	Description("A GTP session")
 	Attributes(func() {
 		gtpSessionIDMember()
 		gtpSessionStatusMember()
