@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/craftone/gojiko/gtpv2c"
+
 	"github.com/craftone/gojiko/gtp"
 
 	"github.com/sirupsen/logrus"
@@ -63,14 +65,17 @@ func (r *GtpSessionRepo) newSession(
 	session := &GtpSession{
 		id:     r.nextID(),
 		status: GssIdle,
+		repo:   r,
 		mtx:    sync.RWMutex{},
 
-		cmdReqChan:           make(chan gtpSessionCmd),
-		cmdResChan:           make(chan GscRes),
+		cmdReqChan:       make(chan gtpSessionCmd, 10),
+		cmdResChan:       make(chan GscRes, 10),
+		receiveCSresChan: make(chan *gtpv2c.CreateSessionResponse, 10),
+
 		toCtrlSenderChan:     sgwCtrlSendChan,
-		fromCtrlReceiverChan: make(chan UDPpacket),
-		toDataSenderChan:     make(chan UDPpacket),
-		fromDataReceiverChan: make(chan UDPpacket),
+		fromCtrlReceiverChan: make(chan UDPpacket, 10),
+		toDataSenderChan:     make(chan UDPpacket, 100),
+		fromDataReceiverChan: make(chan UDPpacket, 100),
 
 		sgwCtrl:      sgwCtrl,
 		sgwCtrlFTEID: sgwCtrlFTEID,
@@ -120,7 +125,8 @@ func (r *GtpSessionRepo) newSession(
 	r.sessionsByID[session.id] = session
 	r.sessionsByCtrlTeid[teid] = session
 	r.sessionsByImsiEbi[imsiEbi] = session
-	go gtpSessionRoutine(session)
+	go session.gtpSessionRoutine()
+	go session.receivePacketRoutine()
 	return session.id, nil
 }
 
@@ -149,9 +155,10 @@ func (r *GtpSessionRepo) deleteSession(sessionID SessionID) error {
 
 	close(session.cmdReqChan)           // tell the gtpSession to finish
 	close(session.cmdResChan)           // cmdResChan is used by gtpSession only
-	close(session.fromCtrlReceiverChan) // the sender should check if the channel is active
+	close(session.receiveCSresChan)     // receiveCSresChan is used by gtpSession only
+	close(session.fromCtrlReceiverChan) // the sender should care the channel is active
 	close(session.toDataSenderChan)     // tell the data sender to finish
-	close(session.fromDataReceiverChan) // the sender should check if the channel is active
+	close(session.fromDataReceiverChan) // the sender should care the channel is active
 
 	return nil
 }

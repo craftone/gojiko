@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -26,10 +27,12 @@ const (
 type GtpSession struct {
 	id     SessionID
 	status GtpSessionStatus
+	repo   *GtpSessionRepo
 	mtx    sync.RWMutex
 
 	cmdReqChan           chan gtpSessionCmd
 	cmdResChan           chan GscRes
+	receiveCSresChan     chan *gtpv2c.CreateSessionResponse
 	toCtrlSenderChan     chan UDPpacket
 	fromCtrlReceiverChan chan UDPpacket
 	toDataSenderChan     chan UDPpacket
@@ -59,7 +62,7 @@ type GtpSession struct {
 }
 
 // this function is for GoRoutine
-func gtpSessionRoutine(session *GtpSession) {
+func (session *GtpSession) gtpSessionRoutine() {
 	myLog := log.WithField("SessionID", session.id)
 	myLog.Debug("Start a GTP session goroutine")
 
@@ -75,6 +78,44 @@ func gtpSessionRoutine(session *GtpSession) {
 		}
 	}
 	myLog.Debug("Stop a GTP session goroutine")
+}
+
+// this function is for GoRoutine
+func (session *GtpSession) receivePacketRoutine() {
+	myLog := log.WithFields(logrus.Fields{
+		"SessionID": session.ID(),
+		"routine":   "ReceivePacket",
+	})
+	myLog.Debug("Start a GTP session's receive packet goroutine")
+
+	for recv := range session.fromCtrlReceiverChan {
+		// Ensure received packet has sent from correct PGW address
+		if !recv.raddr.IP.Equal(session.pgwCtrlAddr.IP) ||
+			recv.raddr.Port != session.pgwCtrlAddr.Port {
+			myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %#v , expected : %v", recv.raddr, session.pgwCtrlAddr)
+			continue
+		}
+
+		// Unmarchal received packet
+		msg, _, err := gtpv2c.Unmarshal(recv.body)
+		if err != nil {
+			myLog.Debugf("Received invalid GTPv2-C packet : %#v", err)
+			continue
+		}
+		myLog.Debugf("Received GTPv2-C packet : %#v", msg)
+
+		switch typedMsg := msg.(type) {
+		case *gtpv2c.CreateSessionResponse:
+			session.receiveCSresChan <- typedMsg
+		case *gtpv2c.DeleteBearerRequest:
+			err := session.procDeleteBearer(recv.raddr, typedMsg, myLog)
+			if err != nil {
+				myLog.Error(err)
+			}
+		default:
+			myLog.Error("Don't know how to precess the packet")
+		}
+	}
 }
 
 func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus.Entry) error {
@@ -127,39 +168,21 @@ func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus
 
 	var res GscRes
 	afterChan := time.After(config.Gtpv2cTimeoutDuration())
-retry:
+
 	select {
-	case recv := <-session.fromCtrlReceiverChan:
-		// Ensure received packet has sent from correct PGW address
-		if !recv.raddr.IP.Equal(session.pgwCtrlAddr.IP) ||
-			recv.raddr.Port != session.pgwCtrlAddr.Port {
-			myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %v , expected : %v", recv.raddr, session.pgwCtrlAddr)
-			goto retry
+	case csRes := <-session.receiveCSresChan:
+		if csReq.SeqNum() != seqNum {
+			res = GscRes{Code: GscResNG, Msg: "The response's sequense number is invalid"}
+			break
 		}
-
-		// Unmarchal received packet
-		msg, _, err := gtpv2c.Unmarshal(recv.body)
-		if err != nil {
-			myLog.Debugf("Received invalid GTPv2-C packet : %v", err)
-			goto retry
-		}
-		myLog.Debugf("Received GTPv2-C packet : %v", msg)
-
-		// Ensure the received packete is a Create Session Response
-		csres, ok := msg.(*gtpv2c.CreateSessionResponse)
-		if !ok {
-			myLog.Debugf("Received packet is not a Create Session Response message.")
-			goto retry
-		}
-
-		causeType, causeMsg := ie.CauseDetail(csres.Cause().Value())
+		causeType, causeMsg := ie.CauseDetail(csRes.Cause().Value())
 		switch causeType {
 		case ie.CauseTypeAcceptance:
 			// Set PGW's F-TEIDs into the session
-			session.pgwCtrlFTEID = csres.PgwCtrlFteid()
-			session.pgwDataFTEID = csres.BearerContextCeated().PgwDataFteid()
+			session.pgwCtrlFTEID = csRes.PgwCtrlFteid()
+			session.pgwDataFTEID = csRes.BearerContextCeated().PgwDataFteid()
 			// Set PDN Address Allocation into the session
-			session.paa = csres.Paa()
+			session.paa = csRes.Paa()
 
 			res = GscRes{Code: GscResOK, Msg: causeMsg, Session: session}
 		case ie.CauseTypeRetryableRejection:
@@ -174,6 +197,23 @@ retry:
 	}
 	session.cmdResChan <- res
 
+	return nil
+}
+
+func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.DeleteBearerRequest, myLog *logrus.Entry) error {
+	myLog.Debugf("DeleteBearer process")
+	_, pgwTeid := session.PgwCtrlFTEID()
+	dbRes, err := gtpv2c.NewDeleteBearerResponse(pgwTeid, dbReq.SeqNum(), ie.CauseRequestAccepted)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Sending packet ...")
+	session.toCtrlSenderChan <- UDPpacket{raddr, dbRes.Marshal()}
+	fmt.Println("DONE.")
+	err = session.repo.deleteSession(session.ID())
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

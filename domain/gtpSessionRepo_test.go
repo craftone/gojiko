@@ -117,4 +117,5 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	// find nil when the sid does not exist
 	session = theGtpSessionRepo.FindBySessionID(SessionID(2343242))
 	assert.Nil(t, session)
+
 }

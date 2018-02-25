@@ -200,13 +200,14 @@ func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
 			continue
 		}
 		msgType := gtpv2c.MessageTypeNum(buf[1])
+
 		switch msgType {
 		case gtpv2c.EchoRequestNum:
 			sgwCtrl.toEchoReceiver <- UDPpacket{*raddr, buf[:n]}
 		case gtpv2c.EchoResponseNum:
 			myLog.Error("Not yet implemented!")
 			// Not yet be implemented
-		case gtpv2c.CreateSessionResponseNum:
+		case gtpv2c.CreateSessionResponseNum, gtpv2c.DeleteBearerRequestNum:
 			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
 			sess := sgwCtrl.FindByTeid(teid)
 			if sess == nil {

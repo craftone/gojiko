@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -214,4 +215,76 @@ func TestSgwCtrl_EchoResponse(t *testing.T) {
 	assert.Equal(t, raddr, sendPacket.raddr)
 	echoRes, _ := gtpv2c.NewEchoResponse(100, sgwCtrl.recovery)
 	assert.Equal(t, echoRes.Marshal(), sendPacket.body)
+}
+
+func TestSgwCtrl_CreateSessionAndDeleteBearer(t *testing.T) {
+	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
+	resCh := make(chan csResStr)
+	imsi := "440101234567891"
+	ebi := byte(5)
+	go func() {
+		res, err := sgwCtrl.CreateSession(
+			imsi, "819012345679", "0123456789012345",
+			"440", "10", "example.com", ebi,
+		)
+		resCh <- csResStr{res, err}
+	}()
+
+	// wait till the session is created
+	session := ensureTheSession(sgwCtrl, imsi, ebi)
+
+	pgwAddr := net.UDPAddr{IP: pgwIP, Port: GtpControlPort}
+
+	// make pseudo response binary that cause is CauseRequestAccepted
+	paaIP := net.IPv4(9, 10, 11, 12)
+	pgwCtrlTEID := gtp.Teid(0x01234567)
+	pgwDataTEID := gtp.Teid(0x76543210)
+	csResArg, _ := gtpv2c.MakeCSResArg(
+		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
+		ie.CauseRequestAccepted,     // Cause
+		pgwIP, pgwCtrlTEID, // PGW Ctrl FTEID
+		pgwIP, pgwDataTEID, // PGW Data FTEID
+		paaIP,                // PDN Allocated IP address
+		net.IPv4(8, 8, 8, 8), // PriDNS
+		net.IPv4(8, 8, 4, 4), // SecDNS
+		5)                    // EBI
+	csRes, _ := gtpv2c.NewCreateSessionResponse(0x1234, csResArg)
+	csResBin := csRes.Marshal()
+
+	// send valid packet
+	session.fromCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
+
+	csres := <-resCh
+	assert.NoError(t, csres.err)
+	assert.Equal(t, GscResOK, csres.res.Code)
+
+	assert.True(t, session.paa.IPv4().Equal(paaIP))
+	assert.Equal(t, pgwCtrlTEID, session.pgwCtrlFTEID.Teid())
+	assert.Equal(t, pgwDataTEID, session.pgwDataFTEID.Teid())
+
+	//
+	// Delete Bearer Test
+	//
+	dbReq, _ := gtpv2c.NewDeleteBearerRequest(pgwCtrlTEID, 100, ebi)
+	packet := UDPpacket{raddr: pgwAddr, body: dbReq.Marshal()}
+	session.fromCtrlReceiverChan <- packet
+
+	err := ensureNoSession(sgwCtrl.GtpSessionRepo, session.ID(), 10)
+	assert.NoError(t, err)
+}
+
+func ensureNoSession(repo *GtpSessionRepo, id SessionID, retryCnt int) error {
+retry:
+	retryCnt--
+	if retryCnt == 0 {
+		return fmt.Errorf("The session %d exists", id)
+	}
+	session := repo.FindBySessionID(id)
+	if session != nil {
+		fmt.Println("waiting")
+		time.Sleep(50 * time.Microsecond)
+		goto retry
+	}
+	// fmt.Printf("find the session! : %v\n", session)
+	return nil
 }
