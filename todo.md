@@ -65,10 +65,11 @@
   + ~~APIでsgwが存在しない場合に落ちてしまう~~ @ 2018/02/23
 
 - SgwCtrl.DeleteSession() を実装
-- SgwCtrl.DeleteBearer() を実装
+- ~~SgwCtrl.DeleteBearer() を実装~~ @ 2018/02/25
 
 - ECHO-Cを実装する
-  + ~~ECHOパケットを適切なECHOMgrへ振り分ける。~~ @ 2018/02/24
+  + ~~GTPv2C ECHOパケットに応答する。~~ @ 2018/02/24
+  + GTPv1U ECHOパケットに応答する。
   + 定期的にECHO-Cパケットを送出し、死活監視を行う。
 
 - UDP通信を実装する
