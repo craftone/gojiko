@@ -65,7 +65,6 @@ func (r *GtpSessionRepo) newSession(
 	session := &GtpSession{
 		id:     r.nextID(),
 		status: GssIdle,
-		repo:   r,
 		mtx:    sync.RWMutex{},
 
 		cmdReqChan:       make(chan gtpSessionCmd, 10),

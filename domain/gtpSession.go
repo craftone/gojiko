@@ -26,7 +26,6 @@ const (
 type GtpSession struct {
 	id     SessionID
 	status GtpSessionStatus
-	repo   *GtpSessionRepo
 	mtx    sync.RWMutex
 
 	cmdReqChan           chan gtpSessionCmd
@@ -200,13 +199,13 @@ func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus
 
 func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.DeleteBearerRequest, myLog *logrus.Entry) error {
 	_, pgwTeid := session.PgwCtrlFTEID()
-	dbRes, err := gtpv2c.NewDeleteBearerResponse(pgwTeid, dbReq.SeqNum(), ie.CauseRequestAccepted)
+	dbRes, err := gtpv2c.NewDeleteBearerResponse(pgwTeid, dbReq.SeqNum(), ie.CauseRequestAccepted, session.Ebi(), session.sgwCtrl.recovery)
 	if err != nil {
 		return err
 	}
 	session.toCtrlSenderChan <- UDPpacket{raddr, dbRes.Marshal()}
 	myLog.Debugf("Send Delete Bearer Response : %#v", dbRes)
-	err = session.repo.deleteSession(session.ID())
+	err = session.sgwCtrl.GtpSessionRepo.deleteSession(session.ID())
 	if err != nil {
 		return err
 	}
