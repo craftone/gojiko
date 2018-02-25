@@ -90,9 +90,8 @@ func (session *GtpSession) receivePacketRoutine() {
 
 	for recv := range session.fromCtrlReceiverChan {
 		// Ensure received packet has sent from correct PGW address
-		if !recv.raddr.IP.Equal(session.pgwCtrlAddr.IP) ||
-			recv.raddr.Port != session.pgwCtrlAddr.Port {
-			myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %#v , expected : %v", recv.raddr, session.pgwCtrlAddr)
+		if !recv.raddr.IP.Equal(session.pgwCtrlAddr.IP) {
+			myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %v , expected : %v", recv.raddr, session.pgwCtrlAddr)
 			continue
 		}
 
