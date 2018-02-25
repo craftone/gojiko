@@ -95,23 +95,3 @@ func (mt *Gtpsession) Validate() (err error) {
 	}
 	return
 }
-
-// List of GTP sessions (default view)
-//
-// Identifier: application/vnd.gtpsessions+json; view=default
-type Gtpsessions struct {
-	Count    *int          `form:"count,omitempty" json:"count,omitempty" xml:"count,omitempty"`
-	Sessions []*Gtpsession `form:"sessions,omitempty" json:"sessions,omitempty" xml:"sessions,omitempty"`
-}
-
-// Validate validates the Gtpsessions media type instance.
-func (mt *Gtpsessions) Validate() (err error) {
-	for _, e := range mt.Sessions {
-		if e != nil {
-			if err2 := e.Validate(); err2 != nil {
-				err = goa.MergeErrors(err, err2)
-			}
-		}
-	}
-	return
-}

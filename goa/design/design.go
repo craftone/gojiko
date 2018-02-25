@@ -79,18 +79,6 @@ var GtpSessionFTEIDs = Type("gtpSessionFTEIDs", func() {
 	Attribute("pgwDataFTEID", FTEID)
 })
 
-var GtpSessionsMedia = MediaType("application/vnd.gtpsessions+json", func() {
-	Description("List of GTP sessions")
-	Attributes(func() {
-		Attribute("count", Integer)
-		Attribute("sessions", ArrayOf(GtpSessionMedia))
-	})
-	View("default", func() {
-		Attribute("count")
-		Attribute("sessions")
-	})
-})
-
 var GtpSessionMedia = MediaType("application/vnd.gtpsession+json", func() {
 	Description("A GTP session")
 	Attributes(func() {

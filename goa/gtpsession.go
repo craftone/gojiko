@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/goa/app"
 	"github.com/goadesign/goa"
