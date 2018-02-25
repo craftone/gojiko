@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -200,19 +199,18 @@ func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus
 }
 
 func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.DeleteBearerRequest, myLog *logrus.Entry) error {
-	myLog.Debugf("DeleteBearer process")
 	_, pgwTeid := session.PgwCtrlFTEID()
 	dbRes, err := gtpv2c.NewDeleteBearerResponse(pgwTeid, dbReq.SeqNum(), ie.CauseRequestAccepted)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Sending packet ...")
 	session.toCtrlSenderChan <- UDPpacket{raddr, dbRes.Marshal()}
-	fmt.Println("DONE.")
+	myLog.Debugf("Send Delete Bearer Response : %#v", dbRes)
 	err = session.repo.deleteSession(session.ID())
 	if err != nil {
 		return err
 	}
+	myLog.Debug("Delete the sessions records")
 	return nil
 }
 
