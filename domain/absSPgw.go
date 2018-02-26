@@ -36,7 +36,9 @@ type SPgwIf interface {
 	nextTeid() gtp.Teid
 	nextSeqNum() uint32
 	UDPAddr() net.UDPAddr
-	getPair() SPgwIf
+	Pair() SPgwIf
+	ToSender() chan UDPpacket
+	setToSender(chan UDPpacket)
 	findOrCreateOpSPgw(addr net.UDPAddr) (*opSPgw, error)
 }
 
@@ -133,7 +135,7 @@ func (sp *absSPgw) UDPAddr() net.UDPAddr {
 	return sp.addr
 }
 
-func (sp *absSPgw) getPair() SPgwIf {
+func (sp *absSPgw) Pair() SPgwIf {
 	return sp.pair
 }
 
@@ -155,4 +157,13 @@ func (sp *absSPgw) findOrCreateOpSPgw(addr net.UDPAddr) (*opSPgw, error) {
 	sp.opSpgwMap[addr.String()] = opSPgw
 
 	return opSPgw, nil
+}
+
+func (sp *absSPgw) ToSender() chan UDPpacket {
+	return sp.toSender
+}
+
+// for test only
+func (sp *absSPgw) setToSender(c chan UDPpacket) {
+	sp.toSender = c
 }

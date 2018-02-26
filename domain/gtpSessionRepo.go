@@ -82,7 +82,7 @@ func (r *GtpSessionRepo) newSession(
 		pgwCtrlFTEID: pgwCtrlFTEID,
 
 		sgwCtrlAddr: sgwCtrl.UDPAddr(),
-		sgwDataAddr: sgwCtrl.getPair().UDPAddr(),
+		sgwDataAddr: sgwCtrl.Pair().UDPAddr(),
 		pgwCtrlAddr: net.UDPAddr{IP: pgwCtrlIPv4, Port: GtpControlPort},
 		pgwDataAddr: net.UDPAddr{IP: pgwCtrlIPv4, Port: GtpUserPort},
 

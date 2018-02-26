@@ -35,7 +35,7 @@ func (s *spgwRepo) GetCtrl(addr net.UDPAddr) SPgwIf {
 }
 
 func (s *spgwRepo) AddCtrl(spgwCtrl SPgwIf) error {
-	spgwData := spgwCtrl.getPair()
+	spgwData := spgwCtrl.Pair()
 	if spgwData == nil {
 		return fmt.Errorf("S/P-GW Ctrl must have a paired S/P-GW Data")
 	}

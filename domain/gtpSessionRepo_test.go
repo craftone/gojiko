@@ -21,7 +21,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	sgwCtrlSendChan := make(chan UDPpacket)
 
 	sgwCtrlTEID := sgwCtrl.nextTeid()
-	sgwDataTEID := sgwCtrl.getPair().nextTeid()
+	sgwDataTEID := sgwCtrl.Pair().nextTeid()
 	sgwCtrlFTEID, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpCIf, sgwCtrlTEID)
 	sgwDataFTEID, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpUIf, sgwDataTEID)
 

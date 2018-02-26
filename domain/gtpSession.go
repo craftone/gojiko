@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -57,12 +58,25 @@ type GtpSession struct {
 	ratType        *ie.RatType
 	servingNetwork *ie.ServingNetwork
 	pdnType        *ie.PdnType
+
+	udpFlow *UdpFlow
+}
+
+func (sess *GtpSession) changeState(curState, nextState GtpSessionStatus) error {
+	sess.mtx4status.Lock()
+	defer sess.mtx4status.Unlock()
+	if sess.status != curState {
+		return fmt.Errorf("Current State is not %v", curState)
+	}
+	sess.status = nextState
+	log.WithField("SessionID", sess.id).Debugf("Change GTP session state : %v -> %v", curState, nextState)
+	return nil
 }
 
 // this function is for GoRoutine
 func (session *GtpSession) gtpSessionRoutine() {
 	myLog := log.WithField("SessionID", session.id)
-	myLog.Debug("Start a GTP session goroutine")
+	myLog.Debug("Start a GTP session CMD goroutine")
 
 	for msg := range session.cmdReqChan {
 		myLog.Debugf("Received CMD : %v", msg)
@@ -72,6 +86,7 @@ func (session *GtpSession) gtpSessionRoutine() {
 			err := session.procCreateSession(cmd, myLog)
 			if err != nil {
 				log.Error(err)
+				session.changeState(GssSendingCSReq, GssIdle)
 			}
 		}
 	}
@@ -116,7 +131,12 @@ func (session *GtpSession) receivePacketRoutine() {
 }
 
 func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus.Entry) error {
-	session.status = GssSendingCSReq
+	// Change state from IDLE to SENDING
+	err := session.changeState(GssIdle, GssSendingCSReq)
+	if err != nil {
+		myLog.Debug(err)
+	}
+
 	seqNum := session.sgwCtrl.nextSeqNum()
 
 	recoveryIE, err := ie.NewRecovery(0, session.sgwCtrl.recovery)
@@ -159,8 +179,9 @@ func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus
 	}
 	csReqBin := csReq.Marshal()
 
-	// Send a CSReq packet to the PGW
 	raddr := session.pgwCtrlAddr
+
+	// Send a CSReq packet to the PGW
 	session.toCtrlSenderChan <- UDPpacket{raddr, csReqBin}
 
 	var res GscRes
@@ -170,6 +191,7 @@ func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus
 	case csRes := <-session.receiveCSresChan:
 		if csReq.SeqNum() != seqNum {
 			res = GscRes{Code: GscResNG, Msg: "The response's sequense number is invalid"}
+			session.changeState(GssSendingCSReq, GssIdle)
 			break
 		}
 		causeType, causeMsg := ie.CauseDetail(csRes.Cause().Value())
@@ -181,15 +203,19 @@ func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus
 			// Set PDN Address Allocation into the session
 			session.paa = csRes.Paa()
 
+			session.changeState(GssSendingCSReq, GssConnected)
 			res = GscRes{Code: GscResOK, Msg: causeMsg, Session: session}
 		case ie.CauseTypeRetryableRejection:
+			session.changeState(GssSendingCSReq, GssIdle)
 			res = GscRes{Code: GscResRetryableNG, Msg: causeMsg}
 		default:
+			session.changeState(GssSendingCSReq, GssIdle)
 			res = GscRes{Code: GscResNG, Msg: causeMsg}
 		}
 
 	case <-afterChan:
 		myLog.Error("The Create Session Response timed out")
+		session.changeState(GssSendingCSReq, GssIdle)
 		res = GscRes{Code: GscResTimeout, Msg: "Create Session Request timed out"}
 	}
 	session.cmdResChan <- res
@@ -210,6 +236,21 @@ func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.Del
 		return err
 	}
 	myLog.Debug("Delete the sessions records")
+	return nil
+}
+
+func (sess *GtpSession) NewUdpFlow(udpFlow UdpFlow) error {
+	if sess.status != GssConnected {
+		return fmt.Errorf("This session is not connected")
+	}
+	if sess.udpFlow != nil {
+		return fmt.Errorf("This session already have a UdpFlow")
+	}
+	if udpFlow.sendUdpDataSize < 10 {
+		return fmt.Errorf("SendUdpDataSize must be bigger than 10")
+	}
+	sess.udpFlow = &udpFlow
+	go sess.udpFlow.sender(sess)
 	return nil
 }
 
