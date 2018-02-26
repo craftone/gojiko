@@ -73,9 +73,10 @@
   + 定期的にECHO-Cパケットを送出し、死活監視を行う。
 
 - UDP通信を実装する
-  + SgwData.SendUDP() を実装
+  + gtpSession.SendUDP() を実装
   + UdpResponser を実装
 
+- sessionのステータス遷移をちゃんとして受け付けられるときだけ受け付けるようにする。channelが詰まったりするのを防ぐため。
 
 
 - Monitor を実装

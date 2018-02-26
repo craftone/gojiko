@@ -24,9 +24,9 @@ const (
 )
 
 type GtpSession struct {
-	id     SessionID
-	status GtpSessionStatus
-	mtx    sync.RWMutex
+	id         SessionID
+	status     GtpSessionStatus
+	mtx4status sync.RWMutex
 
 	cmdReqChan           chan gtpSessionCmd
 	cmdResChan           chan GscRes
