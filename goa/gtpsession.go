@@ -67,16 +67,11 @@ func (c *GtpsessionController) ShowByID(ctx *app.ShowByIDGtpsessionContext) erro
 func (c *GtpsessionController) ShowByIMSIandEBI(ctx *app.ShowByIMSIandEBIGtpsessionContext) error {
 	// GtpsessionController_ShowByIMSIandEBI: start_implement
 
-	sgwCtrl, err := querySgw(ctx.SgwAddr)
+	sess, err := querySessionByIMSIandEBI(ctx.SgwAddr, ctx.Imsi, ctx.Ebi)
 	if err != nil {
 		return ctx.NotFound(err)
 	}
-	sess := sgwCtrl.FindByImsiEbi(ctx.Imsi, byte(ctx.Ebi))
-	if sess == nil {
-		return ctx.NotFound(goa.ErrNotFound(fmt.Errorf("There is no session that's IMSI is %s and EBI is %d", ctx.Imsi, ctx.Ebi)))
-	}
-	res := newGtpsessionMedia(sess)
-	return ctx.OK(res)
+	return ctx.OK(newGtpsessionMedia(sess))
 
 	// GtpsessionController_ShowByIMSIandEBI: end_implement
 }

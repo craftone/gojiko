@@ -24,6 +24,18 @@ func querySgw(sgwAddr string) (*domain.SgwCtrl, error) {
 	return sgwCtrl, nil
 }
 
+func querySessionByIMSIandEBI(sgwAddr, imsi string, ebi int) (*domain.GtpSession, error) {
+	sgwCtrl, err := querySgw(sgwAddr)
+	if err != nil {
+		return nil, err
+	}
+	sess := sgwCtrl.FindByImsiEbi(imsi, byte(ebi))
+	if sess == nil {
+		return nil, goa.ErrNotFound(fmt.Errorf("There is no session that's IMSI is %s and EBI is %d", imsi, ebi))
+	}
+	return sess, nil
+}
+
 func newGtpsessionMedia(sess *domain.GtpSession) *app.Gtpsession {
 	return &app.Gtpsession{
 		Apn: sess.Apn(),

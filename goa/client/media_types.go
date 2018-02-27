@@ -110,3 +110,27 @@ func (c *Client) DecodeGtpsession(resp *http.Response) (*Gtpsession, error) {
 	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
 	return &decoded, err
 }
+
+// A UDP ECHO flow (default view)
+//
+// Identifier: application/vnd.udpechoflow+json; view=default
+type Udpechoflow struct {
+	UDPEchoFlowArg *UDPEchoFlowPayload `form:"UdpEchoFlowArg,omitempty" json:"UdpEchoFlowArg,omitempty" xml:"UdpEchoFlowArg,omitempty"`
+}
+
+// Validate validates the Udpechoflow media type instance.
+func (mt *Udpechoflow) Validate() (err error) {
+	if mt.UDPEchoFlowArg != nil {
+		if err2 := mt.UDPEchoFlowArg.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// DecodeUdpechoflow decodes the Udpechoflow instance encoded in resp body.
+func (c *Client) DecodeUdpechoflow(resp *http.Response) (*Udpechoflow, error) {
+	var decoded Udpechoflow
+	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
+	return &decoded, err
+}

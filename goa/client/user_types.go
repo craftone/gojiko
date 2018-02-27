@@ -15,6 +15,242 @@ import (
 	"github.com/goadesign/goa"
 )
 
+// udpEchoFlowPayload user type.
+type udpEchoFlowPayload struct {
+	// ECHO destination IPv4 address
+	DestAddr *string `form:"destAddr,omitempty" json:"destAddr,omitempty" xml:"destAddr,omitempty"`
+	// ECHO destination UDP port
+	DestPort *int `form:"destPort,omitempty" json:"destPort,omitempty" xml:"destPort,omitempty"`
+	// Receive packet size (including IP header)
+	RecvPacketSize *int `form:"recvPacketSize,omitempty" json:"recvPacketSize,omitempty" xml:"recvPacketSize,omitempty"`
+	// Send packet size (including IP header)
+	SendPacketSize *int `form:"sendPacketSize,omitempty" json:"sendPacketSize,omitempty" xml:"sendPacketSize,omitempty"`
+	// ECHO source UDP port
+	SourcePort *int `form:"sourcePort,omitempty" json:"sourcePort,omitempty" xml:"sourcePort,omitempty"`
+	// Target bitrate(bps) in SGi not S5/S8
+	TargetBps *int `form:"targetBps,omitempty" json:"targetBps,omitempty" xml:"targetBps,omitempty"`
+	// Type of service
+	Tos *int `form:"tos,omitempty" json:"tos,omitempty" xml:"tos,omitempty"`
+	// Time To Live
+	TTL *int `form:"ttl,omitempty" json:"ttl,omitempty" xml:"ttl,omitempty"`
+}
+
+// Finalize sets the default values for udpEchoFlowPayload type instance.
+func (ut *udpEchoFlowPayload) Finalize() {
+	var defaultDestPort = 7777
+	if ut.DestPort == nil {
+		ut.DestPort = &defaultDestPort
+	}
+	var defaultSourcePort = 7777
+	if ut.SourcePort == nil {
+		ut.SourcePort = &defaultSourcePort
+	}
+	var defaultTos = 0
+	if ut.Tos == nil {
+		ut.Tos = &defaultTos
+	}
+	var defaultTTL = 255
+	if ut.TTL == nil {
+		ut.TTL = &defaultTTL
+	}
+}
+
+// Validate validates the udpEchoFlowPayload type instance.
+func (ut *udpEchoFlowPayload) Validate() (err error) {
+	if ut.DestAddr == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "destAddr"))
+	}
+	if ut.SendPacketSize == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "sendPacketSize"))
+	}
+	if ut.TargetBps == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "targetBps"))
+	}
+	if ut.RecvPacketSize == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "recvPacketSize"))
+	}
+	if ut.DestAddr != nil {
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, *ut.DestAddr); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`request.destAddr`, *ut.DestAddr, goa.FormatIPv4, err2))
+		}
+	}
+	if ut.DestPort != nil {
+		if *ut.DestPort < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.destPort`, *ut.DestPort, 0, true))
+		}
+	}
+	if ut.DestPort != nil {
+		if *ut.DestPort > 65535 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.destPort`, *ut.DestPort, 65535, false))
+		}
+	}
+	if ut.RecvPacketSize != nil {
+		if *ut.RecvPacketSize < 38 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.recvPacketSize`, *ut.RecvPacketSize, 38, true))
+		}
+	}
+	if ut.RecvPacketSize != nil {
+		if *ut.RecvPacketSize > 1460 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.recvPacketSize`, *ut.RecvPacketSize, 1460, false))
+		}
+	}
+	if ut.SendPacketSize != nil {
+		if *ut.SendPacketSize < 38 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.sendPacketSize`, *ut.SendPacketSize, 38, true))
+		}
+	}
+	if ut.SendPacketSize != nil {
+		if *ut.SendPacketSize > 1460 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.sendPacketSize`, *ut.SendPacketSize, 1460, false))
+		}
+	}
+	if ut.SourcePort != nil {
+		if *ut.SourcePort < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.sourcePort`, *ut.SourcePort, 0, true))
+		}
+	}
+	if ut.SourcePort != nil {
+		if *ut.SourcePort > 65535 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.sourcePort`, *ut.SourcePort, 65535, false))
+		}
+	}
+	if ut.TargetBps != nil {
+		if *ut.TargetBps < 1 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.targetBps`, *ut.TargetBps, 1, true))
+		}
+	}
+	if ut.TargetBps != nil {
+		if *ut.TargetBps > 100000000000 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.targetBps`, *ut.TargetBps, 100000000000, false))
+		}
+	}
+	if ut.Tos != nil {
+		if *ut.Tos < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.tos`, *ut.Tos, 0, true))
+		}
+	}
+	if ut.Tos != nil {
+		if *ut.Tos > 255 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.tos`, *ut.Tos, 255, false))
+		}
+	}
+	if ut.TTL != nil {
+		if *ut.TTL < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.ttl`, *ut.TTL, 0, true))
+		}
+	}
+	if ut.TTL != nil {
+		if *ut.TTL > 255 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.ttl`, *ut.TTL, 255, false))
+		}
+	}
+	return
+}
+
+// Publicize creates UDPEchoFlowPayload from udpEchoFlowPayload
+func (ut *udpEchoFlowPayload) Publicize() *UDPEchoFlowPayload {
+	var pub UDPEchoFlowPayload
+	if ut.DestAddr != nil {
+		pub.DestAddr = *ut.DestAddr
+	}
+	if ut.DestPort != nil {
+		pub.DestPort = *ut.DestPort
+	}
+	if ut.RecvPacketSize != nil {
+		pub.RecvPacketSize = *ut.RecvPacketSize
+	}
+	if ut.SendPacketSize != nil {
+		pub.SendPacketSize = *ut.SendPacketSize
+	}
+	if ut.SourcePort != nil {
+		pub.SourcePort = *ut.SourcePort
+	}
+	if ut.TargetBps != nil {
+		pub.TargetBps = *ut.TargetBps
+	}
+	if ut.Tos != nil {
+		pub.Tos = *ut.Tos
+	}
+	if ut.TTL != nil {
+		pub.TTL = *ut.TTL
+	}
+	return &pub
+}
+
+// UDPEchoFlowPayload user type.
+type UDPEchoFlowPayload struct {
+	// ECHO destination IPv4 address
+	DestAddr string `form:"destAddr" json:"destAddr" xml:"destAddr"`
+	// ECHO destination UDP port
+	DestPort int `form:"destPort" json:"destPort" xml:"destPort"`
+	// Receive packet size (including IP header)
+	RecvPacketSize int `form:"recvPacketSize" json:"recvPacketSize" xml:"recvPacketSize"`
+	// Send packet size (including IP header)
+	SendPacketSize int `form:"sendPacketSize" json:"sendPacketSize" xml:"sendPacketSize"`
+	// ECHO source UDP port
+	SourcePort int `form:"sourcePort" json:"sourcePort" xml:"sourcePort"`
+	// Target bitrate(bps) in SGi not S5/S8
+	TargetBps int `form:"targetBps" json:"targetBps" xml:"targetBps"`
+	// Type of service
+	Tos int `form:"tos" json:"tos" xml:"tos"`
+	// Time To Live
+	TTL int `form:"ttl" json:"ttl" xml:"ttl"`
+}
+
+// Validate validates the UDPEchoFlowPayload type instance.
+func (ut *UDPEchoFlowPayload) Validate() (err error) {
+	if ut.DestAddr == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "destAddr"))
+	}
+
+	if err2 := goa.ValidateFormat(goa.FormatIPv4, ut.DestAddr); err2 != nil {
+		err = goa.MergeErrors(err, goa.InvalidFormatError(`type.destAddr`, ut.DestAddr, goa.FormatIPv4, err2))
+	}
+	if ut.DestPort < 0 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.destPort`, ut.DestPort, 0, true))
+	}
+	if ut.DestPort > 65535 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.destPort`, ut.DestPort, 65535, false))
+	}
+	if ut.RecvPacketSize < 38 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.recvPacketSize`, ut.RecvPacketSize, 38, true))
+	}
+	if ut.RecvPacketSize > 1460 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.recvPacketSize`, ut.RecvPacketSize, 1460, false))
+	}
+	if ut.SendPacketSize < 38 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.sendPacketSize`, ut.SendPacketSize, 38, true))
+	}
+	if ut.SendPacketSize > 1460 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.sendPacketSize`, ut.SendPacketSize, 1460, false))
+	}
+	if ut.SourcePort < 0 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.sourcePort`, ut.SourcePort, 0, true))
+	}
+	if ut.SourcePort > 65535 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.sourcePort`, ut.SourcePort, 65535, false))
+	}
+	if ut.TargetBps < 1 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.targetBps`, ut.TargetBps, 1, true))
+	}
+	if ut.TargetBps > 100000000000 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.targetBps`, ut.TargetBps, 100000000000, false))
+	}
+	if ut.Tos < 0 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.tos`, ut.Tos, 0, true))
+	}
+	if ut.Tos > 255 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.tos`, ut.Tos, 255, false))
+	}
+	if ut.TTL < 0 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.ttl`, ut.TTL, 0, true))
+	}
+	if ut.TTL > 255 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.ttl`, ut.TTL, 255, false))
+	}
+	return
+}
+
 // fteid user type.
 type fteid struct {
 	Ipv4 *string `form:"ipv4,omitempty" json:"ipv4,omitempty" xml:"ipv4,omitempty"`

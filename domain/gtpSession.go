@@ -246,10 +246,10 @@ func (sess *GtpSession) NewUdpFlow(udpFlow UdpFlow) error {
 	if sess.udpFlow != nil {
 		return fmt.Errorf("This session already have a UdpFlow")
 	}
-	if udpFlow.sendPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
+	if udpFlow.SendPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
 		return fmt.Errorf("SendPacketSize must be bigger than %d", MIN_UDP_ECHO_PACKET_SIZE)
 	}
-	if udpFlow.recvPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
+	if udpFlow.RecvPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
 		return fmt.Errorf("RecvPacketSize must be bigger than %d", MIN_UDP_ECHO_PACKET_SIZE)
 	}
 	sess.udpFlow = &udpFlow

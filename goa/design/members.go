@@ -59,3 +59,14 @@ var gtpSessionStatusMember = func() {
 		Example("idle")
 	})
 }
+
+var sgwAddrMember = func() {
+	Member("sgwAddr", String, "SGW GTPv2-C loopback address", func() {
+		Format("ipv4")
+		Example("127.0.0.1")
+	})
+}
+
+var sessionIdMember = func() {
+	Member("sid", Integer, "Session ID")
+}

@@ -17,10 +17,7 @@ var _ = Resource("gtpsession", func() {
 	BasePath("/sgw/:sgwAddr/gtpsessions")
 	DefaultMedia(GtpSessionMedia)
 	Params(func() {
-		Param("sgwAddr", String, "SGW GTPv2-C loopback address", func() {
-			Format("ipv4")
-			Example("127.0.0.1")
-		})
+		sgwAddrMember()
 	})
 
 	Action("create", func() {
@@ -42,7 +39,7 @@ var _ = Resource("gtpsession", func() {
 		Description("Show the gtp session by session ID")
 		Routing(GET("/id/:sid"))
 		Params(func() {
-			Param("sid", Integer, "Session ID")
+			sessionIdMember()
 		})
 		Response(OK)
 		Response(NotFound, ErrorMedia)
@@ -52,11 +49,27 @@ var _ = Resource("gtpsession", func() {
 		Description("Show the gtp session by IMSI and EBI")
 		Routing(GET("/imsi/:imsi/ebi/:ebi"))
 		Params(func() {
-			Param("imsi")
-			Param("ebi")
+			imsiEbiMember()
 		})
 		Response(OK)
 		Response(NotFound, ErrorMedia)
+	})
+})
+
+var _ = Resource("udpEchoFlowByIMSIandEBI", func() {
+	BasePath("/sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi/udp_echo_flow")
+	Params(func() {
+		sgwAddrMember()
+		imsiEbiMember()
+	})
+
+	Action("create", func() {
+		Description("Start UDP ECHO flow by IMSI and EBI")
+		Routing(POST(""))
+		Payload(UdpEchoFlowPayload)
+		Response(OK, UdpEchoFlowMedia)
+		Response(NotFound, ErrorMedia)
+		Response(InternalServerError, ErrorMedia)
 	})
 })
 
@@ -102,5 +115,59 @@ var GtpSessionMedia = MediaType("application/vnd.gtpsession+json", func() {
 		Attribute("imsi")
 		Attribute("ebi")
 		Attribute("fteid")
+	})
+})
+
+var UdpEchoFlowPayload = Type("UdpEchoFlowPayload", func() {
+	Member("destAddr", String, "ECHO destination IPv4 address", func() {
+		Format("ipv4")
+	})
+	Member("destPort", Integer, "ECHO destination UDP port", func() {
+		Minimum(0)
+		Maximum(65535)
+		Default(7777)
+		Example(7777)
+	})
+	Member("sourcePort", Integer, "ECHO source UDP port", func() {
+		Minimum(0)
+		Maximum(65535)
+		Default(7777)
+		Example(7777)
+	})
+	Member("sendPacketSize", Integer, "Send packet size (including IP header)", func() {
+		Minimum(38)
+		Maximum(1460)
+		Example(1460)
+	})
+	Member("tos", Integer, "Type of service", func() {
+		Minimum(0)
+		Maximum(255)
+		Default(0)
+		Example(0)
+	})
+	Member("ttl", Integer, "Time To Live", func() {
+		Minimum(0)
+		Maximum(255)
+		Default(255)
+		Example(255)
+	})
+	Member("targetBps", Integer, "Target bitrate(bps) in SGi not S5/S8", func() {
+		Minimum(1)
+		Maximum(100000000000)
+		Example(100000000)
+	})
+	Member("recvPacketSize", Integer, "Receive packet size (including IP header)", func() {
+		Minimum(38)
+		Maximum(1460)
+		Example(1460)
+	})
+	Required("destAddr", "sendPacketSize", "targetBps", "recvPacketSize")
+})
+
+var UdpEchoFlowMedia = MediaType("application/vnd.udpechoflow+json", func() {
+	Description("A UDP ECHO flow")
+	Attribute("UdpEchoFlowArg", UdpEchoFlowPayload)
+	View("default", func() {
+		Attribute("UdpEchoFlowArg")
 	})
 })

@@ -112,3 +112,52 @@ func unmarshalCreateGtpsessionPayload(ctx context.Context, service *goa.Service,
 	goa.ContextRequest(ctx).Payload = payload.Publicize()
 	return nil
 }
+
+// UDPEchoFlowByIMSIandEBIController is the controller interface for the UDPEchoFlowByIMSIandEBI actions.
+type UDPEchoFlowByIMSIandEBIController interface {
+	goa.Muxer
+	Create(*CreateUDPEchoFlowByIMSIandEBIContext) error
+}
+
+// MountUDPEchoFlowByIMSIandEBIController "mounts" a UDPEchoFlowByIMSIandEBI resource controller on the given service.
+func MountUDPEchoFlowByIMSIandEBIController(service *goa.Service, ctrl UDPEchoFlowByIMSIandEBIController) {
+	initService(service)
+	var h goa.Handler
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewCreateUDPEchoFlowByIMSIandEBIContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*UDPEchoFlowPayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.Create(rctx)
+	}
+	service.Mux.Handle("POST", "/sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi/udp_echo_flow", ctrl.MuxHandler("create", h, unmarshalCreateUDPEchoFlowByIMSIandEBIPayload))
+	service.LogInfo("mount", "ctrl", "UDPEchoFlowByIMSIandEBI", "action", "Create", "route", "POST /sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi/udp_echo_flow")
+}
+
+// unmarshalCreateUDPEchoFlowByIMSIandEBIPayload unmarshals the request body into the context request data Payload field.
+func unmarshalCreateUDPEchoFlowByIMSIandEBIPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &udpEchoFlowPayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	payload.Finalize()
+	if err := payload.Validate(); err != nil {
+		// Initialize payload with private data structure so it can be logged
+		goa.ContextRequest(ctx).Payload = payload
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
