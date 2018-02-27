@@ -24,8 +24,12 @@ func main() {
 	service.Use(middleware.Recover())
 
 	// Mount "gtpsession" controller
-	c := NewGtpsessionController(service)
-	app.MountGtpsessionController(service, c)
+	c1 := NewGtpsessionController(service)
+	app.MountGtpsessionController(service, c1)
+
+	// Mount "udpEchoFlowByIMSIandEBI" controller
+	c2 := NewUDPEchoFlowByIMSIandEBIController(service)
+	app.MountUDPEchoFlowByIMSIandEBIController(service, c2)
 
 	// Start service
 	if err := service.ListenAndServe(":8080"); err != nil {

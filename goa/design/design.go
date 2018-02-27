@@ -67,6 +67,7 @@ var _ = Resource("udpEchoFlowByIMSIandEBI", func() {
 		Description("Start UDP ECHO flow by IMSI and EBI")
 		Routing(POST(""))
 		Payload(UdpEchoFlowPayload)
+
 		Response(OK, UdpEchoFlowMedia)
 		Response(NotFound, ErrorMedia)
 		Response(InternalServerError, ErrorMedia)
