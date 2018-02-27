@@ -78,6 +78,10 @@
 
 - sessionのステータス遷移をちゃんとして受け付けられるときだけ受け付けるようにする。channelが詰まったりするのを防ぐため。
 
+- CreateSessionをリファクタリング。コマンドchanでやる必要がない。
+
+- contextを使ってキャンセル→goroutine停止を確実に実施する
+
 
 - Monitor を実装
 

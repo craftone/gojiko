@@ -9,44 +9,45 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const MIN_UDP_ECHO_PACKET_SIZE = 38
+
 type UdpFlow struct {
-	destAddr        net.UDPAddr
-	sourcePort      uint16
-	sendUdpDataSize uint16
-	tos             byte
-	ttl             byte
-	targetBps       uint64
-	sendDuration    time.Duration
-	recvUdpDataSize uint16
+	destAddr       net.UDPAddr
+	sourcePort     uint16
+	sendPacketSize uint16
+	tos            byte
+	ttl            byte
+	targetBps      uint64
+	sendDuration   time.Duration
+	recvPacketSize uint16
 }
 
 func (u *UdpFlow) sender(sess *GtpSession) {
 	sourceAddr := net.UDPAddr{IP: sess.paa.IPv4(), Port: int(u.sourcePort)}
 	myLog := log.WithFields(logrus.Fields{
-		"routine":         "UdpFlowSender",
-		"DestAddr":        u.destAddr,
-		"SourceAddr":      sourceAddr,
-		"SendUdpDataSize": u.sendUdpDataSize,
-		"TypeOfService":   u.tos,
-		"TTL":             u.ttl,
-		"TargetBps":       u.targetBps,
-		"SendDuration":    u.sendDuration,
-		"RecvUdpDataSize": u.recvUdpDataSize,
+		"routine":        "UdpFlowSender",
+		"DestAddr":       u.destAddr,
+		"SourceAddr":     sourceAddr,
+		"SendPacketSize": u.sendPacketSize,
+		"TypeOfService":  u.tos,
+		"TTL":            u.ttl,
+		"TargetBps":      u.targetBps,
+		"SendDuration":   u.sendDuration,
+		"RecvPacketSize": u.recvPacketSize,
 	})
 	myLog.Debug("Start a UDP Flow goroutine")
 
-	packetSize := u.sendUdpDataSize
-	packetSize += 8  // UDP header
-	packetSize += 20 // IP header
+	packetSize := u.sendPacketSize
+	udpSize := packetSize - 20
 
 	sendIntervalSec := float64(packetSize*8) / float64(u.targetBps)
 	sendInterval := time.Duration(sendIntervalSec * float64(time.Second))
 
-	udpBody := make([]byte, u.sendUdpDataSize+8)
+	udpBody := make([]byte, udpSize)
 	binary.BigEndian.PutUint16(udpBody[0:], u.sourcePort)
 	binary.BigEndian.PutUint16(udpBody[2:], uint16(u.destAddr.Port))
-	binary.BigEndian.PutUint16(udpBody[4:], u.sendUdpDataSize+8)
-	binary.BigEndian.PutUint16(udpBody[8:], u.recvUdpDataSize)
+	binary.BigEndian.PutUint16(udpBody[4:], udpSize)
+	binary.BigEndian.PutUint16(udpBody[8:], u.recvPacketSize)
 	ipv4Emu := ipemu.NewIPv4Emulator(ipemu.UDP, sess.Paa(), u.destAddr.IP, 1500)
 	teid := sess.pgwDataFTEID.Teid()
 	senderChan := sess.sgwCtrl.Pair().ToSender()
@@ -78,5 +79,6 @@ loop:
 	case <-durationChan:
 		log.Debug("UDP flow duration exipred")
 	}
+	sess.udpFlow = nil
 	log.Debug("End a UDP Flow goroutine")
 }

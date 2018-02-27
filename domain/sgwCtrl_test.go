@@ -336,14 +336,14 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 
 	// NewUdpFlow
 	udpFlow := UdpFlow{
-		destAddr:        net.UDPAddr{IP: net.IPv4(100, 100, 100, 100), Port: 10000},
-		sourcePort:      10001,
-		sendUdpDataSize: 10,
-		tos:             0,
-		ttl:             255,
-		targetBps:       15000, // interval = (10+8+20)*8 / 15000 = 0.02026
-		sendDuration:    100 * time.Millisecond,
-		recvUdpDataSize: 1450,
+		destAddr:       net.UDPAddr{IP: net.IPv4(100, 100, 100, 100), Port: 10000},
+		sourcePort:     10001,
+		sendPacketSize: 38,
+		tos:            0,
+		ttl:            255,
+		targetBps:      15000, // interval = 38*8 / 15000 = 0.02026
+		sendDuration:   100 * time.Millisecond,
+		recvPacketSize: 1450,
 	}
 
 	sgwData := session.sgwCtrl.Pair()
