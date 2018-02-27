@@ -110,6 +110,7 @@ Payload example:
 {
    "destAddr": "93.108.70.217",
    "destPort": 7777,
+   "numOfSend": 1,
    "recvPacketSize": 1460,
    "sendPacketSize": 1460,
    "sourcePort": 7777,

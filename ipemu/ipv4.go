@@ -60,14 +60,14 @@ func (e *IPv4Emulator) NewIPv4GPDU(teid gtp.Teid, tos, ttl byte, data []byte) ([
 	totalLength := uint16(headerSize + len(data))
 
 	// make gpdu
-	gpdu := make([]byte, totalLength+8)
+	gpdu := make([]byte, totalLength+12)
 	gpdu[0] = 0x20 // version:1, all flags are 0
 	gpdu[1] = 0xFF // GTP_TPDU_MSG (0xFF)
-	binary.BigEndian.PutUint16(gpdu[2:], totalLength)
+	binary.BigEndian.PutUint16(gpdu[2:], 4+totalLength)
 	binary.BigEndian.PutUint32(gpdu[4:], uint32(teid))
 
 	// make packet
-	packet := gpdu[8:]
+	packet := gpdu[12:]
 	packet[0] = byte(ipVersion<<4 + ihl)
 	packet[1] = tos
 	binary.BigEndian.PutUint16(packet[2:], totalLength)
@@ -84,12 +84,14 @@ func (e *IPv4Emulator) NewIPv4GPDU(teid gtp.Teid, tos, ttl byte, data []byte) ([
 	for _, i := range []int{0, 2, 4, 6, 8, 12, 14, 16, 18} {
 		crc += int(binary.BigEndian.Uint16(packet[i : i+2]))
 	}
-loop:
-	carry := crc >> 16
-	if carry != 0 {
+
+	for {
+		carry := crc >> 16
+		if carry == 0 {
+			break
+		}
 		crc = crc & 0xFFFF
 		crc += carry
-		goto loop
 	}
 	checksum := ^uint16(crc)
 	binary.BigEndian.PutUint16(packet[10:], checksum)

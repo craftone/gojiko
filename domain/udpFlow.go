@@ -11,18 +11,18 @@ import (
 
 const MIN_UDP_ECHO_PACKET_SIZE = 38
 
-type UdpFlow struct {
+type UdpEchoFlowArg struct {
 	DestAddr       net.UDPAddr
 	SourcePort     uint16
 	SendPacketSize uint16
 	Tos            byte
 	Ttl            byte
 	TargetBps      uint64
-	SendDuration   time.Duration
+	NumOfSend      int
 	RecvPacketSize uint16
 }
 
-func (u *UdpFlow) sender(sess *GtpSession) {
+func (u *UdpEchoFlowArg) sender(sess *GtpSession) {
 	sourceAddr := net.UDPAddr{IP: sess.paa.IPv4(), Port: int(u.SourcePort)}
 	myLog := log.WithFields(logrus.Fields{
 		"routine":        "UdpFlowSender",
@@ -32,7 +32,7 @@ func (u *UdpFlow) sender(sess *GtpSession) {
 		"TypeOfService":  u.Tos,
 		"TTL":            u.Ttl,
 		"TargetBps":      u.TargetBps,
-		"SendDuration":   u.SendDuration,
+		"NumOfSend":      u.NumOfSend,
 		"RecvPacketSize": u.RecvPacketSize,
 	})
 	myLog.Debug("Start a UDP Flow goroutine")
@@ -52,32 +52,34 @@ func (u *UdpFlow) sender(sess *GtpSession) {
 	teid := sess.pgwDataFTEID.Teid()
 	senderChan := sess.sgwCtrl.Pair().ToSender()
 	seqNum := uint64(0)
-
-	durationChan := time.After(u.SendDuration)
+	numOfSend := uint64(u.NumOfSend)
 
 	nextTime := time.Now()
 	nextTimeChan := time.After(0)
+
 loop:
-	select {
-	case <-nextTimeChan:
-		if sess.status != GssConnected {
-			log.Debug("Session status is not connected")
-			break
+	for {
+		select {
+		case <-nextTimeChan:
+			if sess.status != GssConnected {
+				log.Debug("Session status is not connected")
+				break loop
+			}
+			seqNum++
+			if seqNum > numOfSend {
+				break loop
+			}
+			binary.BigEndian.PutUint64(udpBody[10:], seqNum)
+			packet, err := ipv4Emu.NewIPv4GPDU(teid, u.Tos, u.Ttl, udpBody)
+			if err != nil {
+				myLog.Debug(err)
+			} else {
+				myLog.Debugf("Send a packet at %s", time.Now())
+				senderChan <- UDPpacket{sess.pgwDataAddr, packet}
+			}
+			nextTime = nextTime.Add(sendInterval)
+			nextTimeChan = time.After(nextTime.Sub(time.Now()))
 		}
-		seqNum++
-		binary.BigEndian.PutUint64(udpBody[10:], seqNum)
-		packet, err := ipv4Emu.NewIPv4GPDU(teid, u.Tos, u.Ttl, udpBody)
-		if err != nil {
-			myLog.Debug(err)
-		} else {
-			myLog.Debugf("Send a packet at %s", time.Now())
-			senderChan <- UDPpacket{sess.pgwDataAddr, packet}
-		}
-		nextTime = nextTime.Add(sendInterval)
-		nextTimeChan = time.After(nextTime.Sub(time.Now()))
-		goto loop
-	case <-durationChan:
-		log.Debug("UDP flow duration exipred")
 	}
 	sess.udpFlow = nil
 	log.Debug("End a UDP Flow goroutine")

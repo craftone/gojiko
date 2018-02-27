@@ -335,14 +335,14 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	assert.Equal(t, pgwDataTEID, session.pgwDataFTEID.Teid())
 
 	// NewUdpFlow
-	udpFlow := UdpFlow{
+	udpFlow := UdpEchoFlowArg{
 		DestAddr:       net.UDPAddr{IP: net.IPv4(100, 100, 100, 100), Port: 10000},
 		SourcePort:     10001,
 		SendPacketSize: 38,
 		Tos:            0,
 		Ttl:            255,
 		TargetBps:      15000, // interval = 38*8 / 15000 = 0.02026
-		SendDuration:   100 * time.Millisecond,
+		NumOfSend:      5,
 		RecvPacketSize: 1450,
 	}
 
@@ -359,10 +359,11 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	packet = <-c  // @ 0.08 s
 
 	assert.Equal(t, []byte{
-		0x20,       // GTP version:1, all flags are 0
-		0xFF,       // GTP_TPDU_MSG (0xFF)
-		0x00, 0x26, // totalLen: 38
+		0x20,     // GTP version:1, all flags are 0
+		0xFF,     // GTP_TPDU_MSG (0xFF)
+		0x00, 42, // totalLen: 4+38
 		0x76, 0x54, 0x32, 0x10, // teid
+		0, 0, 0, 0,
 
 		0x45,       // version: 4, ihl: 5
 		0x00,       // tos: 0,

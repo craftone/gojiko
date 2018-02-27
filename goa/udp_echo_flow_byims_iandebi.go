@@ -1,11 +1,11 @@
 package main
 
 import (
+	"net"
+
 	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/goa/app"
 	"github.com/goadesign/goa"
-	"net"
-	"time"
 )
 
 // UDPEchoFlowByIMSIandEBIController implements the udpEchoFlowByIMSIandEBI resource.
@@ -30,14 +30,14 @@ func (c *UDPEchoFlowByIMSIandEBIController) Create(ctx *app.CreateUDPEchoFlowByI
 	pl := ctx.Payload
 	destAddr := net.UDPAddr{IP: net.ParseIP(pl.DestAddr), Port: pl.DestPort}
 
-	udpFlow := domain.UdpFlow{
+	udpFlow := domain.UdpEchoFlowArg{
 		DestAddr:       destAddr,
 		SourcePort:     uint16(pl.SourcePort),
 		SendPacketSize: uint16(pl.SendPacketSize),
 		Tos:            byte(pl.Tos),
 		Ttl:            byte(pl.TTL),
 		TargetBps:      uint64(pl.TargetBps),
-		SendDuration:   24 * time.Hour,
+		NumOfSend:      pl.NumOfSend,
 		RecvPacketSize: uint16(pl.RecvPacketSize),
 	}
 

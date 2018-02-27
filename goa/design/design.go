@@ -157,12 +157,15 @@ var UdpEchoFlowPayload = Type("UdpEchoFlowPayload", func() {
 		Maximum(100000000000)
 		Example(100000000)
 	})
+	Member("numOfSend", Integer, "Number of send packets", func() {
+		Minimum(1)
+	})
 	Member("recvPacketSize", Integer, "Receive packet size (including IP header)", func() {
 		Minimum(38)
 		Maximum(1460)
 		Example(1460)
 	})
-	Required("destAddr", "sendPacketSize", "targetBps", "recvPacketSize")
+	Required("destAddr", "sendPacketSize", "targetBps", "numOfSend", "recvPacketSize")
 })
 
 var UdpEchoFlowMedia = MediaType("application/vnd.udpechoflow+json", func() {

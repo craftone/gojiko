@@ -59,7 +59,7 @@ type GtpSession struct {
 	servingNetwork *ie.ServingNetwork
 	pdnType        *ie.PdnType
 
-	udpFlow *UdpFlow
+	udpFlow *UdpEchoFlowArg
 }
 
 func (sess *GtpSession) changeState(curState, nextState GtpSessionStatus) error {
@@ -239,7 +239,7 @@ func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.Del
 	return nil
 }
 
-func (sess *GtpSession) NewUdpFlow(udpFlow UdpFlow) error {
+func (sess *GtpSession) NewUdpFlow(udpFlow UdpEchoFlowArg) error {
 	if sess.status != GssConnected {
 		return fmt.Errorf("This session is not connected")
 	}

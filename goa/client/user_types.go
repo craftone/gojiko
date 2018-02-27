@@ -21,6 +21,8 @@ type udpEchoFlowPayload struct {
 	DestAddr *string `form:"destAddr,omitempty" json:"destAddr,omitempty" xml:"destAddr,omitempty"`
 	// ECHO destination UDP port
 	DestPort *int `form:"destPort,omitempty" json:"destPort,omitempty" xml:"destPort,omitempty"`
+	// Number of send packets
+	NumOfSend *int `form:"numOfSend,omitempty" json:"numOfSend,omitempty" xml:"numOfSend,omitempty"`
 	// Receive packet size (including IP header)
 	RecvPacketSize *int `form:"recvPacketSize,omitempty" json:"recvPacketSize,omitempty" xml:"recvPacketSize,omitempty"`
 	// Send packet size (including IP header)
@@ -66,6 +68,9 @@ func (ut *udpEchoFlowPayload) Validate() (err error) {
 	if ut.TargetBps == nil {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "targetBps"))
 	}
+	if ut.NumOfSend == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "numOfSend"))
+	}
 	if ut.RecvPacketSize == nil {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "recvPacketSize"))
 	}
@@ -82,6 +87,11 @@ func (ut *udpEchoFlowPayload) Validate() (err error) {
 	if ut.DestPort != nil {
 		if *ut.DestPort > 65535 {
 			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.destPort`, *ut.DestPort, 65535, false))
+		}
+	}
+	if ut.NumOfSend != nil {
+		if *ut.NumOfSend < 1 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.numOfSend`, *ut.NumOfSend, 1, true))
 		}
 	}
 	if ut.RecvPacketSize != nil {
@@ -156,6 +166,9 @@ func (ut *udpEchoFlowPayload) Publicize() *UDPEchoFlowPayload {
 	if ut.DestPort != nil {
 		pub.DestPort = *ut.DestPort
 	}
+	if ut.NumOfSend != nil {
+		pub.NumOfSend = *ut.NumOfSend
+	}
 	if ut.RecvPacketSize != nil {
 		pub.RecvPacketSize = *ut.RecvPacketSize
 	}
@@ -183,6 +196,8 @@ type UDPEchoFlowPayload struct {
 	DestAddr string `form:"destAddr" json:"destAddr" xml:"destAddr"`
 	// ECHO destination UDP port
 	DestPort int `form:"destPort" json:"destPort" xml:"destPort"`
+	// Number of send packets
+	NumOfSend int `form:"numOfSend" json:"numOfSend" xml:"numOfSend"`
 	// Receive packet size (including IP header)
 	RecvPacketSize int `form:"recvPacketSize" json:"recvPacketSize" xml:"recvPacketSize"`
 	// Send packet size (including IP header)
@@ -211,6 +226,9 @@ func (ut *UDPEchoFlowPayload) Validate() (err error) {
 	}
 	if ut.DestPort > 65535 {
 		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.destPort`, ut.DestPort, 65535, false))
+	}
+	if ut.NumOfSend < 1 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.numOfSend`, ut.NumOfSend, 1, true))
 	}
 	if ut.RecvPacketSize < 38 {
 		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.recvPacketSize`, ut.RecvPacketSize, 38, true))

@@ -146,6 +146,7 @@ definitions:
     example:
       destAddr: 93.108.70.217
       destPort: 7777
+      numOfSend: 1
       recvPacketSize: 1460
       sendPacketSize: 1460
       sourcePort: 7777
@@ -164,6 +165,11 @@ definitions:
         example: 7777
         maximum: 65535
         minimum: 0
+        type: integer
+      numOfSend:
+        description: Number of send packets
+        example: 1
+        minimum: 1
         type: integer
       recvPacketSize:
         description: Receive packet size (including IP header)
@@ -208,6 +214,7 @@ definitions:
     - destAddr
     - sendPacketSize
     - targetBps
+    - numOfSend
     - recvPacketSize
     title: UdpEchoFlowPayload
     type: object
@@ -217,6 +224,7 @@ definitions:
       UdpEchoFlowArg:
         destAddr: 93.108.70.217
         destPort: 7777
+        numOfSend: 1
         recvPacketSize: 1460
         sendPacketSize: 1460
         sourcePort: 7777
