@@ -181,7 +181,7 @@ retry:
 // sgwCtrlReceiverRoutine is for GoRoutine
 func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
 	myLog := log.WithFields(logrus.Fields{
-		"laddr":   sgwCtrl.addr,
+		"laddr":   sgwCtrl.addr.String(),
 		"routine": "SgwReceiver",
 	})
 	myLog.Info("Start a SGW Receiver goroutine")

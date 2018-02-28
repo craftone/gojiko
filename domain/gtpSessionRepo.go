@@ -100,10 +100,10 @@ func (r *GtpSessionRepo) newSession(
 
 	myLog := log.WithFields(logrus.Fields{
 		"id":          session.id,
-		"pgwCtrlIPv4": fmt.Sprint(pgwCtrlIPv4),
-		"imsi":        session.imsi,
-		"ebi":         session.ebi,
-		"msisdn":      session.msisdn,
+		"pgwCtrlIPv4": pgwCtrlIPv4.String(),
+		"imsi":        session.imsi.Value(),
+		"ebi":         session.ebi.Value(),
+		"msisdn":      session.msisdn.Value(),
 	})
 	myLog.Debugf("New GTP session created")
 

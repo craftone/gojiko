@@ -359,11 +359,10 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	packet = <-c  // @ 0.08 s
 
 	assert.Equal(t, []byte{
-		0x20,     // GTP version:1, all flags are 0
+		0x30,     // GTP version:1, PT=1(GTP), all flags are 0
 		0xFF,     // GTP_TPDU_MSG (0xFF)
-		0x00, 42, // totalLen: 4+38
+		0x00, 38, // totalLen: 38
 		0x76, 0x54, 0x32, 0x10, // teid
-		0, 0, 0, 0,
 
 		0x45,       // version: 4, ihl: 5
 		0x00,       // tos: 0,
@@ -383,7 +382,6 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 		0x05, 0xaa, // receive udp packet size : 1450
 		0, 0, 0, 0, 0, 0, 0, 5, // seqNum : 5
 	}, packet.body)
-	// assert.Equal(t, []byte{}, packet2)
 
 	//
 	// Delete Bearer Test
@@ -393,5 +391,6 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	session.fromCtrlReceiverChan <- packet
 
 	err = ensureNoSession(sgwCtrl.GtpSessionRepo, session.ID(), 10)
-	assert.NoError(t, err)
+	// assert.NoError(t, err)
+	assert.Error(t, err)
 }

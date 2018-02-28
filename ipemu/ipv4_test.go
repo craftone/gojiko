@@ -23,13 +23,12 @@ func TestIPv4Emulator_NewIPv4GPDU(t *testing.T) {
 	ttl := byte(0x40)
 	packet, err := ipv4Emu.NewIPv4GPDU(teid, tos, ttl, data)
 	assert.NoError(t, err)
-	expected := make([]byte, 12+20+95)
+	expected := make([]byte, 8+20+95)
 	expectedHeader := []byte{
-		0x20,      // GTP version:1, all flags are 0
+		0x30,      // GTP version:1, PT=1, all flags are 0
 		0xFF,      // GTP_TPDU_MSG (0xFF)
-		0x00, 119, // totalLen: 4+115
+		0x00, 115, // totalLen: 20+95
 		0x12, 0x34, 0x56, 0x78, // teid
-		0, 0, 0, 0, // seqNum, etc
 		0x45,      // version: 4, ihl: 5
 		0x00,      // tos: 0,
 		0x00, 115, // totalLen : 115

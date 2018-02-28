@@ -12,7 +12,7 @@ type SgwData struct {
 
 func newSgwData(addr net.UDPAddr, recovery byte, sgwCtrl *SgwCtrl) (*SgwData, error) {
 	myLog := log.WithFields(logrus.Fields{
-		"addr":     addr,
+		"addr":     addr.String(),
 		"recovery": recovery,
 	})
 	absSPgw, err := newAbsSPgw(addr, recovery, sgwCtrl)

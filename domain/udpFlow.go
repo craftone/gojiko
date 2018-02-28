@@ -26,8 +26,8 @@ func (u *UdpEchoFlowArg) sender(sess *GtpSession) {
 	sourceAddr := net.UDPAddr{IP: sess.paa.IPv4(), Port: int(u.SourcePort)}
 	myLog := log.WithFields(logrus.Fields{
 		"routine":        "UdpFlowSender",
-		"DestAddr":       u.DestAddr,
-		"SourceAddr":     sourceAddr,
+		"DestAddr":       u.DestAddr.String(),
+		"SourceAddr":     sourceAddr.String(),
 		"SendPacketSize": u.SendPacketSize,
 		"TypeOfService":  u.Tos,
 		"TTL":            u.Ttl,
@@ -74,7 +74,7 @@ loop:
 			if err != nil {
 				myLog.Debug(err)
 			} else {
-				myLog.Debugf("Send a packet at %s", time.Now())
+				myLog.Debugf("Send a packet #%d at %s", seqNum, time.Now())
 				senderChan <- UDPpacket{sess.pgwDataAddr, packet}
 			}
 			nextTime = nextTime.Add(sendInterval)

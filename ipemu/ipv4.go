@@ -61,9 +61,9 @@ func (e *IPv4Emulator) NewIPv4GPDU(teid gtp.Teid, tos, ttl byte, data []byte) ([
 
 	// make gpdu
 	gpdu := make([]byte, totalLength+8)
-	gpdu[0] = 0x30 // version:1, all flags are 0
+	gpdu[0] = 0x30 // version:1, ProtocolType:1(GTP), all flags are 0
 	gpdu[1] = 0xFF // GTP_TPDU_MSG (0xFF)
-	binary.BigEndian.PutUint16(gpdu[2:], 4+totalLength)
+	binary.BigEndian.PutUint16(gpdu[2:], totalLength)
 	binary.BigEndian.PutUint32(gpdu[4:], uint32(teid))
 
 	// make packet
