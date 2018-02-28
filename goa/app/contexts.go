@@ -302,6 +302,9 @@ func NewShowByIDGtpsessionContext(ctx context.Context, r *http.Request, service 
 		} else {
 			err = goa.MergeErrors(err, goa.InvalidParamTypeError("sid", rawSid, "integer"))
 		}
+		if rctx.Sid < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`sid`, rctx.Sid, 0, true))
+		}
 	}
 	return &rctx, err
 }

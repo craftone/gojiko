@@ -79,12 +79,13 @@ definitions:
         sgwDataFTEID:
           ipv4: 127.0.0.1
           teid: "0x12345678"
-      id: 1
       imsi: "440100123456780"
       mcc: "440"
       mei: "1212345612345612"
       mnc: "10"
       msisdn: "8101012345678"
+      paa: 93.108.70.217
+      sid: 1
     properties:
       apn:
         description: Access Point Name
@@ -100,11 +101,6 @@ definitions:
         type: integer
       fteid:
         $ref: '#/definitions/gtpSessionFTEIDs'
-      id:
-        description: Session ID in this SGW
-        example: 1
-        minimum: 0
-        type: integer
       imsi:
         example: "440100123456780"
         pattern: ^[0-9]{14,15}$
@@ -130,21 +126,30 @@ definitions:
         example: "8101012345678"
         pattern: ^[0-9]{12,15}$
         type: string
+      paa:
+        default: 0.0.0.0
+        description: PDN Address Allocation
+        example: 93.108.70.217
+        format: ipv4
+        type: string
+      sid:
+        description: Session ID in this SGW
+        example: 1
+        minimum: 0
+        type: integer
     required:
-    - id
     - apn
+    - sid
+    - imsi
     - mcc
     - mnc
-    - msisdn
     - mei
-    - imsi
-    - ebi
-    - fteid
+    - msisdn
     title: 'Mediatype identifier: application/vnd.gtpsession+json; view=default'
     type: object
   UdpEchoFlowPayload:
     example:
-      destAddr: 93.108.70.217
+      destAddr: 48.227.40.225
       destPort: 7777
       numOfSend: 1
       recvPacketSize: 1460
@@ -156,7 +161,7 @@ definitions:
     properties:
       destAddr:
         description: ECHO destination IPv4 address
-        example: 93.108.70.217
+        example: 48.227.40.225
         format: ipv4
         type: string
       destPort:
@@ -222,7 +227,7 @@ definitions:
     description: A UDP ECHO flow (default view)
     example:
       UdpEchoFlowArg:
-        destAddr: 93.108.70.217
+        destAddr: 48.227.40.225
         destPort: 7777
         numOfSend: 1
         recvPacketSize: 1460
@@ -376,8 +381,9 @@ paths:
         name: sgwAddr
         required: true
         type: string
-      - description: Session ID
+      - description: Session ID in this SGW
         in: path
+        minimum: 0
         name: sid
         required: true
         type: integer

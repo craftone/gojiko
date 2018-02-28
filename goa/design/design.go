@@ -39,7 +39,7 @@ var _ = Resource("gtpsession", func() {
 		Description("Show the gtp session by session ID")
 		Routing(GET("/id/:sid"))
 		Params(func() {
-			sessionIdMember()
+			gtpSessionIDMember()
 		})
 		Response(OK)
 		Response(NotFound, ErrorMedia)
@@ -97,17 +97,21 @@ var GtpSessionMedia = MediaType("application/vnd.gtpsession+json", func() {
 	Description("A GTP session")
 	Attributes(func() {
 		gtpSessionIDMember()
-		gtpSessionStatusMember()
+		gtpSessionStateMember()
 
 		Attribute("fteid", GtpSessionFTEIDs)
+		Attribute("paa", String, "PDN Address Allocation", func() {
+			Default("0.0.0.0")
+			Format("ipv4")
+		})
 
 		apnMccMncMember()
 		msisdnMeiMember()
 		imsiEbiMember()
-		Required("id", "apn", "mcc", "mnc", "msisdn", "mei", "imsi", "ebi", "fteid")
+		Required("apn", "sid", "imsi", "mcc", "mnc", "mei", "mnc", "msisdn")
 	})
 	View("default", func() {
-		Attribute("id")
+		Attribute("sid")
 		Attribute("apn")
 		Attribute("mcc")
 		Attribute("mnc")
@@ -116,6 +120,7 @@ var GtpSessionMedia = MediaType("application/vnd.gtpsession+json", func() {
 		Attribute("imsi")
 		Attribute("ebi")
 		Attribute("fteid")
+		Attribute("paa")
 	})
 })
 

@@ -47,14 +47,14 @@ var msisdnMeiMember = func() {
 }
 
 var gtpSessionIDMember = func() {
-	Member("id", Integer, "Session ID in this SGW", func() {
+	Member("sid", Integer, "Session ID in this SGW", func() {
 		Minimum(0)
 		Example(1)
 	})
 }
 
-var gtpSessionStatusMember = func() {
-	Member("status", String, "GTP session's status", func() {
+var gtpSessionStateMember = func() {
+	Member("state", String, "GTP session's state", func() {
 		Enum("idle", "sending Create Sessin Request", "connected")
 		Example("idle")
 	})
@@ -65,8 +65,4 @@ var sgwAddrMember = func() {
 		Format("ipv4")
 		Example("127.0.0.1")
 	})
-}
-
-var sessionIdMember = func() {
-	Member("sid", Integer, "Session ID")
 }

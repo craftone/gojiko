@@ -42,7 +42,7 @@ type (
 	ShowByIDGtpsessionCommand struct {
 		// SGW GTPv2-C loopback address
 		SgwAddr string
-		// Session ID
+		// Session ID in this SGW
 		Sid         int
 		PrettyPrint bool
 	}
@@ -108,7 +108,7 @@ Payload example:
 Payload example:
 
 {
-   "destAddr": "93.108.70.217",
+   "destAddr": "48.227.40.225",
    "destPort": 7777,
    "numOfSend": 1,
    "recvPacketSize": 1460,
@@ -367,7 +367,7 @@ func (cmd *ShowByIDGtpsessionCommand) RegisterFlags(cc *cobra.Command, c *client
 	var sgwAddr string
 	cc.Flags().StringVar(&cmd.SgwAddr, "sgwAddr", sgwAddr, `SGW GTPv2-C loopback address`)
 	var sid int
-	cc.Flags().IntVar(&cmd.Sid, "sid", sid, `Session ID`)
+	cc.Flags().IntVar(&cmd.Sid, "sid", sid, `Session ID in this SGW`)
 }
 
 // Run makes the HTTP request corresponding to the ShowByIMSIandEBIGtpsessionCommand command.
