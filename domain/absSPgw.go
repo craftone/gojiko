@@ -38,7 +38,6 @@ type SPgwIf interface {
 	UDPAddr() net.UDPAddr
 	Pair() SPgwIf
 	ToSender() chan UDPpacket
-	setToSender(chan UDPpacket)
 	findOrCreateOpSPgw(addr net.UDPAddr) (*opSPgw, error)
 }
 
@@ -57,22 +56,22 @@ func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) 
 		toEchoReceiver: make(chan UDPpacket, 10),
 		opSpgwMap:      make(map[string]*opSPgw),
 	}
-	go absSPgwSenderRoutine(spgw, spgw.toSender)
+	go spgw.absSPgwSenderRoutine()
 	go spgw.echoReceiver()
 	return spgw, nil
 }
 
 // absSPgwSenderRoutine is for GoRoutine
-func absSPgwSenderRoutine(spgw *absSPgw, sendChan <-chan UDPpacket) {
+func (sp *absSPgw) absSPgwSenderRoutine() {
 	myLog := log.WithFields(logrus.Fields{
-		"laddr":   spgw.addr.String(),
+		"laddr":   sp.addr.String(),
 		"routine": "SPgwSender",
 	})
 	myLog.Info("Start a SPgw Sender goroutine")
 
-	for msg := range sendChan {
-		myLog.Debugf("Sending %d bytes packet to %s", len(msg.body), msg.raddr.String())
-		conn := spgw.conn
+	for msg := range sp.toSender {
+		myLog.WithField("raddr", msg.raddr.String()).Debugf("Sending %d bytes packet", len(msg.body))
+		conn := sp.conn
 		_, err := conn.WriteToUDP(msg.body, &msg.raddr)
 		if err != nil {
 			myLog.Error(err)
@@ -161,9 +160,4 @@ func (sp *absSPgw) findOrCreateOpSPgw(addr net.UDPAddr) (*opSPgw, error) {
 
 func (sp *absSPgw) ToSender() chan UDPpacket {
 	return sp.toSender
-}
-
-// for test only
-func (sp *absSPgw) setToSender(c chan UDPpacket) {
-	sp.toSender = c
 }

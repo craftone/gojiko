@@ -393,3 +393,162 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	err = ensureNoSession(sgwCtrl.GtpSessionRepo, session.ID(), 10)
 	assert.NoError(t, err)
 }
+
+func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
+	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
+
+	resCh1 := make(chan csResStr)
+	resCh2 := make(chan csResStr)
+	imsi1 := "440101234567894"
+	imsi2 := "440101234567895"
+	msisdn1 := "819012345674"
+	msisdn2 := "819012345675"
+	ebi := byte(5)
+
+	go func() {
+		res1, err := sgwCtrl.CreateSession(
+			imsi1, msisdn1, "0123456789012345",
+			"440", "10", "example.com", ebi,
+		)
+		resCh1 <- csResStr{res1, err}
+	}()
+	go func() {
+		res2, err := sgwCtrl.CreateSession(
+			imsi2, msisdn2, "0123456789012345",
+			"440", "10", "example.com", ebi,
+		)
+		resCh2 <- csResStr{res2, err}
+	}()
+
+	// wait till the session is created
+	session1 := ensureTheSession(sgwCtrl, imsi1, ebi)
+	session2 := ensureTheSession(sgwCtrl, imsi2, ebi)
+
+	pgwAddr := net.UDPAddr{IP: pgwIP, Port: GtpControlPort}
+
+	// make pseudo response binary that cause is CauseRequestAccepted
+	paaIP1 := net.IPv4(11, 11, 11, 11)
+	paaIP2 := net.IPv4(22, 22, 22, 22)
+	pgwCtrlTEID1 := gtp.Teid(0x01234567)
+	pgwDataTEID1 := gtp.Teid(0x01234567)
+	pgwCtrlTEID2 := gtp.Teid(0x76543210)
+	pgwDataTEID2 := gtp.Teid(0x76543210)
+	csResArg1, _ := gtpv2c.MakeCSResArg(
+		session1.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
+		ie.CauseRequestAccepted,      // Cause
+		pgwIP, pgwCtrlTEID1, // PGW Ctrl FTEID
+		pgwIP, pgwDataTEID1, // PGW Data FTEID
+		paaIP1,               // PDN Allocated IP address
+		net.IPv4(8, 8, 8, 8), // PriDNS
+		net.IPv4(8, 8, 4, 4), // SecDNS
+		5)                    // EBI
+	csRes1, _ := gtpv2c.NewCreateSessionResponse(0x1234, csResArg1)
+	csRes1Bin := csRes1.Marshal()
+	csResArg2, _ := gtpv2c.MakeCSResArg(
+		session2.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
+		ie.CauseRequestAccepted,      // Cause
+		pgwIP, pgwCtrlTEID2, // PGW Ctrl FTEID
+		pgwIP, pgwDataTEID2, // PGW Data FTEID
+		paaIP2,               // PDN Allocated IP address
+		net.IPv4(8, 8, 8, 8), // PriDNS
+		net.IPv4(8, 8, 4, 4), // SecDNS
+		5)                    // EBI
+	csRes2, _ := gtpv2c.NewCreateSessionResponse(0x1234, csResArg2)
+	csRes2Bin := csRes2.Marshal()
+
+	// send valid packet
+	session1.fromCtrlReceiverChan <- UDPpacket{pgwAddr, csRes1Bin}
+	session2.fromCtrlReceiverChan <- UDPpacket{pgwAddr, csRes2Bin}
+
+	csres1 := <-resCh1
+	assert.NoError(t, csres1.err)
+	assert.Equal(t, GscResOK, csres1.res.Code)
+	csres2 := <-resCh2
+	assert.NoError(t, csres2.err)
+	assert.Equal(t, GscResOK, csres2.res.Code)
+
+	assert.True(t, session1.paa.IPv4().Equal(paaIP1))
+	assert.Equal(t, pgwCtrlTEID1, session1.pgwCtrlFTEID.Teid())
+	assert.Equal(t, pgwDataTEID1, session1.pgwDataFTEID.Teid())
+	assert.True(t, session2.paa.IPv4().Equal(paaIP2))
+	assert.Equal(t, pgwCtrlTEID2, session2.pgwCtrlFTEID.Teid())
+	assert.Equal(t, pgwDataTEID2, session2.pgwDataFTEID.Teid())
+
+	// NewUdpFlow
+	udpFlow1 := UdpEchoFlowArg{
+		DestAddr:       net.UDPAddr{IP: net.IPv4(100, 100, 100, 100), Port: 10000},
+		SourcePort:     10001,
+		SendPacketSize: 38,
+		Tos:            0,
+		Ttl:            255,
+		TargetBps:      15000, // interval = 38*8 / 15000 = 0.02026
+		NumOfSend:      2,
+		RecvPacketSize: 1450,
+	}
+	udpFlow2 := UdpEchoFlowArg{
+		DestAddr:       net.UDPAddr{IP: net.IPv4(100, 100, 100, 100), Port: 10000},
+		SourcePort:     10001,
+		SendPacketSize: 38,
+		Tos:            0,
+		Ttl:            255,
+		TargetBps:      15000, // interval = 38*8 / 15000 = 0.02026
+		NumOfSend:      4,
+		RecvPacketSize: 1450,
+	}
+
+	sgwData := session1.sgwCtrl.Pair().(*SgwData)
+	c := make(chan UDPpacket)
+	sgwData.toSender = c
+
+	err := session1.NewUdpFlow(udpFlow1)
+	assert.NoError(t, err)
+	err = session2.NewUdpFlow(udpFlow2)
+	assert.NoError(t, err)
+
+	packet := <-c
+	packet = <-c
+	packet = <-c
+	packet = <-c
+	packet = <-c
+	packet = <-c
+
+	assert.Equal(t, []byte{
+		0x30,     // GTP version:1, PT=1(GTP), all flags are 0
+		0xFF,     // GTP_TPDU_MSG (0xFF)
+		0x00, 38, // totalLen: 38
+		0x76, 0x54, 0x32, 0x10, // teid
+
+		0x45,       // version: 4, ihl: 5
+		0x00,       // tos: 0,
+		0x00, 0x26, // totalLen : 38
+		0x00, 0x00, // id:0
+		0x40, 0x00, // fragment: 0x4000
+		0xff,       // ttl
+		0x11,       // protocol
+		0x86, 0xd2, // checksum
+		22, 22, 22, 22, //source address
+		100, 100, 100, 100, //destination address
+
+		0x27, 0x11, // source port : 10001
+		0x27, 0x10, // destination port : 10000
+		0x00, 0x12, // udp size : 8+10
+		0x00, 0x00, // checksum
+		0x05, 0xaa, // receive udp packet size : 1450
+		0, 0, 0, 0, 0, 0, 0, 4, // seqNum : 5
+	}, packet.body)
+
+	//
+	// Delete Bearer
+	//
+	dbReq1, _ := gtpv2c.NewDeleteBearerRequest(pgwCtrlTEID1, 100, ebi)
+	packet = UDPpacket{raddr: pgwAddr, body: dbReq1.Marshal()}
+	session1.fromCtrlReceiverChan <- packet
+	err = ensureNoSession(sgwCtrl.GtpSessionRepo, session1.ID(), 10)
+	assert.NoError(t, err)
+
+	dbReq2, _ := gtpv2c.NewDeleteBearerRequest(pgwCtrlTEID2, 100, ebi)
+	packet = UDPpacket{raddr: pgwAddr, body: dbReq2.Marshal()}
+	session2.fromCtrlReceiverChan <- packet
+	err = ensureNoSession(sgwCtrl.GtpSessionRepo, session2.ID(), 10)
+	assert.NoError(t, err)
+}
