@@ -22,37 +22,43 @@ type UdpEchoFlowArg struct {
 	RecvPacketSize uint16
 }
 
-func (u *UdpEchoFlowArg) sender(sess *GtpSession) {
-	sourceAddr := net.UDPAddr{IP: sess.paa.IPv4(), Port: int(u.SourcePort)}
+type UdpEchoFlow struct {
+	Arg UdpEchoFlowArg
+}
+
+func (u *UdpEchoFlow) sender(sess *GtpSession) {
+	sourceAddr := net.UDPAddr{IP: sess.Paa(), Port: int(u.Arg.SourcePort)}
 	myLog := log.WithFields(logrus.Fields{
 		"routine":        "UdpFlowSender",
-		"DestAddr":       u.DestAddr.String(),
+		"DestAddr":       u.Arg.DestAddr.String(),
 		"SourceAddr":     sourceAddr.String(),
-		"SendPacketSize": u.SendPacketSize,
-		"TypeOfService":  u.Tos,
-		"TTL":            u.Ttl,
-		"TargetBps":      u.TargetBps,
-		"NumOfSend":      u.NumOfSend,
-		"RecvPacketSize": u.RecvPacketSize,
+		"SendPacketSize": u.Arg.SendPacketSize,
+		"TypeOfService":  u.Arg.Tos,
+		"TTL":            u.Arg.Ttl,
+		"TargetBps":      u.Arg.TargetBps,
+		"NumOfSend":      u.Arg.NumOfSend,
+		"RecvPacketSize": u.Arg.RecvPacketSize,
 	})
 	myLog.Debug("Start a UDP Flow goroutine")
 
-	packetSize := u.SendPacketSize
+	packetSize := u.Arg.SendPacketSize
 	udpSize := packetSize - 20
 
-	sendIntervalSec := float64(packetSize*8) / float64(u.TargetBps)
+	sendIntervalSec := float64(packetSize*8) / float64(u.Arg.TargetBps)
 	sendInterval := time.Duration(sendIntervalSec * float64(time.Second))
 
 	udpBody := make([]byte, udpSize)
-	binary.BigEndian.PutUint16(udpBody[0:], u.SourcePort)
-	binary.BigEndian.PutUint16(udpBody[2:], uint16(u.DestAddr.Port))
+	binary.BigEndian.PutUint16(udpBody[0:], u.Arg.SourcePort)
+	binary.BigEndian.PutUint16(udpBody[2:], uint16(u.Arg.DestAddr.Port))
 	binary.BigEndian.PutUint16(udpBody[4:], udpSize)
-	binary.BigEndian.PutUint16(udpBody[8:], u.RecvPacketSize)
-	ipv4Emu := ipemu.NewIPv4Emulator(ipemu.UDP, sess.Paa(), u.DestAddr.IP, 1500)
+	binary.BigEndian.PutUint16(udpBody[8:], u.Arg.RecvPacketSize)
+
+	ipv4Emu := ipemu.NewIPv4Emulator(ipemu.UDP, sourceAddr.IP, u.Arg.DestAddr.IP, 1500)
+	log.Debugf("Make IPv4Emu : %#v", ipv4Emu)
 	teid := sess.pgwDataFTEID.Teid()
 	senderChan := sess.sgwCtrl.Pair().ToSender()
 	seqNum := uint64(0)
-	numOfSend := uint64(u.NumOfSend)
+	numOfSend := uint64(u.Arg.NumOfSend)
 
 	nextTime := time.Now()
 	nextTimeChan := time.After(0)
@@ -70,7 +76,7 @@ loop:
 				break loop
 			}
 			binary.BigEndian.PutUint64(udpBody[10:], seqNum)
-			packet, err := ipv4Emu.NewIPv4GPDU(teid, u.Tos, u.Ttl, udpBody)
+			packet, err := ipv4Emu.NewIPv4GPDU(teid, u.Arg.Tos, u.Arg.Ttl, udpBody)
 			if err != nil {
 				myLog.Debug(err)
 			} else {

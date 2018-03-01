@@ -60,7 +60,7 @@ type GtpSession struct {
 	servingNetwork *ie.ServingNetwork
 	pdnType        *ie.PdnType
 
-	udpFlow  *UdpEchoFlowArg
+	udpFlow  *UdpEchoFlow
 	mtx4flow sync.RWMutex
 }
 
@@ -241,13 +241,13 @@ func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.Del
 	return nil
 }
 
-func (sess *GtpSession) setUdpFlow(udpEchoFlowArg *UdpEchoFlowArg) error {
+func (sess *GtpSession) setUdpFlow(udpEchoFlow *UdpEchoFlow) error {
 	sess.mtx4flow.Lock()
 	defer sess.mtx4flow.Unlock()
 	if sess.udpFlow != nil {
 		return errors.New("This session already have a UdpFlow")
 	}
-	sess.udpFlow = udpEchoFlowArg
+	sess.udpFlow = udpEchoFlow
 	return nil
 }
 
@@ -261,8 +261,8 @@ func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
 	if udpEchoFlowArg.RecvPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
 		return fmt.Errorf("RecvPacketSize must be bigger than %d", MIN_UDP_ECHO_PACKET_SIZE)
 	}
-	udpEchoFlow := udpEchoFlowArg
-	err := sess.setUdpFlow(&udpEchoFlow)
+	udpEchoFlow := &UdpEchoFlow{udpEchoFlowArg}
+	err := sess.setUdpFlow(udpEchoFlow)
 	if err != nil {
 		return err
 	}

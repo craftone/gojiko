@@ -482,7 +482,7 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 		Tos:            0,
 		Ttl:            255,
 		TargetBps:      15000, // interval = 38*8 / 15000 = 0.02026
-		NumOfSend:      2,
+		NumOfSend:      4,
 		RecvPacketSize: 1450,
 	}
 	udpFlow2 := UdpEchoFlowArg{
@@ -492,7 +492,7 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 		Tos:            0,
 		Ttl:            255,
 		TargetBps:      15000, // interval = 38*8 / 15000 = 0.02026
-		NumOfSend:      4,
+		NumOfSend:      2,
 		RecvPacketSize: 1450,
 	}
 
@@ -516,7 +516,7 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 		0x30,     // GTP version:1, PT=1(GTP), all flags are 0
 		0xFF,     // GTP_TPDU_MSG (0xFF)
 		0x00, 38, // totalLen: 38
-		0x76, 0x54, 0x32, 0x10, // teid
+		0x01, 0x23, 0x45, 0x67, // teid
 
 		0x45,       // version: 4, ihl: 5
 		0x00,       // tos: 0,
@@ -525,8 +525,8 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 		0x40, 0x00, // fragment: 0x4000
 		0xff,       // ttl
 		0x11,       // protocol
-		0x86, 0xd2, // checksum
-		22, 22, 22, 22, //source address
+		0x9c, 0xe8, // checksum
+		11, 11, 11, 11, //source address
 		100, 100, 100, 100, //destination address
 
 		0x27, 0x11, // source port : 10001
