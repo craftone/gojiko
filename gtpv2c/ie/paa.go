@@ -84,13 +84,16 @@ func unmarshalPaa(h header, buf []byte) (*Paa, error) {
 	offset := 1
 	var ipv4, ipv6 net.IP
 	if pdnType == PdnTypeIPv6 || pdnType == PdnTypeIPv4v6 {
-		ipv6 = net.IP(buf[offset : offset+16])
+		ipbuf := make([]byte, 16)
+		copy(ipbuf, buf[offset:offset+16])
+		ipv6 = net.IP(ipbuf)
 		ipv6 = ipv6.To16()
 		offset += 16
 	}
 	if pdnType == PdnTypeIPv4 || pdnType == PdnTypeIPv4v6 {
-		ipv4 = net.IP(buf[offset : offset+4])
-		ipv4 = ipv4.To4()
+		ipbuf := make([]byte, 4)
+		copy(ipbuf, buf[offset:offset+4])
+		ipv4 = net.IP(ipbuf)
 	}
 
 	paa, err := NewPaa(h.instance, pdnType, ipv4, ipv6)
