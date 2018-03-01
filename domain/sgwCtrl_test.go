@@ -346,9 +346,9 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 		RecvPacketSize: 1450,
 	}
 
-	sgwData := session.sgwCtrl.Pair()
+	sgwData := session.sgwCtrl.Pair().(*SgwData)
 	c := make(chan UDPpacket)
-	sgwData.setToSender(c)
+	sgwData.toSender = c
 
 	err := session.NewUdpFlow(udpFlow)
 	assert.NoError(t, err)

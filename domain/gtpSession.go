@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -59,7 +60,8 @@ type GtpSession struct {
 	servingNetwork *ie.ServingNetwork
 	pdnType        *ie.PdnType
 
-	udpFlow *UdpEchoFlowArg
+	udpFlow  *UdpEchoFlowArg
+	mtx4flow sync.RWMutex
 }
 
 func (sess *GtpSession) changeState(curState, nextState GtpSessionStatus) error {
@@ -239,21 +241,34 @@ func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.Del
 	return nil
 }
 
-func (sess *GtpSession) NewUdpFlow(udpFlow UdpEchoFlowArg) error {
-	if sess.status != GssConnected {
-		return fmt.Errorf("This session is not connected")
-	}
+func (sess *GtpSession) setUdpFlow(udpEchoFlowArg *UdpEchoFlowArg) error {
+	sess.mtx4flow.Lock()
+	defer sess.mtx4flow.Unlock()
 	if sess.udpFlow != nil {
-		return fmt.Errorf("This session already have a UdpFlow")
+		return errors.New("This session already have a UdpFlow")
 	}
-	if udpFlow.SendPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
+	sess.udpFlow = udpEchoFlowArg
+	return nil
+}
+
+func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
+	if sess.status != GssConnected {
+		return errors.New("This session is not connected")
+	}
+	if udpEchoFlowArg.SendPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
 		return fmt.Errorf("SendPacketSize must be bigger than %d", MIN_UDP_ECHO_PACKET_SIZE)
 	}
-	if udpFlow.RecvPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
+	if udpEchoFlowArg.RecvPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
 		return fmt.Errorf("RecvPacketSize must be bigger than %d", MIN_UDP_ECHO_PACKET_SIZE)
 	}
-	sess.udpFlow = &udpFlow
+	udpEchoFlow := udpEchoFlowArg
+	err := sess.setUdpFlow(&udpEchoFlow)
+	if err != nil {
+		return err
+	}
+
 	go sess.udpFlow.sender(sess)
+
 	return nil
 }
 
