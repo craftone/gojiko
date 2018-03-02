@@ -85,6 +85,12 @@ func TestUnmarshal_Paa(t *testing.T) {
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
 
+	//ensure no refference to the buffer
+	copy(paaBin, make([]byte, len(paaBin)))
+	assert.Equal(t, PdnTypeIPv6, paa.Value())
+	assert.Nil(t, paa.IPv4())
+	assert.Equal(t, net.ParseIP("2001:db8::68"), paa.IPv6())
+
 	paa, _ = NewPaa(2, PdnTypeIPv4v6, net.IPv4(1, 2, 3, 4), net.ParseIP("2001:db8::68"))
 	paaBin = paa.Marshal()
 	msg, tail, err = Unmarshal(paaBin, CreateSessionRequest)
@@ -95,4 +101,10 @@ func TestUnmarshal_Paa(t *testing.T) {
 	assert.Equal(t, net.ParseIP("2001:db8::68"), paa.IPv6())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(paaBin, make([]byte, len(paaBin)))
+	assert.Equal(t, PdnTypeIPv4v6, paa.Value())
+	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), paa.IPv4())
+	assert.Equal(t, net.ParseIP("2001:db8::68"), paa.IPv6())
 }

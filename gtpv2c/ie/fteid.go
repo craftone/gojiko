@@ -107,11 +107,15 @@ func unmarshalFteid(h header, buf []byte) (*Fteid, error) {
 	var ipv4, ipv6 net.IP
 	offset := 5
 	if v4flag {
-		ipv4 = buf[offset : offset+4]
+		ipv4buf := make([]byte, 4)
+		copy(ipv4buf, buf[offset:offset+4])
+		ipv4 = net.IP(ipv4buf)
 		offset += 4
 	}
 	if v6flag {
-		ipv6 = buf[offset : offset+16]
+		ipv6buf := make([]byte, 16)
+		copy(ipv6buf, buf[offset:offset+16])
+		ipv6 = net.IP(ipv6buf)
 	}
 
 	fteid, err := NewFteid(h.instance, ipv4, ipv6, ifType, teid)

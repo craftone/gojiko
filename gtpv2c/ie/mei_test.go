@@ -41,6 +41,11 @@ func TestUnmarshal_mei(t *testing.T) {
 	assert.Equal(t, byte(1), mei.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(meiBin, make([]byte, len(meiBin)))
+	assert.Equal(t, "0123456789012345", mei.Value())
+	assert.Equal(t, byte(1), mei.instance)
 }
 
 func TestUnmarshal_meiWithTail(t *testing.T) {

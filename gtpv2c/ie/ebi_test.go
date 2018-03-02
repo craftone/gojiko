@@ -41,4 +41,9 @@ func TestUnmebishal_Ebi(t *testing.T) {
 	assert.Equal(t, byte(0), ebi.header.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(ebiBin, make([]byte, len(ebiBin)))
+	assert.Equal(t, byte(5), ebi.Value())
+	assert.Equal(t, byte(0), ebi.header.instance)
 }

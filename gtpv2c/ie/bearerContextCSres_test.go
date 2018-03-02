@@ -93,4 +93,12 @@ func TestUnmarshal_BearerContextCreatedWithinCSRes(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(bcCwCSResBin, make([]byte, len(bcCwCSResBin)))
+	assert.Equal(t, bearerContextNum, bcCwCSRes.typeNum)
+	assert.Equal(t, ebi, bcCwCSRes.Ebi())
+	assert.Equal(t, cause, bcCwCSRes.Cause())
+	assert.Equal(t, pgwDataFteid, bcCwCSRes.PgwDataFteid())
+	assert.Equal(t, chargingID, bcCwCSRes.ChargingID())
 }

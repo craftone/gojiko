@@ -63,6 +63,16 @@ func TestUnmarshal_cause(t *testing.T) {
 	assert.Equal(t, byte(3), cause.offendingIe.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(causeOffBin, make([]byte, len(causeOffBin)))
+	assert.Equal(t, byte(1), cause.instance)
+	assert.Equal(t, CauseNoResourcesAvailable, cause.value)
+	assert.Equal(t, true, cause.pce)
+	assert.Equal(t, false, cause.bce)
+	assert.Equal(t, true, cause.cs)
+	assert.Equal(t, ieTypeNum(2), cause.offendingIe.typeNum)
+	assert.Equal(t, byte(3), cause.offendingIe.instance)
 }
 
 func TestCauseDetail(t *testing.T) {

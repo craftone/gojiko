@@ -34,4 +34,8 @@ func TestUnmarshal_selectionMode(t *testing.T) {
 	assert.Equal(t, byte(1), sm.Value())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(smBin, make([]byte, len(smBin)))
+	assert.Equal(t, byte(1), sm.Value())
 }

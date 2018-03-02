@@ -29,6 +29,12 @@ func TestUnmambrshal_Ambr(t *testing.T) {
 	assert.Equal(t, uint32(4294960), ambr.DownlinkKbps())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(ambrBin, make([]byte, len(ambrBin)))
+	assert.Equal(t, byte(0), ambr.header.instance)
+	assert.Equal(t, uint32(4294967), ambr.UplinkKbps())
+	assert.Equal(t, uint32(4294960), ambr.DownlinkKbps())
 }
 
 func TestAmbr_String(t *testing.T) {

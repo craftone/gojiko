@@ -95,9 +95,13 @@ func unmarshalIpcp(buf []byte) (*Ipcp, error) {
 		}
 		switch option {
 		case primaryDNSServerAddress:
-			priDNS = tail[2:6]
+			ipv4buf := make([]byte, 4)
+			copy(ipv4buf, tail[2:6])
+			priDNS = net.IP(ipv4buf)
 		case secondaryDNSServerAddress:
-			secDNS = tail[2:6]
+			ipv4buf := make([]byte, 4)
+			copy(ipv4buf, tail[2:6])
+			secDNS = net.IP(ipv4buf)
 		}
 		tail = tail[optionLength:]
 	}

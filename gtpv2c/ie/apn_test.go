@@ -35,4 +35,9 @@ func TestUnmarshal_apn(t *testing.T) {
 	assert.Equal(t, "example.com", apn.String())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(apnBin, make([]byte, len(apnBin)))
+	assert.Equal(t, byte(1), apn.instance)
+	assert.Equal(t, "example.com", apn.String())
 }

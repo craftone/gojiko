@@ -1,6 +1,7 @@
 package ie
 
 import (
+	"fmt"
 	"net"
 	"testing"
 
@@ -99,6 +100,7 @@ func TestUnmarshal_BearerContextToBeCreatedWithinCSReq(t *testing.T) {
 	bcTBCwCSReqBin := bcTBCwCSReq.Marshal()
 
 	msg, tail, err := Unmarshal(bcTBCwCSReqBin, CreateSessionRequest)
+	fmt.Println(err)
 	bcTBCwCSReq = msg.(*BearerContextToBeCreatedWithinCSReq)
 	assert.Equal(t, bearerContextNum, bcTBCwCSReq.typeNum)
 	assert.Equal(t, ebi, bcTBCwCSReq.Ebi())
@@ -107,4 +109,11 @@ func TestUnmarshal_BearerContextToBeCreatedWithinCSReq(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(bcTBCwCSReqBin, make([]byte, len(bcTBCwCSReqBin)))
+	assert.Equal(t, bearerContextNum, bcTBCwCSReq.typeNum)
+	assert.Equal(t, ebi, bcTBCwCSReq.Ebi())
+	assert.Equal(t, bearerQoS, bcTBCwCSReq.BearerQoS())
+	assert.Equal(t, sgwDataFteid, bcTBCwCSReq.SgwDataFteid())
 }

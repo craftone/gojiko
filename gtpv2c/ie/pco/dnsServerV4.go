@@ -35,7 +35,10 @@ func unmarshalDNSServerV4(buf []byte) (*DNSServerV4, error) {
 	}
 
 	if len(buf) == 4 {
-		return NewDNSServerV4(buf[0:4]), nil
+		ipv4buf := make([]byte, 4)
+		copy(ipv4buf, buf[0:4])
+		ipv4 := net.IP(ipv4buf)
+		return NewDNSServerV4(ipv4), nil
 	}
 	return nil, fmt.Errorf("It should be 4 octets binary : %v", buf)
 }

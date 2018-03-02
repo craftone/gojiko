@@ -27,4 +27,9 @@ func TestUnmarshal_ApnRestriction(t *testing.T) {
 	assert.Equal(t, byte(0), ar.header.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(arBin, make([]byte, len(arBin)))
+	assert.Equal(t, byte(255), ar.Value())
+	assert.Equal(t, byte(0), ar.header.instance)
 }

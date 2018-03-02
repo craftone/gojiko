@@ -85,4 +85,12 @@ func TestUnmarshal_BearerQoS(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
+
+	//ensure no refference to the buffer
+	copy(bearerQoSBin, make([]byte, len(bearerQoSBin)))
+	assert.Equal(t, bearerQoSNum, bearerQoS.typeNum)
+	assert.Equal(t, true, bearerQoS.Pci())
+	assert.Equal(t, byte(15), bearerQoS.Pl())
+	assert.Equal(t, false, bearerQoS.Pvi())
+	assert.Equal(t, byte(9), bearerQoS.Label())
 }

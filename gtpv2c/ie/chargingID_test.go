@@ -28,6 +28,11 @@ func TestUnmarshal_ChargingID(t *testing.T) {
 	assert.Nil(t, err)
 
 	chargingIDBin2 := chargingIDBin[0:4]
-	msg, tail, err = Unmarshal(chargingIDBin2, CreateSessionRequest)
+	_, _, err = Unmarshal(chargingIDBin2, CreateSessionRequest)
 	assert.Error(t, err)
+
+	//ensure no refference to the buffer
+	copy(chargingIDBin, make([]byte, len(chargingIDBin)))
+	assert.Equal(t, byte(1), chargingID.instance)
+	assert.Equal(t, uint32(0x00558776), chargingID.Value())
 }
