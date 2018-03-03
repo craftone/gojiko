@@ -11,5 +11,4 @@ var log *logrus.Entry
 func Init() {
 	ie.Init()
 	log = applog.NewLogger("gtpv2c")
-	log.Infof("Package initialized")
 }

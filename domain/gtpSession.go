@@ -229,12 +229,12 @@ func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.Del
 		return err
 	}
 	session.toCtrlSenderChan <- UDPpacket{raddr, dbRes.Marshal()}
-	myLog.Debugf("Send Delete Bearer Response : %#v", dbRes)
+	myLog.Infof("Send Delete Bearer Response : %#v", dbRes)
 	err = session.sgwCtrl.GtpSessionRepo.deleteSession(session.ID())
 	if err != nil {
 		return err
 	}
-	myLog.Debug("Delete the sessions records")
+	myLog.Info("Delete the sessions records")
 	return nil
 }
 

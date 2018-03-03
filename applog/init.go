@@ -20,6 +20,8 @@ func NewLogger(pkgName string) *logrus.Entry {
 	logger.Out = os.Stdout
 
 	logLevelStr := config.LogLevel(pkgName)
+	logger.WithField("package", pkgName).Infof("A logger created at %s level", logLevelStr)
+
 	switch logLevelStr {
 	case "debug":
 		logger.SetLevel(logrus.DebugLevel)
@@ -32,6 +34,6 @@ func NewLogger(pkgName string) *logrus.Entry {
 	default:
 		log.Panicf("Invalid logLevel : %s", logLevelStr)
 	}
-
-	return logger.WithField("package", pkgName)
+	myLog := logger.WithField("package", pkgName)
+	return myLog
 }

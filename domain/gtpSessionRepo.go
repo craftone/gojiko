@@ -102,7 +102,7 @@ func (r *GtpSessionRepo) newSession(
 		"ebi":         session.ebi.Value(),
 		"msisdn":      session.msisdn.Value(),
 	})
-	myLog.Debugf("New GTP session created")
+	myLog.Info("New GTP session created")
 
 	r.mtx4Map.Lock()
 	defer r.mtx4Map.Unlock()

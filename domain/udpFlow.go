@@ -39,7 +39,7 @@ func (u *UdpEchoFlow) sender(sess *GtpSession) {
 		"NumOfSend":      u.Arg.NumOfSend,
 		"RecvPacketSize": u.Arg.RecvPacketSize,
 	})
-	myLog.Debug("Start a UDP Flow goroutine")
+	myLog.Info("Start a UDP Flow goroutine")
 
 	packetSize := u.Arg.SendPacketSize
 	udpSize := packetSize - 20
@@ -54,7 +54,6 @@ func (u *UdpEchoFlow) sender(sess *GtpSession) {
 	binary.BigEndian.PutUint16(udpBody[8:], u.Arg.RecvPacketSize)
 
 	ipv4Emu := ipemu.NewIPv4Emulator(ipemu.UDP, sourceAddr.IP, u.Arg.DestAddr.IP, 1500)
-	log.Debugf("Make IPv4Emu : %#v", ipv4Emu)
 	teid := sess.pgwDataFTEID.Teid()
 	senderChan := sess.sgwCtrl.Pair().ToSender()
 	seqNum := uint64(0)
@@ -68,7 +67,7 @@ loop:
 		select {
 		case <-nextTimeChan:
 			if sess.status != GssConnected {
-				log.Debug("Session status is not connected")
+				log.Info("Session status is not connected")
 				break loop
 			}
 			seqNum++
@@ -88,5 +87,5 @@ loop:
 		}
 	}
 	sess.udpFlow = nil
-	log.Debug("End a UDP Flow goroutine")
+	log.Info("End a UDP Flow goroutine")
 }
