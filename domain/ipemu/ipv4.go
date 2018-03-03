@@ -35,29 +35,31 @@ func NewIPv4Emulator(proto Protocol, saddr, daddr net.IP, mtu uint16) *IPv4Emula
 	}
 }
 
-type IPv4 struct {
-	version             byte
-	ihl                 byte
-	tos                 byte
-	totalLength         uint16
-	identification      uint16
-	variousControlFlags byte
-	fragmentOffset      uint16
-	ttl                 byte
-	headerChecksum      byte
-	destinationAddress  net.IP
-	data                []byte
-}
+// type IPv4 struct {
+// 	version             byte
+// 	ihl                 byte
+// 	tos                 byte
+// 	totalLength         uint16
+// 	identification      uint16
+// 	variousControlFlags byte
+// 	fragmentOffset      uint16
+// 	ttl                 byte
+// 	headerChecksum      byte
+// 	destinationAddress  net.IP
+// 	data                []byte
+// }
 
-func (e *IPv4Emulator) NewIPv4GPDU(teid gtp.Teid, tos, ttl byte, data []byte) ([]byte, error) {
+// NewIPv4GPDU creates a GTPv1-U packet : GTPv1 header + IP header + Payload.
+// Payload have layers over IP layer (TCP/UDP/ICMP etc).
+func (e *IPv4Emulator) NewIPv4GPDU(teid gtp.Teid, tos, ttl byte, payload []byte) ([]byte, error) {
 	ipVersion := 4
 	ihl := 5
 	headerSize := ihl * 4
 	maxDataSize := (e.mtu - uint16(headerSize)) & 0xfff8
-	if len(data) > int(maxDataSize) {
-		return []byte{}, fmt.Errorf("Too big data : max data size is %d but the data size is %d", maxDataSize, len(data))
+	if len(payload) > int(maxDataSize) {
+		return []byte{}, fmt.Errorf("Too big payload : max payload size is %d but the payload size is %d", maxDataSize, len(payload))
 	}
-	totalLength := uint16(headerSize + len(data))
+	totalLength := uint16(headerSize + len(payload))
 
 	// make gpdu
 	gpdu := make([]byte, totalLength+8)
@@ -77,14 +79,13 @@ func (e *IPv4Emulator) NewIPv4GPDU(teid gtp.Teid, tos, ttl byte, data []byte) ([
 	packet[9] = byte(e.protocol)
 	copy(packet[12:16], e.sourceAddr)
 	copy(packet[16:20], e.destAddr)
-	copy(packet[20:], data)
+	copy(packet[20:], payload)
 
 	// checksum
 	crc := 0
 	for _, i := range []int{0, 2, 4, 6, 8, 12, 14, 16, 18} {
 		crc += int(binary.BigEndian.Uint16(packet[i : i+2]))
 	}
-
 	for {
 		carry := crc >> 16
 		if carry == 0 {
@@ -105,4 +106,42 @@ func (e *IPv4Emulator) getIdentification() uint16 {
 	identification := e.identification
 	e.identification++
 	return identification
+}
+
+// PickOutPayload check and pick up payload (and return the payload)
+// from an IP packet (body argument).
+// srcAddr, destAddr, etc. are checked ensure matching with IPv4Emulator's parameter.
+func (e *IPv4Emulator) PickOutPayload(destPort uint16, body []byte) ([]byte, error) {
+	bodyLen := len(body)
+	if bodyLen < 20 {
+		return nil, fmt.Errorf("Too short packet : length %d", bodyLen)
+	}
+	ihl := body[0] & 0xf
+	proto := Protocol(body[9])
+	if proto != e.protocol {
+		return nil, fmt.Errorf("Not a Expected packet : protocol %d", proto)
+	}
+	srcAddr := net.IP(body[12:16])
+	if !e.sourceAddr.Equal(srcAddr) {
+		return nil, fmt.Errorf("From unexpected address : %s", srcAddr.String())
+	}
+	destAddr := net.IP(body[16:20])
+	if !e.destAddr.Equal(destAddr) {
+		return nil, fmt.Errorf("To unknown address : %s", destAddr.String())
+	}
+	totalLen := int(binary.BigEndian.Uint16(body[2:4]))
+	if bodyLen < totalLen {
+		return nil, fmt.Errorf("Too short packet : length %d", bodyLen)
+	}
+	headerLen := int(ihl) * 4
+	if headerLen > totalLen {
+		return nil, fmt.Errorf("Header length or/and Total length are invalid")
+	}
+	udpPacket := body[headerLen:]
+	destPortAct := binary.BigEndian.Uint16(udpPacket[2:4])
+	if destPortAct != destPort {
+		return nil, fmt.Errorf("To unexpected port : expected %d , actual %d", destPort, destPortAct)
+	}
+	payload := body[headerLen+8:] // 8 is length of UDP header
+	return payload, nil
 }

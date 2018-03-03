@@ -39,10 +39,6 @@ func TestUnmarshal_RatType(t *testing.T) {
 	assert.Equal(t, byte(0), rt.header.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
-
-	//ensure no refference to the buffer
-	copy(rtBin, make([]byte, len(rtBin)))
-	assert.Equal(t, byte(255), rt.Value())
 }
 
 func TestRatType_String(t *testing.T) {

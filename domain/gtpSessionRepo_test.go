@@ -79,12 +79,14 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 
 	// Error when same IMSI and EBI
 	sgwCtrlTEID2 := sgwCtrl.nextTeid()
+	sgwDataTEID2 := sgwCtrl.Pair().nextTeid()
 	sgwCtrlFTEID2, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpCIf, sgwCtrlTEID2)
+	sgwDataFTEID2, _ := ie.NewFteid(0, net.IPv4(127, 0, 0, 1), nil, ie.S5S8SgwGtpUIf, sgwDataTEID2)
 	_, err = theGtpSessionRepo.newSession(
 		sgwCtrl,
 		net.IPv4(100, 100, 100, 100),
 		sgwCtrlSendChan,
-		sgwCtrlFTEID2, sgwDataFTEID,
+		sgwCtrlFTEID2, sgwDataFTEID2,
 		imsi1Ie, msisdnIe, meiIe, ebi1Ie, paaIe, apnIe, ambrIe,
 		ratTypeIe, servingNetworkIe, pdnTypeIe,
 	)
@@ -96,7 +98,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		sgwCtrl,
 		net.IPv4(100, 100, 100, 100),
 		sgwCtrlSendChan,
-		sgwCtrlFTEID2, sgwDataFTEID,
+		sgwCtrlFTEID2, sgwDataFTEID2,
 		imsi2Ie, msisdnIe, meiIe, ebi1Ie, paaIe, apnIe, ambrIe,
 		ratTypeIe, servingNetworkIe, pdnTypeIe,
 	)
@@ -106,9 +108,12 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	// Assert to find 2nd session by SessionID
 	session2 := theGtpSessionRepo.FindBySessionID(sid2)
 	assert.Equal(t, imsi2, session2.imsi.Value())
-	// Assert to find 2nd session by TEID
-	session2t := theGtpSessionRepo.FindByTeid(sgwCtrlTEID2)
-	assert.Equal(t, imsi2, session2t.imsi.Value())
+	// Assert to find 2nd session by CtrlTEID
+	session2ct := theGtpSessionRepo.FindByCtrlTeid(sgwCtrlTEID2)
+	assert.Equal(t, imsi2, session2ct.imsi.Value())
+	// Assert to find 2nd session by DataTEID
+	session2dt := theGtpSessionRepo.FindByDataTeid(sgwDataTEID2)
+	assert.Equal(t, imsi2, session2dt.imsi.Value())
 	// Assert to find 2nd session by IMSI and EBI
 	session2i := theGtpSessionRepo.FindByImsiEbi(imsi2, ebi1)
 	assert.Equal(t, imsi2, session2i.imsi.Value())

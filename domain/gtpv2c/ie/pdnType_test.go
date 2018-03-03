@@ -41,10 +41,6 @@ func TestUnmarshal_pdnType(t *testing.T) {
 	assert.Equal(t, PdnTypeIPv4, pt.Value())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
-
-	//ensure no refference to the buffer
-	copy(ptBin, make([]byte, len(ptBin)))
-	assert.Equal(t, PdnTypeIPv4, pt.Value())
 }
 
 func TestPdnType_String(t *testing.T) {

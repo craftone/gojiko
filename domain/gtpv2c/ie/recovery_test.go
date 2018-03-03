@@ -40,10 +40,6 @@ func TestUnmarshal_recovery(t *testing.T) {
 	assert.Equal(t, byte(0), rec.header.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
-
-	//ensure no refference to the buffer
-	copy(recBin, make([]byte, len(recBin)))
-	assert.Equal(t, byte(255), rec.Value())
 }
 
 func TestUnmarshal_recoveryWithTail(t *testing.T) {

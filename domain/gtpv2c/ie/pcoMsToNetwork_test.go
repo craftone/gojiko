@@ -46,14 +46,4 @@ func TestUnmarshal_PcoMsToNetwork(t *testing.T) {
 	assert.Equal(t, true, pcoMsToNetwork.IPAllocViaNasSig())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
-
-	//ensure no refference to the buffer
-	copy(pcoMsToNetworkBin, make([]byte, len(pcoMsToNetworkBin)))
-	assert.Equal(t, pco.ConfigureRequest, pcoMsToNetwork.Ipcp().Code())
-	assert.Equal(t, byte(0), pcoMsToNetwork.Ipcp().Identifier())
-	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), pcoMsToNetwork.Ipcp().PriDNS())
-	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), pcoMsToNetwork.Ipcp().SecDNS())
-	assert.Equal(t, true, pcoMsToNetwork.DNSServerV4Req())
-	assert.Equal(t, false, pcoMsToNetwork.DNSServerV6Req())
-	assert.Equal(t, true, pcoMsToNetwork.IPAllocViaNasSig())
 }

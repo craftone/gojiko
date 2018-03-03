@@ -40,7 +40,7 @@ func newSgwCtrl(addr net.UDPAddr, dataPort int, recovery byte) (*SgwCtrl, error)
 		return nil, err
 	}
 
-	go sgwCtrlReceiverRoutine(sgwCtrl)
+	go sgwCtrl.sgwCtrlReceiverRoutine()
 
 	return sgwCtrl, nil
 }
@@ -176,12 +176,12 @@ retry:
 }
 
 // sgwCtrlReceiverRoutine is for GoRoutine
-func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
+func (sgwCtrl *SgwCtrl) sgwCtrlReceiverRoutine() {
 	myLog := log.WithFields(logrus.Fields{
 		"laddr":   sgwCtrl.addr.String(),
-		"routine": "SgwReceiver",
+		"routine": "SgwCtrlReceiver",
 	})
-	myLog.Info("Start a SGW Receiver goroutine")
+	myLog.Info("Start a SGW Ctrl Receiver goroutine")
 
 	buf := make([]byte, 2000)
 	for {
@@ -200,18 +200,22 @@ func sgwCtrlReceiverRoutine(sgwCtrl *SgwCtrl) {
 
 		switch msgType {
 		case gtpv2c.EchoRequestNum:
-			sgwCtrl.toEchoReceiver <- UDPpacket{*raddr, buf[:n]}
+			received := make([]byte, n)
+			copy(received, buf[:n])
+			sgwCtrl.toEchoReceiver <- UDPpacket{*raddr, received}
 		case gtpv2c.EchoResponseNum:
 			myLog.Error("Not yet implemented!")
 			// Not yet be implemented
 		case gtpv2c.CreateSessionResponseNum, gtpv2c.DeleteBearerRequestNum:
 			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
-			sess := sgwCtrl.FindByTeid(teid)
+			sess := sgwCtrl.FindByCtrlTeid(teid)
 			if sess == nil {
 				myLog.Debug("No session that have the teid : %04x", teid)
 				continue
 			}
-			sess.fromCtrlReceiverChan <- UDPpacket{*raddr, buf[:n]}
+			received := make([]byte, n)
+			copy(received, buf[:n])
+			sess.fromCtrlReceiverChan <- UDPpacket{*raddr, received}
 		default:
 			myLog.Debugf("Unkown Message Type : %d", msgType)
 		}

@@ -46,10 +46,6 @@ func TestUnmarshal_msisdn(t *testing.T) {
 	assert.Equal(t, byte(1), msisdn.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
-
-	//ensure no refference to the buffer
-	copy(msisdnBin, make([]byte, len(msisdnBin)))
-	assert.Equal(t, "819012345678", msisdn.Value())
 }
 
 func TestUnmarshal_msisdnWithTail(t *testing.T) {

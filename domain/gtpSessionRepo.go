@@ -21,6 +21,7 @@ type SessionID uint32
 type GtpSessionRepo struct {
 	sessionsByID       map[SessionID]*GtpSession
 	sessionsByCtrlTeid map[gtp.Teid]*GtpSession
+	sessionsByDataTeid map[gtp.Teid]*GtpSession
 	sessionsByImsiEbi  map[string]*GtpSession
 	mtx4Map            sync.RWMutex
 
@@ -33,6 +34,7 @@ func newGtpSessionRepo() *GtpSessionRepo {
 	return &GtpSessionRepo{
 		sessionsByID:       make(map[SessionID]*GtpSession),
 		sessionsByCtrlTeid: make(map[gtp.Teid]*GtpSession),
+		sessionsByDataTeid: make(map[gtp.Teid]*GtpSession),
 		sessionsByImsiEbi:  make(map[string]*GtpSession),
 	}
 }
@@ -109,9 +111,13 @@ func (r *GtpSessionRepo) newSession(
 	if _, ok := r.sessionsByID[session.id]; ok {
 		return 0, fmt.Errorf("There is already the session that have the ID : %d", session.id)
 	}
-	teid := session.sgwCtrlFTEID.Teid()
-	if _, ok := r.sessionsByCtrlTeid[teid]; ok {
-		return 0, fmt.Errorf("There is already the session that have the SGW-CTRL-TEID : %d", teid)
+	ctrlTeid := session.sgwCtrlFTEID.Teid()
+	if _, ok := r.sessionsByCtrlTeid[ctrlTeid]; ok {
+		return 0, fmt.Errorf("There is already the session that have the SGW-CTRL-TEID : %d", ctrlTeid)
+	}
+	dataTeid := session.sgwDataFTEID.Teid()
+	if _, ok := r.sessionsByDataTeid[dataTeid]; ok {
+		return 0, fmt.Errorf("There is already the session that have the SGW-DATA-TEID : %d", dataTeid)
 	}
 	imsiEbi := imsi.Value() + "_" + strconv.Itoa(int(ebi.Value()))
 	if _, ok := r.sessionsByImsiEbi[imsiEbi]; ok {
@@ -119,10 +125,12 @@ func (r *GtpSessionRepo) newSession(
 	}
 
 	r.sessionsByID[session.id] = session
-	r.sessionsByCtrlTeid[teid] = session
+	r.sessionsByCtrlTeid[ctrlTeid] = session
+	r.sessionsByDataTeid[dataTeid] = session
 	r.sessionsByImsiEbi[imsiEbi] = session
 	go session.gtpSessionRoutine()
-	go session.receivePacketRoutine()
+	go session.receiveCtrlPacketRoutine()
+	go session.receiveDataPacketRoutine()
 	return session.id, nil
 }
 
@@ -135,11 +143,18 @@ func (r *GtpSessionRepo) deleteSession(sessionID SessionID) error {
 	}
 	delete(r.sessionsByID, sessionID)
 
-	teid := session.sgwCtrlFTEID.Teid()
-	if _, ok := r.sessionsByCtrlTeid[teid]; ok {
-		delete(r.sessionsByCtrlTeid, teid)
+	ctrlTeid := session.sgwCtrlFTEID.Teid()
+	if _, ok := r.sessionsByCtrlTeid[ctrlTeid]; ok {
+		delete(r.sessionsByCtrlTeid, ctrlTeid)
 	} else {
-		log.Debugf("There is no session with that SGW Ctrl F-TEID : %0X", teid)
+		log.Debugf("There is no session with that SGW Ctrl F-TEID : %0X", ctrlTeid)
+	}
+
+	dataTeid := session.sgwDataFTEID.Teid()
+	if _, ok := r.sessionsByDataTeid[dataTeid]; ok {
+		delete(r.sessionsByDataTeid, dataTeid)
+	} else {
+		log.Debugf("There is no session with that SGW Data F-TEID : %0X", dataTeid)
 	}
 
 	imsiEbi := session.imsi.Value() + "_" + strconv.Itoa(int(session.ebi.Value()))
@@ -177,11 +192,21 @@ func (r *GtpSessionRepo) FindBySessionID(id SessionID) *GtpSession {
 	return nil
 }
 
-// FindByTeid returns nil when the id does not exist.
-func (r *GtpSessionRepo) FindByTeid(teid gtp.Teid) *GtpSession {
+// FindByCtrlTeid returns nil when the id does not exist.
+func (r *GtpSessionRepo) FindByCtrlTeid(teid gtp.Teid) *GtpSession {
 	r.mtx4Map.RLock()
 	defer r.mtx4Map.RUnlock()
 	if val, ok := r.sessionsByCtrlTeid[teid]; ok {
+		return val
+	}
+	return nil
+}
+
+// FindByDataTeid returns nil when the id does not exist.
+func (r *GtpSessionRepo) FindByDataTeid(teid gtp.Teid) *GtpSession {
+	r.mtx4Map.RLock()
+	defer r.mtx4Map.RUnlock()
+	if val, ok := r.sessionsByDataTeid[teid]; ok {
 		return val
 	}
 	return nil

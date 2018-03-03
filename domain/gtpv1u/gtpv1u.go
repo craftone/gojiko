@@ -2,6 +2,7 @@ package gtpv1u
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	"github.com/craftone/gojiko/domain/gtp"
 	"github.com/craftone/gojiko/util"
@@ -56,4 +57,20 @@ func (h header) marshal(body []byte) []byte {
 		copy(res[12:], body)
 	}
 	return res
+}
+
+func GetPacketfromGPDU(buf []byte) ([]byte, error) {
+	// don't care about this packet is valid as GTPv1-U
+	offset := 8
+	length := binary.BigEndian.Uint16(buf[2:4])
+	gtpuSize := offset + int(length)
+	if len(buf) < gtpuSize {
+		return nil, fmt.Errorf("Too short packet : expected : %d, actual : %d", gtpuSize, len(buf))
+	}
+
+	flags := buf[0] & 0x7
+	if flags > 0 {
+		offset += 4
+	}
+	return buf[offset:gtpuSize], nil
 }

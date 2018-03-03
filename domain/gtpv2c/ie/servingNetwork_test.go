@@ -32,11 +32,6 @@ func TestUnmarshal_servingNetwork(t *testing.T) {
 	assert.Equal(t, "10", sn.Mnc())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
-
-	//ensure no refference to the buffer
-	copy(snBin, make([]byte, len(snBin)))
-	assert.Equal(t, "440", sn.Mcc())
-	assert.Equal(t, "10", sn.Mnc())
 }
 
 func TestServingNetwork_String(t *testing.T) {

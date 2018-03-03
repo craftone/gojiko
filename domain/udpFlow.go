@@ -5,6 +5,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/craftone/gojiko/config"
+
 	"github.com/craftone/gojiko/domain/ipemu"
 	"github.com/sirupsen/logrus"
 )
@@ -23,23 +25,15 @@ type UdpEchoFlowArg struct {
 }
 
 type UdpEchoFlow struct {
-	Arg UdpEchoFlowArg
+	Arg        UdpEchoFlowArg
+	session    *GtpSession
+	toReceiver chan UDPpacket
 }
 
-func (u *UdpEchoFlow) sender(sess *GtpSession) {
-	sourceAddr := net.UDPAddr{IP: sess.Paa(), Port: int(u.Arg.SourcePort)}
-	myLog := log.WithFields(logrus.Fields{
-		"routine":        "UdpFlowSender",
-		"DestAddr":       u.Arg.DestAddr.String(),
-		"SourceAddr":     sourceAddr.String(),
-		"SendPacketSize": u.Arg.SendPacketSize,
-		"TypeOfService":  u.Arg.Tos,
-		"TTL":            u.Arg.Ttl,
-		"TargetBps":      u.Arg.TargetBps,
-		"NumOfSend":      u.Arg.NumOfSend,
-		"RecvPacketSize": u.Arg.RecvPacketSize,
-	})
-	myLog.Info("Start a UDP Flow goroutine")
+// sender is for goroutine
+func (u *UdpEchoFlow) sender() {
+	myLog := u.newMyLog("UdpFlowSender")
+	myLog.Info("Start a UDP Flow sender goroutine")
 
 	packetSize := u.Arg.SendPacketSize
 	udpSize := packetSize - 20
@@ -48,12 +42,21 @@ func (u *UdpEchoFlow) sender(sess *GtpSession) {
 	sendInterval := time.Duration(sendIntervalSec * float64(time.Second))
 
 	udpBody := make([]byte, udpSize)
+	// 0 -  1 : Source Port
+	// 2 -  3 : Destination Port
+	// 4 -  5 : UDP length
+	// 6 -  7 : checksum (ignore)
 	binary.BigEndian.PutUint16(udpBody[0:], u.Arg.SourcePort)
 	binary.BigEndian.PutUint16(udpBody[2:], uint16(u.Arg.DestAddr.Port))
 	binary.BigEndian.PutUint16(udpBody[4:], udpSize)
-	binary.BigEndian.PutUint16(udpBody[8:], u.Arg.RecvPacketSize)
 
-	ipv4Emu := ipemu.NewIPv4Emulator(ipemu.UDP, sourceAddr.IP, u.Arg.DestAddr.IP, 1500)
+	payload := udpBody[8:]
+	// 0 -  1 : Receive Packet size (16bit)
+	// 2 - 10 : Sequence Number (64bit)
+	binary.BigEndian.PutUint16(payload[0:], u.Arg.RecvPacketSize)
+
+	sess := u.session
+	ipv4Emu := ipemu.NewIPv4Emulator(ipemu.UDP, sess.Paa(), u.Arg.DestAddr.IP, config.MTU())
 	teid := sess.pgwDataFTEID.Teid()
 	senderChan := sess.sgwCtrl.Pair().ToSender()
 	seqNum := uint64(0)
@@ -74,7 +77,7 @@ loop:
 			if seqNum > numOfSend {
 				break loop
 			}
-			binary.BigEndian.PutUint64(udpBody[10:], seqNum)
+			binary.BigEndian.PutUint64(payload[2:], seqNum)
 			packet, err := ipv4Emu.NewIPv4GPDU(teid, u.Arg.Tos, u.Arg.Ttl, udpBody)
 			if err != nil {
 				myLog.Debug(err)
@@ -88,4 +91,35 @@ loop:
 	}
 	sess.udpFlow = nil
 	log.Info("End a UDP Flow goroutine")
+}
+
+// receiver is for goroutine
+func (u *UdpEchoFlow) receiver() {
+	myLog := u.newMyLog("UdpFlowReceiver")
+	myLog.Info("Start a UDP Flow receiver goroutine")
+	ipv4emu := ipemu.NewIPv4Emulator(ipemu.UDP, u.Arg.DestAddr.IP, u.session.Paa(), config.MTU())
+	for pkt := range u.toReceiver {
+		payload, err := ipv4emu.PickOutPayload(u.Arg.SourcePort, pkt.body)
+		if err != nil {
+			myLog.Debug(err)
+			continue
+		}
+		seqNum := binary.BigEndian.Uint64(payload[2:])
+		myLog.Debugf("Received #%d", seqNum)
+	}
+}
+
+func (u *UdpEchoFlow) newMyLog(routine string) *logrus.Entry {
+	sourceAddr := net.UDPAddr{IP: u.session.Paa(), Port: int(u.Arg.SourcePort)}
+	return log.WithFields(logrus.Fields{
+		"routine":        routine,
+		"DestAddr":       u.Arg.DestAddr.String(),
+		"SourceAddr":     sourceAddr.String(),
+		"SendPacketSize": u.Arg.SendPacketSize,
+		"TypeOfService":  u.Arg.Tos,
+		"TTL":            u.Arg.Ttl,
+		"TargetBps":      u.Arg.TargetBps,
+		"NumOfSend":      u.Arg.NumOfSend,
+		"RecvPacketSize": u.Arg.RecvPacketSize,
+	})
 }

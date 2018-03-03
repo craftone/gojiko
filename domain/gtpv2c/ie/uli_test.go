@@ -57,13 +57,4 @@ func TestUnmarshal_uli(t *testing.T) {
 	assert.Equal(t, uint16(0x1421), uli.Tai().Tac())
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
-
-	//ensure no refference to the buffer
-	copy(uliBin, make([]byte, len(uliBin)))
-	assert.Equal(t, "440", uli.Ecgi().Mcc())
-	assert.Equal(t, "10", uli.Ecgi().Mnc())
-	assert.Equal(t, uint32(0x22D6600), uli.Ecgi().Eci())
-	assert.Equal(t, "440", uli.Tai().Mcc())
-	assert.Equal(t, "10", uli.Tai().Mnc())
-	assert.Equal(t, uint16(0x1421), uli.Tai().Tac())
 }

@@ -32,3 +32,12 @@ func TestInit_Gtpv2cRetry(t *testing.T) {
 	SetGtpv2cRetry(5)
 	assert.Equal(t, 5, Gtpv2cRetry())
 }
+
+func TestInit_MTU(t *testing.T) {
+	// test sample config value
+	assert.Equal(t, uint16(1472), MTU())
+
+	// test update
+	setMTU(1600)
+	assert.Equal(t, uint16(1600), MTU())
+}

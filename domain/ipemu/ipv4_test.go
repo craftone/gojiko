@@ -52,3 +52,33 @@ func TestIPv4Emulator_NewIPv4GPDU(t *testing.T) {
 	_, err = ipv4Emu.NewIPv4GPDU(teid, tos, ttl, data3)
 	assert.Error(t, err)
 }
+
+func TestIPv4Emulator_PickOutPayload(t *testing.T) {
+	ipv4Emu := NewIPv4Emulator(UDP, net.IPv4(192, 168, 0, 1), net.IPv4(192, 168, 0, 199), 1500)
+	teid := gtp.Teid(0x12345678)
+	tos := byte(0)
+	ttl := byte(0x40)
+	payload := []byte{
+		0x12, 0x34, // srcPort
+		0x56, 0x78, // destPort
+		0, 10, // length
+		0, 0, // checksum
+		0, 0, // udp payload (dummy)
+	}
+	packet, err := ipv4Emu.NewIPv4GPDU(teid, tos, ttl, payload)
+	assert.NoError(t, err)
+	ipPacket := packet[8:]
+
+	// no error
+	pl, err := ipv4Emu.PickOutPayload(0x5678, ipPacket)
+	assert.NoError(t, err)
+	assert.Equal(t, []byte{0, 0}, pl)
+
+	// too short
+	_, err = ipv4Emu.PickOutPayload(0x5678, ipPacket[:19])
+	assert.Error(t, err)
+
+	// invalid destPort
+	_, err = ipv4Emu.PickOutPayload(0, ipPacket)
+	assert.Error(t, err)
+}

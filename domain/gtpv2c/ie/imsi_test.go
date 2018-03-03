@@ -46,11 +46,6 @@ func TestUnmarshal_imsi(t *testing.T) {
 	assert.Equal(t, byte(1), imsi.instance)
 	assert.Equal(t, []byte{}, tail)
 	assert.Nil(t, err)
-
-	//ensure no refference to the buffer
-	copy(imsiBin, make([]byte, len(imsiBin)))
-	assert.Equal(t, "819012345678", imsi.Value())
-	assert.Equal(t, byte(1), imsi.instance)
 }
 
 func TestUnmarshal_imsiWithTail(t *testing.T) {

@@ -64,7 +64,6 @@
   + ~~APN IEが間違っていたので修正~~ @ 2018/02/18
   + ~~APIでsgwが存在しない場合に落ちてしまう~~ @ 2018/02/23
 
-- SgwCtrl.DeleteSession() を実装
 - ~~SgwCtrl.DeleteBearer() を実装~~ @ 2018/02/25
 
 - ECHO-Cを実装する
@@ -74,11 +73,13 @@
 
 - UDP通信を実装する
   + ~~gtpSession.SendUDP() を実装~~ @ 2018/03/01
-  + 受信機能を実装する
+  + ~~受信機能を実装する~~ @ 2018/03/04
+  + delete flow を実装する
   + statsを実装する
   + UdpResponser を実装
 
 - ~~ログレベルを設定可能とする~~ @ 2018/03/03
+- ~~logを別レイヤに切り出し。gtpv2c や ie パッケージをどうlogrus対応するか？~~ @ 2018/03/03
 
 - UdpEchoFlowSenderで、チャンネルが詰まったり遅延したりに対応する
 
@@ -87,13 +88,13 @@
 - sessionのステータス遷移をちゃんとして受け付けられるときだけ受け付けるようにする。channelが詰まったりするのを防ぐため。
 
 - CreateSessionをリファクタリング。コマンドchanでやる必要がない。
+- SgwCtrl.DeleteSession() を実装
 
 - contextを使ってキャンセル→goroutine停止を確実に実施する
 
 
 - Monitor を実装
 
-- logを別レイヤに切り出し。gtpv2c や ie パッケージをどうlogrus対応するか？
 
 - SPgwのgoroutine終了。UDP read timeoutもさせる必要がある。
 
