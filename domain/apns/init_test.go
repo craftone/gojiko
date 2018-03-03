@@ -4,16 +4,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	"github.com/craftone/gojiko/config"
 )
 
 func TestMain(m *testing.M) {
-	logger := logrus.New()
-	logger.Out = os.Stdout
-	logger.SetLevel(logrus.DebugLevel)
-	_log := logger.WithField("package", "domain")
-	Init(_log)
-
+	config.Init()
+	Init()
 	code := m.Run()
 	os.Exit(code)
 }

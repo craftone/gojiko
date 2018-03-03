@@ -5,7 +5,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/craftone/gojiko/ipemu"
+	"github.com/craftone/gojiko/domain/ipemu"
 	"github.com/sirupsen/logrus"
 )
 

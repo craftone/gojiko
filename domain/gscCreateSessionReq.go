@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/craftone/gojiko/gtpv2c/ie"
-	"github.com/craftone/gojiko/gtpv2c/ie/pco"
+	"github.com/craftone/gojiko/domain/gtpv2c/ie"
+	"github.com/craftone/gojiko/domain/gtpv2c/ie/pco"
 )
 
 // createSessionReq respresents the command message that

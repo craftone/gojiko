@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/craftone/gojiko/gtp"
+	"github.com/craftone/gojiko/domain/gtp"
 	"github.com/stretchr/testify/assert"
 )
 

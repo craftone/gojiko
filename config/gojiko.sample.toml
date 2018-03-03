@@ -1,0 +1,23 @@
+[log]
+# level : debug | info | warn | error
+level = "debug"
+
+[GTPv2c]
+timeout = 1000 # msec
+retry   =    2 # times
+
+[[SGW]]
+name = "sgw1"
+ip   = "127.0.0.1"
+
+[[APN]]
+host = "apn-example.com"
+mcc  = "440"
+mnc  = "10"
+ips  = [ "127.0.0.1", "127.0.0.2" ]
+
+[[APN]]
+host = "apn-example2.com"
+mcc  = "440"
+mnc  = "10"
+ips  = [ "127.0.2.1", "127.0.2.2" ]

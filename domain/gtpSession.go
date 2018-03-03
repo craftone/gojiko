@@ -7,14 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/craftone/gojiko/gtp"
-
 	"github.com/craftone/gojiko/config"
+	"github.com/craftone/gojiko/domain/gtp"
+	"github.com/craftone/gojiko/domain/gtpv2c"
+	"github.com/craftone/gojiko/domain/gtpv2c/ie"
 	"github.com/sirupsen/logrus"
-
-	"github.com/craftone/gojiko/gtpv2c"
-
-	"github.com/craftone/gojiko/gtpv2c/ie"
 )
 
 type GtpSessionStatus byte

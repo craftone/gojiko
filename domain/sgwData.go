@@ -19,6 +19,6 @@ func newSgwData(addr net.UDPAddr, recovery byte, sgwCtrl *SgwCtrl) (*SgwData, er
 	if err != nil {
 		return nil, err
 	}
-	myLog.Debug("A new SGW Data is created")
+	myLog.Info("A new SGW Data is created")
 	return &SgwData{absSPgw}, nil
 }

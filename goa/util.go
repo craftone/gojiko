@@ -5,8 +5,8 @@ import (
 	"net"
 
 	"github.com/craftone/gojiko/domain"
+	"github.com/craftone/gojiko/domain/gtp"
 	"github.com/craftone/gojiko/goa/app"
-	"github.com/craftone/gojiko/gtp"
 	"github.com/goadesign/goa"
 )
 

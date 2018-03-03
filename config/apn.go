@@ -21,20 +21,20 @@ var (
 
 func initApn() {
 	if !viper.IsSet("apn") {
-		log.Fatal("Invalid APN config : No APN config")
+		log.Panic("Invalid APN config : No APN config")
 	}
 	apnMapIfs, ok := viper.Get("apn").([]interface{})
 	if !ok {
-		log.Fatalf("Invalid APN config : type assertion error %#v", viper.Get("apn"))
+		log.Panicf("Invalid APN config : type assertion error %#v", viper.Get("apn"))
 	}
 	for _, apnMapIf := range apnMapIfs {
 		apnMap, ok := apnMapIf.(map[string]interface{})
 		if !ok {
-			log.Fatalf("Invalid APN config : type asseertion error %#v", apnMapIf)
+			log.Panicf("Invalid APN config : type asseertion error %#v", apnMapIf)
 		}
 		apn, err := newApn(apnMap)
 		if err != nil {
-			log.Fatal(err)
+			log.Panic(err)
 		}
 		apns = append(apns, apn)
 	}

@@ -18,29 +18,29 @@ var (
 
 func initSgw() {
 	if !viper.IsSet("sgw") {
-		log.Fatal("Invalid SGW config : No SGW config")
+		log.Panic("Invalid SGW config : No SGW config")
 	}
 	sgwMapIfs, ok := viper.Get("sgw").([]interface{})
 	if !ok {
-		log.Fatalf("Invalid SGW config : type assertion error %#v", viper.Get("sgw"))
+		log.Panicf("Invalid SGW config : type assertion error %#v", viper.Get("sgw"))
 	}
 	for _, sgwMapIf := range sgwMapIfs {
 		sgwMap, ok := sgwMapIf.(map[string]interface{})
 		if !ok {
-			log.Fatalf("Invalid SGW config : type asseertion error %#v", sgwMapIf)
+			log.Panicf("Invalid SGW config : type asseertion error %#v", sgwMapIf)
 		}
 		name, err := getStringFromIfMap(sgwMap, "SGW", "name")
 		if err != nil {
-			log.Fatalf(err.Error())
+			log.Panicf(err.Error())
 		}
 		ipStr, err := getStringFromIfMap(sgwMap, "SGW", "ip")
 		if err != nil {
-			log.Fatalf(err.Error())
+			log.Panicf(err.Error())
 		}
 
 		ip := net.ParseIP(ipStr)
 		if ip == nil {
-			log.Fatalf("Invalid SGW config : %s is not a valid IP", ipStr)
+			log.Panicf("Invalid SGW config : %s is not a valid IP", ipStr)
 		}
 		sgws = append(sgws, Sgw{name, ip})
 	}

@@ -6,8 +6,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/craftone/gojiko/gtp"
-	"github.com/craftone/gojiko/gtpv2c"
+	"github.com/craftone/gojiko/domain/gtp"
+	"github.com/craftone/gojiko/domain/gtpv2c"
 )
 
 type UDPpacket struct {
@@ -101,7 +101,7 @@ func (sp *absSPgw) echoReceiver() {
 		// make ECHO Response
 		echoRes, err := gtpv2c.NewEchoResponse(req.SeqNum(), sp.recovery)
 		if err != nil {
-			myLog.Fatalf("Making ECHO Response Failure : %v", err)
+			myLog.Panicf("Making ECHO Response Failure : %v", err)
 		}
 		res := UDPpacket{
 			raddr: pkt.raddr,

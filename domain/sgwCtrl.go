@@ -4,15 +4,12 @@ import (
 	"encoding/binary"
 	"net"
 
-	"github.com/dustin/go-humanize"
-
 	"github.com/craftone/gojiko/config"
-
-	"github.com/craftone/gojiko/gtp"
-	"github.com/craftone/gojiko/gtpv2c"
-
 	"github.com/craftone/gojiko/domain/apns"
-	"github.com/craftone/gojiko/gtpv2c/ie"
+	"github.com/craftone/gojiko/domain/gtp"
+	"github.com/craftone/gojiko/domain/gtpv2c"
+	"github.com/craftone/gojiko/domain/gtpv2c/ie"
+	humanize "github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,7 +25,7 @@ func newSgwCtrl(addr net.UDPAddr, dataPort int, recovery byte) (*SgwCtrl, error)
 		"addr":     addr,
 		"recovery": recovery,
 	})
-	myLog.Debug("A new SGW Ctrl has created")
+	myLog.Info("A new SGW Ctrl has created")
 
 	absSPgw, err := newAbsSPgw(addr, recovery, nil)
 	if err != nil {

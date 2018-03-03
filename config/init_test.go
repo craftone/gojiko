@@ -15,7 +15,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestInit_Gtpv2cTimeout(t *testing.T) {
-	// test default value
+	// test sample config value
 	assert.Equal(t, 1000*time.Millisecond, Gtpv2cTimeoutDuration())
 
 	// test update
@@ -25,7 +25,7 @@ func TestInit_Gtpv2cTimeout(t *testing.T) {
 }
 
 func TestInit_Gtpv2cRetry(t *testing.T) {
-	// test default value
+	// test sample config value
 	assert.Equal(t, 2, Gtpv2cRetry())
 
 	// test update

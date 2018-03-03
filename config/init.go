@@ -19,7 +19,7 @@ func Init() {
 	viper.AddConfigPath(".")
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Println(err)
+		log.Panic(err)
 	}
 
 	// Set default values
@@ -32,6 +32,7 @@ func Init() {
 
 	initApn()
 	initSgw()
+	initLog()
 }
 
 // about Gtpv2cTimeout

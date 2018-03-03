@@ -5,9 +5,8 @@ import (
 	"net"
 	"testing"
 
+	"github.com/craftone/gojiko/domain/gtpv2c/ie"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/craftone/gojiko/gtpv2c/ie"
 )
 
 func TestGtpSessionsRepo_newSession(t *testing.T) {
