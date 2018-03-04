@@ -1,11 +1,14 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/craftone/gojiko/domain/stats"
 
 	"github.com/craftone/gojiko/config"
 	"github.com/craftone/gojiko/domain/gtp"
@@ -302,10 +305,13 @@ func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
 	if udpEchoFlowArg.RecvPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
 		return fmt.Errorf("RecvPacketSize must be bigger than %d", MIN_UDP_ECHO_PACKET_SIZE)
 	}
+	ctx, cancel := context.WithCancel(context.Background())
 	udpEchoFlow := &UdpEchoFlow{
-		Arg:        udpEchoFlowArg,
-		session:    sess,
-		toReceiver: make(chan UDPpacket, 100),
+		Arg:            udpEchoFlowArg,
+		session:        sess,
+		toReceiver:     make(chan UDPpacket, 100),
+		statsCtxCencel: cancel,
+		stats:          stats.NewFlowStats(ctx),
 	}
 	err := sess.setUdpFlow(udpEchoFlow)
 	if err != nil {

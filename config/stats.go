@@ -15,7 +15,7 @@ var (
 	stats_flow_buffer_length int
 )
 
-func initStats() {
+func loadStatsConf() {
 	// Set default values
 	viper.SetDefault(stats_flow_buffer_length_str, 100)
 

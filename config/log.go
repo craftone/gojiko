@@ -9,7 +9,7 @@ import (
 
 var logLevel string
 
-func initLog() {
+func loadLogConf() {
 	viper.SetDefault("log.level", "info")
 	logLevelStr := viper.GetString("log.level")
 	logLevel = strings.ToLower(logLevelStr)

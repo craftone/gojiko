@@ -47,11 +47,13 @@ loop:
 	log.Debug("end MsgReceiver goroutine")
 }
 
-func (as *absStats) ReadInt64(key Key) (int64, bool) {
+func (as *absStats) ReadInt64(key Key) int64 {
 	as.mtx.RLock()
 	defer as.mtx.RUnlock()
-	value, ok := as.int64book[key]
-	return value, ok
+	if value, ok := as.int64book[key]; ok {
+		return value
+	}
+	return 0
 }
 
 func (as *absStats) SetInt64(key Key, val int64) {

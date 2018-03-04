@@ -19,20 +19,13 @@ func Test_FlowStats(t *testing.T) {
 		time.Sleep(1 * time.Millisecond)
 	}
 
-	sendPackets, ok := fs.ReadInt64(SendPackets)
-	assert.True(t, ok)
-	assert.Equal(t, int64(1), sendPackets)
-	sendBytes, ok := fs.ReadInt64(SendBytes)
-	assert.True(t, ok)
-	assert.Equal(t, int64(1460), sendBytes)
-	_, ok = fs.ReadInt64(RecvPackets)
-	assert.False(t, ok)
+	assert.Equal(t, int64(1), fs.ReadInt64(SendPackets))
+	assert.Equal(t, int64(1460), fs.ReadInt64(SendBytes))
+	assert.Equal(t, int64(0), fs.ReadInt64(RecvPackets))
 
 	// SetInt64 test
 	fs.SetInt64(SendPackets, 0)
-	sendPackets, ok = fs.ReadInt64(SendPackets)
-	assert.True(t, ok)
-	assert.Equal(t, int64(0), sendPackets)
+	assert.Equal(t, int64(0), fs.ReadInt64(SendPackets))
 
 	// cancel test
 	cancel()

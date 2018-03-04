@@ -43,10 +43,10 @@ func Init() {
 		log.Fatal(err)
 	}
 
-	initApn()
-	initSgw()
-	initLog()
-	initStats()
+	loadApnConf()
+	loadSgwConf()
+	loadLogConf()
+	loadStatsConf()
 }
 
 // about Gtpv2cTimeout

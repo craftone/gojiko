@@ -19,7 +19,7 @@ var (
 	apns []Apn
 )
 
-func initApn() {
+func loadApnConf() {
 	if !viper.IsSet("apn") {
 		log.Panic("Invalid APN config : No APN config")
 	}

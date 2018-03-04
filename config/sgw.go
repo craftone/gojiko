@@ -16,7 +16,7 @@ var (
 	sgws []Sgw
 )
 
-func initSgw() {
+func loadSgwConf() {
 	if !viper.IsSet("sgw") {
 		log.Panic("Invalid SGW config : No SGW config")
 	}

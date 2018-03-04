@@ -3,6 +3,8 @@ package domain
 import (
 	"net"
 
+	"github.com/craftone/gojiko/domain/stats"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/craftone/gojiko/applog"
@@ -23,6 +25,7 @@ func Init() error {
 
 	apns.Init()
 	gtpv2c.Init()
+	stats.Init()
 
 	theSgwCtrlRepo = newSgwCtrlRepo()
 	for _, sgw := range config.GetSGWs() {

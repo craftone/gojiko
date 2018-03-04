@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"encoding/binary"
 	"net"
 	"time"
@@ -26,16 +27,17 @@ type UdpEchoFlowArg struct {
 }
 
 type UdpEchoFlow struct {
-	Arg        UdpEchoFlowArg
-	session    *GtpSession
-	toReceiver chan UDPpacket
-	stats      stats.FlowStats
+	Arg            UdpEchoFlowArg
+	session        *GtpSession
+	toReceiver     chan UDPpacket
+	stats          *stats.FlowStats
+	statsCtxCencel context.CancelFunc
 }
 
 // sender is for goroutine
 func (u *UdpEchoFlow) sender() {
-	myLog := u.newMyLog("UdpFlowSender")
-	myLog.Info("Start a UDP Flow sender goroutine")
+	log := u.newMyLog("UdpFlowSender")
+	log.Info("Start a UDP Flow sender goroutine")
 
 	packetSize := u.Arg.SendPacketSize
 	udpSize := packetSize - 20
@@ -82,15 +84,24 @@ loop:
 			binary.BigEndian.PutUint64(payload[2:], seqNum)
 			packet, err := ipv4Emu.NewIPv4GPDU(teid, u.Arg.Tos, u.Arg.Ttl, udpBody)
 			if err != nil {
-				myLog.Error(err)
+				log.Error(err)
 			} else {
-				myLog.Debugf("Send a packet #%d at %s", seqNum, time.Now())
+				log.Debugf("Send a packet #%d at %s", seqNum, time.Now())
 				senderChan <- UDPpacket{sess.pgwDataAddr, packet}
+				u.stats.SendInt64Msg(stats.SendPackets, 1)
+				u.stats.SendInt64Msg(stats.SendBytes, int64(20+len(packet)))
 			}
+
 			nextTime = nextTime.Add(sendInterval)
+			for nextTime.Before(time.Now()) {
+				nextTime = nextTime.Add(sendInterval)
+				u.stats.SendInt64Msg(stats.SendPacketsSkipped, 1)
+				u.stats.SendInt64Msg(stats.SendBytesSkipped, int64(20+len(packet)))
+			}
 			nextTimeChan = time.After(nextTime.Sub(time.Now()))
 		}
 	}
+	sess.udpFlow.statsCtxCencel()
 	sess.udpFlow = nil
 	log.Info("End a UDP Flow goroutine")
 }
@@ -103,10 +114,14 @@ func (u *UdpEchoFlow) receiver() {
 	for pkt := range u.toReceiver {
 		payload, err := ipv4emu.PickOutPayload(u.Arg.SourcePort, pkt.body)
 		if err != nil {
+			u.stats.SendInt64Msg(stats.RecvPacketsInvalid, 1)
+			u.stats.SendInt64Msg(stats.RecvBytesInvalid, int64(20+len(pkt.body)))
 			myLog.Debug(err)
 			continue
 		}
 		seqNum := binary.BigEndian.Uint64(payload[2:])
+		u.stats.SendInt64Msg(stats.RecvPackets, 1)
+		u.stats.SendInt64Msg(stats.RecvBytes, int64(20+len(pkt.body)))
 		myLog.Debugf("Received #%d", seqNum)
 	}
 }
