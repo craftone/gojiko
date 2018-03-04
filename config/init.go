@@ -47,6 +47,7 @@ func Init() {
 	loadSgwConf()
 	loadLogConf()
 	loadStatsConf()
+	loadFlowConf()
 }
 
 // about Gtpv2cTimeout

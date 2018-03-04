@@ -318,8 +318,8 @@ func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
 		return err
 	}
 
-	go sess.udpFlow.sender()
-	go sess.udpFlow.receiver()
+	go sess.udpFlow.sender(ctx)
+	go sess.udpFlow.receiver(ctx)
 
 	return nil
 }

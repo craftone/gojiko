@@ -2,6 +2,9 @@
 # level : debug | info | warn | error
 level = "debug"
 
+[flow.UdpEcho]
+WaitReceive = 1 # msec
+
 [GTPv2c]
 timeout = 1000 # msec
 retry   =    2 # times

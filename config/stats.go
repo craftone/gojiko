@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	stats_flow_buffer_length_str = "stats.flow.buffer.length"
+	stats_flow_buffer_length_key = "stats.flow.buffer.length"
 )
 
 var (
@@ -17,10 +17,10 @@ var (
 
 func loadStatsConf() {
 	// Set default values
-	viper.SetDefault(stats_flow_buffer_length_str, 100)
+	viper.SetDefault(stats_flow_buffer_length_key, 100)
 
 	// check and load configs
-	err := setStatsFlowBufferLength(viper.GetInt(stats_flow_buffer_length_str))
+	err := setStatsFlowBufferLength(viper.GetInt(stats_flow_buffer_length_key))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,7 +28,7 @@ func loadStatsConf() {
 
 func setStatsFlowBufferLength(val int) error {
 	if val < 0 {
-		return fmt.Errorf("Invalid %s : %d", stats_flow_buffer_length_str, val)
+		return fmt.Errorf("Invalid %s : %d", stats_flow_buffer_length_key, val)
 	}
 	stats_flow_buffer_length = val
 	return nil

@@ -551,4 +551,5 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	session2.fromCtrlReceiverChan <- packet
 	err = ensureNoSession(sgwCtrl.GtpSessionRepo, session2.ID(), 10)
 	assert.NoError(t, err)
+	// assert.True(t, false) //dummy
 }

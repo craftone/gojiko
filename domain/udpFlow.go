@@ -8,6 +8,7 @@ import (
 
 	"github.com/craftone/gojiko/config"
 	"github.com/craftone/gojiko/domain/stats"
+	humanize "github.com/dustin/go-humanize"
 
 	"github.com/craftone/gojiko/domain/ipemu"
 	"github.com/sirupsen/logrus"
@@ -35,7 +36,7 @@ type UdpEchoFlow struct {
 }
 
 // sender is for goroutine
-func (u *UdpEchoFlow) sender() {
+func (u *UdpEchoFlow) sender(ctx context.Context) {
 	log := u.newMyLog("UdpFlowSender")
 	log.Info("Start a UDP Flow sender goroutine")
 
@@ -67,6 +68,7 @@ func (u *UdpEchoFlow) sender() {
 	numOfSend := uint64(u.Arg.NumOfSend)
 
 	nextTime := time.Now()
+	startTime := nextTime
 	nextTimeChan := time.After(0)
 
 loop:
@@ -75,10 +77,13 @@ loop:
 		case <-nextTimeChan:
 			if sess.status != GssConnected {
 				log.Info("Session status is not connected")
+				sess.udpFlow.statsCtxCencel()
 				break loop
 			}
 			seqNum++
 			if seqNum > numOfSend {
+				time.Sleep(config.FlowUdpEchoWaitReceive())
+				sess.udpFlow.statsCtxCencel()
 				break loop
 			}
 			binary.BigEndian.PutUint64(payload[2:], seqNum)
@@ -86,8 +91,8 @@ loop:
 			if err != nil {
 				log.Error(err)
 			} else {
-				log.Debugf("Send a packet #%d at %s", seqNum, time.Now())
 				senderChan <- UDPpacket{sess.pgwDataAddr, packet}
+				log.Debugf("Send a packet #%d at %s", seqNum, time.Now())
 				u.stats.SendInt64Msg(stats.SendPackets, 1)
 				u.stats.SendInt64Msg(stats.SendBytes, int64(20+len(packet)))
 			}
@@ -99,31 +104,60 @@ loop:
 				u.stats.SendInt64Msg(stats.SendBytesSkipped, int64(20+len(packet)))
 			}
 			nextTimeChan = time.After(nextTime.Sub(time.Now()))
+		case <-ctx.Done():
+			break loop
 		}
 	}
-	sess.udpFlow.statsCtxCencel()
+	endTime := time.Now()
+
+	log.Info("End a UDP Flow sender goroutine")
+	durationSec := float64(endTime.Sub(startTime)) / float64(time.Second)
+	sendBytes := u.stats.ReadInt64(stats.SendBytes)
+	log.Infof("[SEND stats] %s in %s(s) : %s / %s : (skipped) %s / %s",
+		humanize.SI(float64(sendBytes)*8/durationSec, "bps"),
+		humanize.Ftoa(durationSec),
+		humanize.SI(float64(u.stats.ReadInt64(stats.SendBytes)), "bytes"),
+		humanize.SI(float64(u.stats.ReadInt64(stats.SendPackets)), "pkts"),
+		humanize.SI(float64(u.stats.ReadInt64(stats.SendBytesSkipped)), "bytes"),
+		humanize.SI(float64(u.stats.ReadInt64(stats.SendPacketsSkipped)), "pkts"))
 	sess.udpFlow = nil
-	log.Info("End a UDP Flow goroutine")
 }
 
 // receiver is for goroutine
-func (u *UdpEchoFlow) receiver() {
+func (u *UdpEchoFlow) receiver(ctx context.Context) {
 	myLog := u.newMyLog("UdpFlowReceiver")
 	myLog.Info("Start a UDP Flow receiver goroutine")
 	ipv4emu := ipemu.NewIPv4Emulator(ipemu.UDP, u.Arg.DestAddr.IP, u.session.Paa(), config.MTU())
-	for pkt := range u.toReceiver {
+	startTime := time.Now()
+loop:
+	select {
+	case pkt := <-u.toReceiver:
 		payload, err := ipv4emu.PickOutPayload(u.Arg.SourcePort, pkt.body)
 		if err != nil {
 			u.stats.SendInt64Msg(stats.RecvPacketsInvalid, 1)
 			u.stats.SendInt64Msg(stats.RecvBytesInvalid, int64(20+len(pkt.body)))
 			myLog.Debug(err)
-			continue
+			goto loop
 		}
 		seqNum := binary.BigEndian.Uint64(payload[2:])
 		u.stats.SendInt64Msg(stats.RecvPackets, 1)
 		u.stats.SendInt64Msg(stats.RecvBytes, int64(20+len(pkt.body)))
 		myLog.Debugf("Received #%d", seqNum)
+		goto loop
+	case <-ctx.Done():
+		break loop
 	}
+	endTime := time.Now()
+	log.Info("End a UDP Flow receiver goroutine")
+	durationSec := float64(endTime.Sub(startTime)) / float64(time.Second)
+	recvBytes := u.stats.ReadInt64(stats.RecvBytes)
+	log.Infof("[RECV stats] %s in %s(s) : %s / %s : (invalid) %s / %s",
+		humanize.SI(float64(recvBytes)*8/durationSec, "bps"),
+		humanize.Ftoa(durationSec),
+		humanize.SI(float64(u.stats.ReadInt64(stats.RecvBytes)), "bytes"),
+		humanize.SI(float64(u.stats.ReadInt64(stats.RecvPackets)), "pkts"),
+		humanize.SI(float64(u.stats.ReadInt64(stats.RecvBytesInvalid)), "bytes"),
+		humanize.SI(float64(u.stats.ReadInt64(stats.RecvPacketsInvalid)), "pkts"))
 }
 
 func (u *UdpEchoFlow) newMyLog(routine string) *logrus.Entry {
