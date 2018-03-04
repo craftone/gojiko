@@ -46,6 +46,7 @@ func Init() {
 	initApn()
 	initSgw()
 	initLog()
+	initStats()
 }
 
 // about Gtpv2cTimeout

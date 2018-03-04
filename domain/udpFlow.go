@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/craftone/gojiko/config"
+	"github.com/craftone/gojiko/domain/stats"
 
 	"github.com/craftone/gojiko/domain/ipemu"
 	"github.com/sirupsen/logrus"
@@ -28,6 +29,7 @@ type UdpEchoFlow struct {
 	Arg        UdpEchoFlowArg
 	session    *GtpSession
 	toReceiver chan UDPpacket
+	stats      stats.FlowStats
 }
 
 // sender is for goroutine
@@ -80,7 +82,7 @@ loop:
 			binary.BigEndian.PutUint64(payload[2:], seqNum)
 			packet, err := ipv4Emu.NewIPv4GPDU(teid, u.Arg.Tos, u.Arg.Ttl, udpBody)
 			if err != nil {
-				myLog.Debug(err)
+				myLog.Error(err)
 			} else {
 				myLog.Debugf("Send a packet #%d at %s", seqNum, time.Now())
 				senderChan <- UDPpacket{sess.pgwDataAddr, packet}
