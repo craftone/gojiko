@@ -104,7 +104,13 @@ loop:
 			}
 
 			nextTime = nextTime.Add(sendInterval)
-			nextTimeChan = time.After(nextTime.Sub(time.Now()))
+			if nextTime.Before(time.Now()) {
+				skipFlg = true
+				nextTimeChan = time.After(0)
+			} else {
+				skipFlg = false
+				nextTimeChan = time.After(nextTime.Sub(time.Now()))
+			}
 		case <-ctx.Done():
 			break loop
 		}
