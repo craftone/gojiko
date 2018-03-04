@@ -70,6 +70,7 @@ func (u *UdpEchoFlow) sender(ctx context.Context) {
 	nextTime := time.Now()
 	startTime := nextTime
 	nextTimeChan := time.After(0)
+	skipFlg := false // This flag becomes true when skipping due to delay etc.
 
 loop:
 	for {
@@ -86,23 +87,23 @@ loop:
 				sess.udpFlow.statsCtxCencel()
 				break loop
 			}
-			binary.BigEndian.PutUint64(payload[2:], seqNum)
-			packet, err := ipv4Emu.NewIPv4GPDU(teid, u.Arg.Tos, u.Arg.Ttl, udpBody)
-			if err != nil {
-				log.Error(err)
+			if !skipFlg {
+				binary.BigEndian.PutUint64(payload[2:], seqNum)
+				packet, err := ipv4Emu.NewIPv4GPDU(teid, u.Arg.Tos, u.Arg.Ttl, udpBody)
+				if err != nil {
+					log.Error(err)
+				} else {
+					senderChan <- UDPpacket{sess.pgwDataAddr, packet}
+					log.Debugf("Send a packet #%d at %s", seqNum, time.Now())
+					u.stats.SendInt64Msg(stats.SendPackets, 1)
+					u.stats.SendInt64Msg(stats.SendBytes, int64(28+packetSize))
+				}
 			} else {
-				senderChan <- UDPpacket{sess.pgwDataAddr, packet}
-				log.Debugf("Send a packet #%d at %s", seqNum, time.Now())
-				u.stats.SendInt64Msg(stats.SendPackets, 1)
-				u.stats.SendInt64Msg(stats.SendBytes, int64(20+len(packet)))
+				u.stats.SendInt64Msg(stats.SendPacketsSkipped, 1)
+				u.stats.SendInt64Msg(stats.SendBytesSkipped, int64(28+packetSize))
 			}
 
 			nextTime = nextTime.Add(sendInterval)
-			for nextTime.Before(time.Now()) {
-				nextTime = nextTime.Add(sendInterval)
-				u.stats.SendInt64Msg(stats.SendPacketsSkipped, 1)
-				u.stats.SendInt64Msg(stats.SendBytesSkipped, int64(20+len(packet)))
-			}
 			nextTimeChan = time.After(nextTime.Sub(time.Now()))
 		case <-ctx.Done():
 			break loop
