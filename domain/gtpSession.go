@@ -8,12 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/craftone/gojiko/domain/stats"
-
 	"github.com/craftone/gojiko/config"
 	"github.com/craftone/gojiko/domain/gtp"
 	"github.com/craftone/gojiko/domain/gtpv2c"
 	"github.com/craftone/gojiko/domain/gtpv2c/ie"
+	"github.com/craftone/gojiko/domain/stats"
 	"github.com/sirupsen/logrus"
 )
 

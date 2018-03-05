@@ -8,7 +8,7 @@ import (
 var _ = API("gojiko api", func() {
 	Title("Gojiko API")
 	Description(`Gojiko は日本のL2接続MVNOでの利用に適した簡素な疑似SGWシミュレータです。
-Jmeter等で操作可能であるため、試験自動化に適しています。`)
+Jmeter等で操作可能なため、試験自動化に適しています。`)
 	Scheme("http")
 	Host("localhost:8080")
 })
@@ -71,6 +71,11 @@ var _ = Resource("udpEchoFlowByIMSIandEBI", func() {
 		Response(OK, UdpEchoFlowMedia)
 		Response(NotFound, ErrorMedia)
 		Response(InternalServerError, ErrorMedia)
+	})
+
+	Action("delete", func() {
+		Description("End UDP ECHO flow by IMSI and EBI")
+		Routing(DELETE(""))
 	})
 })
 
@@ -175,8 +180,8 @@ var UdpEchoFlowPayload = Type("UdpEchoFlowPayload", func() {
 
 var UdpEchoFlowMedia = MediaType("application/vnd.udpechoflow+json", func() {
 	Description("A UDP ECHO flow")
-	Attribute("UdpEchoFlowArg", UdpEchoFlowPayload)
+	Attribute("param", UdpEchoFlowPayload)
 	View("default", func() {
-		Attribute("UdpEchoFlowArg")
+		Attribute("param")
 	})
 })
