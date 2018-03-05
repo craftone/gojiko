@@ -134,46 +134,27 @@ func (session *GtpSession) receiveCtrlPacketRoutine() {
 
 // this function is for GoRoutine
 func (session *GtpSession) receiveDataPacketRoutine() {
-	myLog := log.WithFields(logrus.Fields{
+	log := log.WithFields(logrus.Fields{
 		"SessionID": session.ID(),
 		"routine":   "DataPacketReceiver",
 	})
-	myLog.Debug("Start a GTP session's data packet receiver")
+	log.Debug("Start a GTP session's data packet receiver")
 
 	for recv := range session.fromDataReceiverChan {
 		// Ensure received packet has sent from correct PGW address
 		if !recv.raddr.IP.Equal(session.pgwDataAddr.IP) {
-			myLog.Debugf("Received invalid GTPv1-U packet from unkown address : %s , expected : %s", recv.raddr.String(), session.pgwDataAddr.String())
+			log.Debugf("Received invalid GTPv1-U packet from unkown address : %s , expected : %s", recv.raddr.String(), session.pgwDataAddr.String())
 			continue
 		}
 
 		if session.udpFlow == nil {
-			myLog.Debug("There is no flow process in this session")
+			log.Debug("There is no flow process in this session")
 			continue
 		}
 
-		// todo
-
-		// Unmarshal received packet
-		msg, _, err := gtpv2c.Unmarshal(recv.body)
-		if err != nil {
-			myLog.Debugf("Received invalid GTPv2-C packet : %#v", err)
-			continue
-		}
-		myLog.Debugf("Received GTPv2-C packet : %#v", msg)
-
-		switch typedMsg := msg.(type) {
-		case *gtpv2c.CreateSessionResponse:
-			session.receiveCSresChan <- typedMsg
-		case *gtpv2c.DeleteBearerRequest:
-			err := session.procDeleteBearer(recv.raddr, typedMsg, myLog)
-			if err != nil {
-				myLog.Error(err)
-			}
-		default:
-			myLog.Error("Don't know how to precess the packet")
-		}
+		session.udpFlow.toReceiver <- recv
 	}
+	log.Debug("End a GTP session's data packet receiver")
 }
 
 func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus.Entry) error {
