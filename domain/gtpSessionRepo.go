@@ -70,10 +70,10 @@ func (r *GtpSessionRepo) newSession(
 		cmdResChan:       make(chan GscRes, 10),
 		receiveCSresChan: make(chan *gtpv2c.CreateSessionResponse, 10),
 
-		toCtrlSenderChan:     sgwCtrlSendChan,
-		fromCtrlReceiverChan: make(chan UDPpacket, 10),
-		toDataSenderChan:     make(chan UDPpacket, 100),
-		fromDataReceiverChan: make(chan UDPpacket, 100),
+		toSgwCtrlSenderChan:     sgwCtrlSendChan,
+		fromSgwCtrlReceiverChan: make(chan UDPpacket, 10),
+		toSgwDataSenderChan:     make(chan UDPpacket, 100),
+		fromSgwDataReceiverChan: make(chan UDPpacket, 100),
 
 		sgwCtrl:      sgwCtrl,
 		sgwCtrlFTEID: sgwCtrlFTEID,
@@ -164,12 +164,12 @@ func (r *GtpSessionRepo) deleteSession(sessionID SessionID) error {
 		log.Debugf("There is no session with that IMSI and EBI : %s", imsiEbi)
 	}
 
-	close(session.cmdReqChan)           // tell the gtpSession to finish
-	close(session.cmdResChan)           // cmdResChan is used by gtpSession only
-	close(session.receiveCSresChan)     // receiveCSresChan is used by gtpSession only
-	close(session.fromCtrlReceiverChan) // the sender should care the channel is active
-	close(session.toDataSenderChan)     // tell the data sender to finish
-	close(session.fromDataReceiverChan) // the sender should care the channel is active
+	close(session.cmdReqChan)              // tell the gtpSession to finish
+	close(session.cmdResChan)              // cmdResChan is used by gtpSession only
+	close(session.receiveCSresChan)        // receiveCSresChan is used by gtpSession only
+	close(session.fromSgwCtrlReceiverChan) // the sender should care the channel is active
+	close(session.toSgwDataSenderChan)     // tell the data sender to finish
+	close(session.fromSgwDataReceiverChan) // the sender should care the channel is active
 
 	return nil
 }

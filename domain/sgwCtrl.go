@@ -215,7 +215,7 @@ func (sgwCtrl *SgwCtrl) sgwCtrlReceiverRoutine() {
 			}
 			received := make([]byte, n)
 			copy(received, buf[:n])
-			sess.fromCtrlReceiverChan <- UDPpacket{*raddr, received}
+			sess.fromSgwCtrlReceiverChan <- UDPpacket{*raddr, received}
 		default:
 			myLog.Debugf("Unkown Message Type : %d", msgType)
 		}

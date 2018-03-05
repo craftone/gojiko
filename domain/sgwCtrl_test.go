@@ -37,7 +37,7 @@ func TestSgwCtrl_CreateSession_OK(t *testing.T) {
 	pgwAddr := net.UDPAddr{IP: pgwIP, Port: GtpControlPort}
 
 	// send invalid binary
-	session.fromCtrlReceiverChan <- UDPpacket{pgwAddr, []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
 
 	// make pseudo response binary that cause is CauseRequestAccepted
 	paaIP := net.IPv4(9, 10, 11, 12)
@@ -56,14 +56,14 @@ func TestSgwCtrl_CreateSession_OK(t *testing.T) {
 	csResBin := csRes.Marshal()
 
 	// send from invalid address
-	session.fromCtrlReceiverChan <- UDPpacket{defaultSgwCtrlAddr, csResBin}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{defaultSgwCtrlAddr, csResBin}
 
 	// send from invalid port
 	invalidPort := net.UDPAddr{IP: pgwAddr.IP, Port: 1}
-	session.fromCtrlReceiverChan <- UDPpacket{invalidPort, csResBin}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{invalidPort, csResBin}
 
 	// send valid packet
-	session.fromCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
 
 	csres := <-resCh
 	assert.NoError(t, csres.err)
@@ -122,7 +122,7 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 	csResBin := csRes.Marshal()
 
 	// send Retryable NG packet
-	session.fromCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
 
 	csres := <-resCh
 
@@ -168,7 +168,7 @@ func TestSgwCtrl_CreateSession_NG(t *testing.T) {
 	csResBin := csRes.Marshal()
 
 	// send Retryable NG packet
-	session.fromCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
 
 	csres := <-resCh
 
@@ -252,7 +252,7 @@ func TestSgwCtrl_CreateSessionAndDeleteBearer(t *testing.T) {
 	csResBin := csRes.Marshal()
 
 	// send valid packet
-	session.fromCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
 
 	csres := <-resCh
 	assert.NoError(t, csres.err)
@@ -267,7 +267,7 @@ func TestSgwCtrl_CreateSessionAndDeleteBearer(t *testing.T) {
 	//
 	dbReq, _ := gtpv2c.NewDeleteBearerRequest(pgwCtrlTEID, 100, ebi)
 	packet := UDPpacket{raddr: pgwAddr, body: dbReq.Marshal()}
-	session.fromCtrlReceiverChan <- packet
+	session.fromSgwCtrlReceiverChan <- packet
 
 	err := ensureNoSession(sgwCtrl.GtpSessionRepo, session.ID(), 10)
 	assert.NoError(t, err)
@@ -324,7 +324,7 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	csResBin := csRes.Marshal()
 
 	// send valid packet
-	session.fromCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
 
 	csres := <-resCh
 	assert.NoError(t, csres.err)
@@ -388,7 +388,7 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	//
 	dbReq, _ := gtpv2c.NewDeleteBearerRequest(pgwCtrlTEID, 100, ebi)
 	packet = UDPpacket{raddr: pgwAddr, body: dbReq.Marshal()}
-	session.fromCtrlReceiverChan <- packet
+	session.fromSgwCtrlReceiverChan <- packet
 
 	err = ensureNoSession(sgwCtrl.GtpSessionRepo, session.ID(), 10)
 	assert.NoError(t, err)
@@ -457,8 +457,8 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	csRes2Bin := csRes2.Marshal()
 
 	// send valid packet
-	session1.fromCtrlReceiverChan <- UDPpacket{pgwAddr, csRes1Bin}
-	session2.fromCtrlReceiverChan <- UDPpacket{pgwAddr, csRes2Bin}
+	session1.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csRes1Bin}
+	session2.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csRes2Bin}
 
 	csres1 := <-resCh1
 	assert.NoError(t, csres1.err)
@@ -542,13 +542,13 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	//
 	dbReq1, _ := gtpv2c.NewDeleteBearerRequest(pgwCtrlTEID1, 100, ebi)
 	packet = UDPpacket{raddr: pgwAddr, body: dbReq1.Marshal()}
-	session1.fromCtrlReceiverChan <- packet
+	session1.fromSgwCtrlReceiverChan <- packet
 	err = ensureNoSession(sgwCtrl.GtpSessionRepo, session1.ID(), 10)
 	assert.NoError(t, err)
 
 	dbReq2, _ := gtpv2c.NewDeleteBearerRequest(pgwCtrlTEID2, 100, ebi)
 	packet = UDPpacket{raddr: pgwAddr, body: dbReq2.Marshal()}
-	session2.fromCtrlReceiverChan <- packet
+	session2.fromSgwCtrlReceiverChan <- packet
 	err = ensureNoSession(sgwCtrl.GtpSessionRepo, session2.ID(), 10)
 	assert.NoError(t, err)
 	// assert.True(t, false) //dummy

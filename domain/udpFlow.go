@@ -28,11 +28,11 @@ type UdpEchoFlowArg struct {
 }
 
 type UdpEchoFlow struct {
-	Arg            UdpEchoFlowArg
-	session        *GtpSession
-	toReceiver     chan UDPpacket
-	stats          *stats.FlowStats
-	statsCtxCencel context.CancelFunc
+	Arg                  UdpEchoFlowArg
+	session              *GtpSession
+	fromSessDataReceiver chan UDPpacket
+	stats                *stats.FlowStats
+	statsCtxCencel       context.CancelFunc
 }
 
 // sender is for goroutine
@@ -138,7 +138,7 @@ func (u *UdpEchoFlow) receiver(ctx context.Context) {
 	startTime := time.Now()
 loop:
 	select {
-	case pkt := <-u.toReceiver:
+	case pkt := <-u.fromSessDataReceiver:
 		payload, err := ipv4emu.PickOutPayload(u.Arg.SourcePort, pkt.body)
 		if err != nil {
 			u.stats.SendInt64Msg(stats.RecvPacketsInvalid, 1)

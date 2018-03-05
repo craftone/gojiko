@@ -30,13 +30,13 @@ type GtpSession struct {
 	status     GtpSessionStatus
 	mtx4status sync.RWMutex
 
-	cmdReqChan           chan gtpSessionCmd
-	cmdResChan           chan GscRes
-	receiveCSresChan     chan *gtpv2c.CreateSessionResponse
-	toCtrlSenderChan     chan UDPpacket
-	fromCtrlReceiverChan chan UDPpacket
-	toDataSenderChan     chan UDPpacket
-	fromDataReceiverChan chan UDPpacket
+	cmdReqChan              chan gtpSessionCmd
+	cmdResChan              chan GscRes
+	receiveCSresChan        chan *gtpv2c.CreateSessionResponse
+	toSgwCtrlSenderChan     chan UDPpacket
+	fromSgwCtrlReceiverChan chan UDPpacket
+	toSgwDataSenderChan     chan UDPpacket
+	fromSgwDataReceiverChan chan UDPpacket
 
 	sgwCtrl      *SgwCtrl
 	sgwCtrlFTEID *ie.Fteid
@@ -103,7 +103,7 @@ func (session *GtpSession) receiveCtrlPacketRoutine() {
 	})
 	myLog.Debug("Start a GTP session's ctrl packet receiver")
 
-	for recv := range session.fromCtrlReceiverChan {
+	for recv := range session.fromSgwCtrlReceiverChan {
 		// Ensure received packet has sent from correct PGW address
 		if !recv.raddr.IP.Equal(session.pgwCtrlAddr.IP) {
 			myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %s , expected : %s", recv.raddr.String(), session.pgwCtrlAddr.String())
@@ -140,7 +140,7 @@ func (session *GtpSession) receiveDataPacketRoutine() {
 	})
 	log.Debug("Start a GTP session's data packet receiver")
 
-	for recv := range session.fromDataReceiverChan {
+	for recv := range session.fromSgwDataReceiverChan {
 		// Ensure received packet has sent from correct PGW address
 		if !recv.raddr.IP.Equal(session.pgwDataAddr.IP) {
 			log.Debugf("Received invalid GTPv1-U packet from unkown address : %s , expected : %s", recv.raddr.String(), session.pgwDataAddr.String())
@@ -152,7 +152,7 @@ func (session *GtpSession) receiveDataPacketRoutine() {
 			continue
 		}
 
-		session.udpFlow.toReceiver <- recv
+		session.udpFlow.fromSessDataReceiver <- recv
 	}
 	log.Debug("End a GTP session's data packet receiver")
 }
@@ -209,7 +209,7 @@ func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus
 	raddr := session.pgwCtrlAddr
 
 	// Send a CSReq packet to the PGW
-	session.toCtrlSenderChan <- UDPpacket{raddr, csReqBin}
+	session.toSgwCtrlSenderChan <- UDPpacket{raddr, csReqBin}
 
 	var res GscRes
 	afterChan := time.After(config.Gtpv2cTimeoutDuration())
@@ -256,7 +256,7 @@ func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.Del
 	if err != nil {
 		return err
 	}
-	session.toCtrlSenderChan <- UDPpacket{raddr, dbRes.Marshal()}
+	session.toSgwCtrlSenderChan <- UDPpacket{raddr, dbRes.Marshal()}
 	myLog.Infof("Send Delete Bearer Response : %#v", dbRes)
 	err = session.sgwCtrl.GtpSessionRepo.deleteSession(session.ID())
 	if err != nil {
@@ -288,11 +288,11 @@ func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	udpEchoFlow := &UdpEchoFlow{
-		Arg:            udpEchoFlowArg,
-		session:        sess,
-		toReceiver:     make(chan UDPpacket, 100),
-		statsCtxCencel: cancel,
-		stats:          stats.NewFlowStats(ctx),
+		Arg:                  udpEchoFlowArg,
+		session:              sess,
+		fromSessDataReceiver: make(chan UDPpacket, 100),
+		statsCtxCencel:       cancel,
+		stats:                stats.NewFlowStats(ctx),
 	}
 	err := sess.setUdpFlow(udpEchoFlow)
 	if err != nil {
