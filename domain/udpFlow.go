@@ -8,7 +8,6 @@ import (
 
 	"github.com/craftone/gojiko/config"
 	"github.com/craftone/gojiko/domain/stats"
-	humanize "github.com/dustin/go-humanize"
 
 	"github.com/craftone/gojiko/domain/ipemu"
 	"github.com/sirupsen/logrus"
@@ -48,17 +47,17 @@ func (u *UdpEchoFlow) sender(ctx context.Context) {
 
 	udpBody := make([]byte, udpSize)
 	// 0 -  1 : Source Port
-	// 2 -  3 : Destination Port
-	// 4 -  5 : UDP length
-	// 6 -  7 : checksum (ignore)
 	binary.BigEndian.PutUint16(udpBody[0:], u.Arg.SourcePort)
+	// 2 -  3 : Destination Port
 	binary.BigEndian.PutUint16(udpBody[2:], uint16(u.Arg.DestAddr.Port))
+	// 4 -  5 : UDP length
 	binary.BigEndian.PutUint16(udpBody[4:], udpSize)
-
+	// 6 -  7 : checksum (ignore)
 	payload := udpBody[8:]
 	// 0 -  1 : Receive Packet size (16bit)
-	// 2 - 10 : Sequence Number (64bit)
 	binary.BigEndian.PutUint16(payload[0:], u.Arg.RecvPacketSize)
+	// 2 - 10 : Sequence Number (64bit)
+	//   set later
 
 	sess := u.session
 	ipv4Emu := ipemu.NewIPv4Emulator(ipemu.UDP, sess.Paa(), u.Arg.DestAddr.IP, config.MTU())
@@ -70,7 +69,10 @@ func (u *UdpEchoFlow) sender(ctx context.Context) {
 	nextTime := time.Now()
 	startTime := nextTime
 	nextTimeChan := time.After(0)
-	skipFlg := false // This flag becomes true when skipping due to delay etc.
+
+	// skipFlg represents that sending a packet will be skipped at this time of loop
+	// due to delay etc, but count up seqNum etc, should be processed.
+	skipFlg := false
 
 loop:
 	for {
@@ -119,14 +121,15 @@ loop:
 
 	log.Info("End a UDP Flow sender goroutine")
 	durationSec := float64(endTime.Sub(startTime)) / float64(time.Second)
-	sendBytes := u.stats.ReadInt64(stats.SendBytes)
-	log.Infof("[SEND stats] %s in %s(s) : %s / %s : (skipped) %s / %s",
-		humanize.SI(float64(sendBytes)*8/durationSec, "bps"),
-		humanize.Ftoa(durationSec),
-		humanize.SI(float64(u.stats.ReadInt64(stats.SendBytes)), "bytes"),
-		humanize.SI(float64(u.stats.ReadInt64(stats.SendPackets)), "pkts"),
-		humanize.SI(float64(u.stats.ReadInt64(stats.SendBytesSkipped)), "bytes"),
-		humanize.SI(float64(u.stats.ReadInt64(stats.SendPacketsSkipped)), "pkts"))
+	_, bitrate := u.stats.SendBitrate(endTime)
+	_, sendBytes := u.stats.SendBytes()
+	_, sendPackets := u.stats.SendPackets()
+	_, sendBytesSkipped := u.stats.SendBytesSkipped()
+	_, sendPacketsSkipped := u.stats.SendPacketsSkipped()
+	log.Infof("[SEND stats] %s in %1.1f(s) : %s / %s : (skipped) %s / %s",
+		bitrate, durationSec,
+		sendBytes, sendPackets,
+		sendBytesSkipped, sendPacketsSkipped)
 	sess.udpFlow = nil
 }
 
@@ -157,14 +160,15 @@ loop:
 	endTime := time.Now()
 	log.Info("End a UDP Flow receiver goroutine")
 	durationSec := float64(endTime.Sub(startTime)) / float64(time.Second)
-	recvBytes := u.stats.ReadInt64(stats.RecvBytes)
+	_, bitrate := u.stats.RecvBitrate(endTime)
+	_, recvBytes := u.stats.RecvBytes()
+	_, recvPackets := u.stats.RecvPackets()
+	_, recvBytesInvalid := u.stats.RecvBytesInvalid()
+	_, recvPacketsInvalid := u.stats.RecvPacketsInvalid()
 	log.Infof("[RECV stats] %s in %s(s) : %s / %s : (invalid) %s / %s",
-		humanize.SI(float64(recvBytes)*8/durationSec, "bps"),
-		humanize.Ftoa(durationSec),
-		humanize.SI(float64(u.stats.ReadInt64(stats.RecvBytes)), "bytes"),
-		humanize.SI(float64(u.stats.ReadInt64(stats.RecvPackets)), "pkts"),
-		humanize.SI(float64(u.stats.ReadInt64(stats.RecvBytesInvalid)), "bytes"),
-		humanize.SI(float64(u.stats.ReadInt64(stats.RecvPacketsInvalid)), "pkts"))
+		bitrate, durationSec,
+		recvBytes, recvPackets,
+		recvBytesInvalid, recvPacketsInvalid)
 }
 
 func (u *UdpEchoFlow) newMyLog(routine string) *logrus.Entry {

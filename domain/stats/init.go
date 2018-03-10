@@ -19,10 +19,13 @@ const (
 	RecvPacketsInvalid
 	RecvBytes
 	RecvBytesInvalid
+	StartTime
+	EndTime
 )
 
 const (
 	KTInt64 KeyType = iota
+	KTTime
 )
 
 var keyTypeMap = map[Key]KeyType{
@@ -34,6 +37,8 @@ var keyTypeMap = map[Key]KeyType{
 	RecvPacketsInvalid: KTInt64,
 	RecvBytes:          KTInt64,
 	RecvBytesInvalid:   KTInt64,
+	StartTime:          KTTime,
+	EndTime:            KTTime,
 }
 
 func Init() {
