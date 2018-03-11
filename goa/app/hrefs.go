@@ -10,3 +10,16 @@
 // --version=v1.3.0
 
 package app
+
+import (
+	"fmt"
+	"strings"
+)
+
+// UDPEchoFlowByIMSIandEBIHref returns the resource href.
+func UDPEchoFlowByIMSIandEBIHref(sgwAddr, imsi, ebi interface{}) string {
+	paramsgwAddr := strings.TrimLeftFunc(fmt.Sprintf("%v", sgwAddr), func(r rune) bool { return r == '/' })
+	paramimsi := strings.TrimLeftFunc(fmt.Sprintf("%v", imsi), func(r rune) bool { return r == '/' })
+	paramebi := strings.TrimLeftFunc(fmt.Sprintf("%v", ebi), func(r rune) bool { return r == '/' })
+	return fmt.Sprintf("/sgw/%v/gtpsessions/imsi/%v/ebi/%v/udp_echo_flow", paramsgwAddr, paramimsi, paramebi)
+}

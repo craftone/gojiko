@@ -13,7 +13,466 @@ package client
 
 import (
 	"github.com/goadesign/goa"
+	"time"
 )
+
+// recvStatForHuman user type.
+type recvStatForHuman struct {
+	// Received bitrate
+	Bitrate *string `form:"bitrate,omitempty" json:"bitrate,omitempty" xml:"bitrate,omitempty"`
+	// Received bytes
+	Bytes *string `form:"bytes,omitempty" json:"bytes,omitempty" xml:"bytes,omitempty"`
+	// Received invalid bytes
+	InvalidBytes *string `form:"invalidBytes,omitempty" json:"invalidBytes,omitempty" xml:"invalidBytes,omitempty"`
+	// Received invalid packets
+	InvalidPackets *string `form:"invalidPackets,omitempty" json:"invalidPackets,omitempty" xml:"invalidPackets,omitempty"`
+	// Received packets
+	Packets *string `form:"packets,omitempty" json:"packets,omitempty" xml:"packets,omitempty"`
+}
+
+// Validate validates the recvStatForHuman type instance.
+func (ut *recvStatForHuman) Validate() (err error) {
+	if ut.Bitrate == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "bitrate"))
+	}
+	if ut.Bytes == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "bytes"))
+	}
+	if ut.Packets == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "packets"))
+	}
+	if ut.InvalidBytes == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "invalidBytes"))
+	}
+	if ut.InvalidPackets == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "invalidPackets"))
+	}
+	return
+}
+
+// Publicize creates RecvStatForHuman from recvStatForHuman
+func (ut *recvStatForHuman) Publicize() *RecvStatForHuman {
+	var pub RecvStatForHuman
+	if ut.Bitrate != nil {
+		pub.Bitrate = *ut.Bitrate
+	}
+	if ut.Bytes != nil {
+		pub.Bytes = *ut.Bytes
+	}
+	if ut.InvalidBytes != nil {
+		pub.InvalidBytes = *ut.InvalidBytes
+	}
+	if ut.InvalidPackets != nil {
+		pub.InvalidPackets = *ut.InvalidPackets
+	}
+	if ut.Packets != nil {
+		pub.Packets = *ut.Packets
+	}
+	return &pub
+}
+
+// RecvStatForHuman user type.
+type RecvStatForHuman struct {
+	// Received bitrate
+	Bitrate string `form:"bitrate" json:"bitrate" xml:"bitrate"`
+	// Received bytes
+	Bytes string `form:"bytes" json:"bytes" xml:"bytes"`
+	// Received invalid bytes
+	InvalidBytes string `form:"invalidBytes" json:"invalidBytes" xml:"invalidBytes"`
+	// Received invalid packets
+	InvalidPackets string `form:"invalidPackets" json:"invalidPackets" xml:"invalidPackets"`
+	// Received packets
+	Packets string `form:"packets" json:"packets" xml:"packets"`
+}
+
+// Validate validates the RecvStatForHuman type instance.
+func (ut *RecvStatForHuman) Validate() (err error) {
+	if ut.Bitrate == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "bitrate"))
+	}
+	if ut.Bytes == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "bytes"))
+	}
+	if ut.Packets == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "packets"))
+	}
+	if ut.InvalidBytes == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "invalidBytes"))
+	}
+	if ut.InvalidPackets == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "invalidPackets"))
+	}
+	return
+}
+
+// recvStatForMachie user type.
+type recvStatForMachie struct {
+	// Received bitrate
+	Bitrate *float64 `form:"bitrate,omitempty" json:"bitrate,omitempty" xml:"bitrate,omitempty"`
+	// Received bytes
+	Bytes *int `form:"bytes,omitempty" json:"bytes,omitempty" xml:"bytes,omitempty"`
+	// Received invalid bytes
+	InvalidBytes *int `form:"invalidBytes,omitempty" json:"invalidBytes,omitempty" xml:"invalidBytes,omitempty"`
+	// Received invalid packets
+	InvalidPackets *int `form:"invalidPackets,omitempty" json:"invalidPackets,omitempty" xml:"invalidPackets,omitempty"`
+	// Received packets
+	Packets *int `form:"packets,omitempty" json:"packets,omitempty" xml:"packets,omitempty"`
+}
+
+// Validate validates the recvStatForMachie type instance.
+func (ut *recvStatForMachie) Validate() (err error) {
+	if ut.Bitrate == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "bitrate"))
+	}
+	if ut.Bytes == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "bytes"))
+	}
+	if ut.Packets == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "packets"))
+	}
+	if ut.InvalidBytes == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "invalidBytes"))
+	}
+	if ut.InvalidPackets == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "invalidPackets"))
+	}
+	return
+}
+
+// Publicize creates RecvStatForMachie from recvStatForMachie
+func (ut *recvStatForMachie) Publicize() *RecvStatForMachie {
+	var pub RecvStatForMachie
+	if ut.Bitrate != nil {
+		pub.Bitrate = *ut.Bitrate
+	}
+	if ut.Bytes != nil {
+		pub.Bytes = *ut.Bytes
+	}
+	if ut.InvalidBytes != nil {
+		pub.InvalidBytes = *ut.InvalidBytes
+	}
+	if ut.InvalidPackets != nil {
+		pub.InvalidPackets = *ut.InvalidPackets
+	}
+	if ut.Packets != nil {
+		pub.Packets = *ut.Packets
+	}
+	return &pub
+}
+
+// RecvStatForMachie user type.
+type RecvStatForMachie struct {
+	// Received bitrate
+	Bitrate float64 `form:"bitrate" json:"bitrate" xml:"bitrate"`
+	// Received bytes
+	Bytes int `form:"bytes" json:"bytes" xml:"bytes"`
+	// Received invalid bytes
+	InvalidBytes int `form:"invalidBytes" json:"invalidBytes" xml:"invalidBytes"`
+	// Received invalid packets
+	InvalidPackets int `form:"invalidPackets" json:"invalidPackets" xml:"invalidPackets"`
+	// Received packets
+	Packets int `form:"packets" json:"packets" xml:"packets"`
+}
+
+// Validate validates the RecvStatForMachie type instance.
+func (ut *RecvStatForMachie) Validate() (err error) {
+
+	return
+}
+
+// sendRecvStatistics user type.
+type sendRecvStatistics struct {
+	// seconds
+	Duration *float64   `form:"duration,omitempty" json:"duration,omitempty" xml:"duration,omitempty"`
+	EndTime  *time.Time `form:"endTime,omitempty" json:"endTime,omitempty" xml:"endTime,omitempty"`
+	// receive statistics for machines
+	RecvStats *recvStatForMachie `form:"recvStats,omitempty" json:"recvStats,omitempty" xml:"recvStats,omitempty"`
+	// receive statistics for humans
+	RecvStatsHumanize *recvStatForHuman `form:"recvStatsHumanize,omitempty" json:"recvStatsHumanize,omitempty" xml:"recvStatsHumanize,omitempty"`
+	// send statistics for machines
+	SendStats *sendStatForMachie `form:"sendStats,omitempty" json:"sendStats,omitempty" xml:"sendStats,omitempty"`
+	// send statistics for humans
+	SendStatsHumanize *sendStatForHuman `form:"sendStatsHumanize,omitempty" json:"sendStatsHumanize,omitempty" xml:"sendStatsHumanize,omitempty"`
+	StartTime         *time.Time        `form:"startTime,omitempty" json:"startTime,omitempty" xml:"startTime,omitempty"`
+}
+
+// Validate validates the sendRecvStatistics type instance.
+func (ut *sendRecvStatistics) Validate() (err error) {
+	if ut.StartTime == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "startTime"))
+	}
+	if ut.Duration == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "duration"))
+	}
+	if ut.SendStats == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "sendStats"))
+	}
+	if ut.SendStatsHumanize == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "sendStatsHumanize"))
+	}
+	if ut.RecvStats == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "recvStats"))
+	}
+	if ut.RecvStatsHumanize == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "recvStatsHumanize"))
+	}
+	if ut.RecvStats != nil {
+		if err2 := ut.RecvStats.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	if ut.RecvStatsHumanize != nil {
+		if err2 := ut.RecvStatsHumanize.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	if ut.SendStats != nil {
+		if err2 := ut.SendStats.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	if ut.SendStatsHumanize != nil {
+		if err2 := ut.SendStatsHumanize.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// Publicize creates SendRecvStatistics from sendRecvStatistics
+func (ut *sendRecvStatistics) Publicize() *SendRecvStatistics {
+	var pub SendRecvStatistics
+	if ut.Duration != nil {
+		pub.Duration = *ut.Duration
+	}
+	if ut.EndTime != nil {
+		pub.EndTime = ut.EndTime
+	}
+	if ut.RecvStats != nil {
+		pub.RecvStats = ut.RecvStats.Publicize()
+	}
+	if ut.RecvStatsHumanize != nil {
+		pub.RecvStatsHumanize = ut.RecvStatsHumanize.Publicize()
+	}
+	if ut.SendStats != nil {
+		pub.SendStats = ut.SendStats.Publicize()
+	}
+	if ut.SendStatsHumanize != nil {
+		pub.SendStatsHumanize = ut.SendStatsHumanize.Publicize()
+	}
+	if ut.StartTime != nil {
+		pub.StartTime = *ut.StartTime
+	}
+	return &pub
+}
+
+// SendRecvStatistics user type.
+type SendRecvStatistics struct {
+	// seconds
+	Duration float64    `form:"duration" json:"duration" xml:"duration"`
+	EndTime  *time.Time `form:"endTime,omitempty" json:"endTime,omitempty" xml:"endTime,omitempty"`
+	// receive statistics for machines
+	RecvStats *RecvStatForMachie `form:"recvStats" json:"recvStats" xml:"recvStats"`
+	// receive statistics for humans
+	RecvStatsHumanize *RecvStatForHuman `form:"recvStatsHumanize" json:"recvStatsHumanize" xml:"recvStatsHumanize"`
+	// send statistics for machines
+	SendStats *SendStatForMachie `form:"sendStats" json:"sendStats" xml:"sendStats"`
+	// send statistics for humans
+	SendStatsHumanize *SendStatForHuman `form:"sendStatsHumanize" json:"sendStatsHumanize" xml:"sendStatsHumanize"`
+	StartTime         time.Time         `form:"startTime" json:"startTime" xml:"startTime"`
+}
+
+// Validate validates the SendRecvStatistics type instance.
+func (ut *SendRecvStatistics) Validate() (err error) {
+
+	if ut.SendStats == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "sendStats"))
+	}
+	if ut.SendStatsHumanize == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "sendStatsHumanize"))
+	}
+	if ut.RecvStats == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "recvStats"))
+	}
+	if ut.RecvStatsHumanize == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "recvStatsHumanize"))
+	}
+	if ut.RecvStatsHumanize != nil {
+		if err2 := ut.RecvStatsHumanize.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	if ut.SendStatsHumanize != nil {
+		if err2 := ut.SendStatsHumanize.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// sendStatForHuman user type.
+type sendStatForHuman struct {
+	// Send bitrate
+	Bitrate *string `form:"bitrate,omitempty" json:"bitrate,omitempty" xml:"bitrate,omitempty"`
+	// Send bytes
+	Bytes *string `form:"bytes,omitempty" json:"bytes,omitempty" xml:"bytes,omitempty"`
+	// Send packets
+	Packets *string `form:"packets,omitempty" json:"packets,omitempty" xml:"packets,omitempty"`
+	// Skipped bytes
+	SkippedBytes *string `form:"skippedBytes,omitempty" json:"skippedBytes,omitempty" xml:"skippedBytes,omitempty"`
+	// Skipped packets
+	SkippedPackets *string `form:"skippedPackets,omitempty" json:"skippedPackets,omitempty" xml:"skippedPackets,omitempty"`
+}
+
+// Validate validates the sendStatForHuman type instance.
+func (ut *sendStatForHuman) Validate() (err error) {
+	if ut.Bitrate == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "bitrate"))
+	}
+	if ut.Bytes == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "bytes"))
+	}
+	if ut.Packets == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "packets"))
+	}
+	if ut.SkippedBytes == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "skippedBytes"))
+	}
+	if ut.SkippedPackets == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "skippedPackets"))
+	}
+	return
+}
+
+// Publicize creates SendStatForHuman from sendStatForHuman
+func (ut *sendStatForHuman) Publicize() *SendStatForHuman {
+	var pub SendStatForHuman
+	if ut.Bitrate != nil {
+		pub.Bitrate = *ut.Bitrate
+	}
+	if ut.Bytes != nil {
+		pub.Bytes = *ut.Bytes
+	}
+	if ut.Packets != nil {
+		pub.Packets = *ut.Packets
+	}
+	if ut.SkippedBytes != nil {
+		pub.SkippedBytes = *ut.SkippedBytes
+	}
+	if ut.SkippedPackets != nil {
+		pub.SkippedPackets = *ut.SkippedPackets
+	}
+	return &pub
+}
+
+// SendStatForHuman user type.
+type SendStatForHuman struct {
+	// Send bitrate
+	Bitrate string `form:"bitrate" json:"bitrate" xml:"bitrate"`
+	// Send bytes
+	Bytes string `form:"bytes" json:"bytes" xml:"bytes"`
+	// Send packets
+	Packets string `form:"packets" json:"packets" xml:"packets"`
+	// Skipped bytes
+	SkippedBytes string `form:"skippedBytes" json:"skippedBytes" xml:"skippedBytes"`
+	// Skipped packets
+	SkippedPackets string `form:"skippedPackets" json:"skippedPackets" xml:"skippedPackets"`
+}
+
+// Validate validates the SendStatForHuman type instance.
+func (ut *SendStatForHuman) Validate() (err error) {
+	if ut.Bitrate == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "bitrate"))
+	}
+	if ut.Bytes == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "bytes"))
+	}
+	if ut.Packets == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "packets"))
+	}
+	if ut.SkippedBytes == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "skippedBytes"))
+	}
+	if ut.SkippedPackets == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`type`, "skippedPackets"))
+	}
+	return
+}
+
+// sendStatForMachie user type.
+type sendStatForMachie struct {
+	// Send bitrate
+	Bitrate *float64 `form:"bitrate,omitempty" json:"bitrate,omitempty" xml:"bitrate,omitempty"`
+	// Send bytes
+	Bytes *int `form:"bytes,omitempty" json:"bytes,omitempty" xml:"bytes,omitempty"`
+	// Send packets
+	Packets *int `form:"packets,omitempty" json:"packets,omitempty" xml:"packets,omitempty"`
+	// Skipped bytes
+	SkippedBytes *int `form:"skippedBytes,omitempty" json:"skippedBytes,omitempty" xml:"skippedBytes,omitempty"`
+	// Skipped packets
+	SkippedPackets *int `form:"skippedPackets,omitempty" json:"skippedPackets,omitempty" xml:"skippedPackets,omitempty"`
+}
+
+// Validate validates the sendStatForMachie type instance.
+func (ut *sendStatForMachie) Validate() (err error) {
+	if ut.Bitrate == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "bitrate"))
+	}
+	if ut.Bytes == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "bytes"))
+	}
+	if ut.Packets == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "packets"))
+	}
+	if ut.SkippedBytes == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "skippedBytes"))
+	}
+	if ut.SkippedPackets == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`request`, "skippedPackets"))
+	}
+	return
+}
+
+// Publicize creates SendStatForMachie from sendStatForMachie
+func (ut *sendStatForMachie) Publicize() *SendStatForMachie {
+	var pub SendStatForMachie
+	if ut.Bitrate != nil {
+		pub.Bitrate = *ut.Bitrate
+	}
+	if ut.Bytes != nil {
+		pub.Bytes = *ut.Bytes
+	}
+	if ut.Packets != nil {
+		pub.Packets = *ut.Packets
+	}
+	if ut.SkippedBytes != nil {
+		pub.SkippedBytes = *ut.SkippedBytes
+	}
+	if ut.SkippedPackets != nil {
+		pub.SkippedPackets = *ut.SkippedPackets
+	}
+	return &pub
+}
+
+// SendStatForMachie user type.
+type SendStatForMachie struct {
+	// Send bitrate
+	Bitrate float64 `form:"bitrate" json:"bitrate" xml:"bitrate"`
+	// Send bytes
+	Bytes int `form:"bytes" json:"bytes" xml:"bytes"`
+	// Send packets
+	Packets int `form:"packets" json:"packets" xml:"packets"`
+	// Skipped bytes
+	SkippedBytes int `form:"skippedBytes" json:"skippedBytes" xml:"skippedBytes"`
+	// Skipped packets
+	SkippedPackets int `form:"skippedPackets" json:"skippedPackets" xml:"skippedPackets"`
+}
+
+// Validate validates the SendStatForMachie type instance.
+func (ut *SendStatForMachie) Validate() (err error) {
+
+	return
+}
 
 // udpEchoFlowPayload user type.
 type udpEchoFlowPayload struct {

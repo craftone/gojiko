@@ -19,21 +19,29 @@ func NewFlowStats(ctx context.Context) *FlowStats {
 	return fs
 }
 
-func (fs *FlowStats) bitrate(key Key, endTime time.Time) float64 {
+// Duration returns duration in sec from StartTime to (EndTime | Now)
+func (fs *FlowStats) Duration() float64 {
+	endTime := fs.ReadTime(EndTime)
+	if endTime.Equal(time.Time{}) {
+		endTime = time.Now()
+	}
 	duration := endTime.Sub(fs.ReadTime(StartTime))
-	durationSec := float64(duration) / float64(time.Second)
-	bitrate := float64(fs.ReadUint64(key)) * 8 / durationSec
+	return float64(duration) / float64(time.Second)
+}
+
+func (fs *FlowStats) bitrate(key Key) float64 {
+	bitrate := float64(fs.ReadUint64(key)) * 8 / fs.Duration()
 	return bitrate
 }
 
-func (fs *FlowStats) SendBitrate(endTime time.Time) (float64, string) {
-	bitrate := fs.bitrate(SendBytes, endTime)
+func (fs *FlowStats) SendBitrate() (float64, string) {
+	bitrate := fs.bitrate(SendBytes)
 	str := FormatSIFloat(bitrate, "bps")
 	return bitrate, str
 }
 
-func (fs *FlowStats) RecvBitrate(endTime time.Time) (float64, string) {
-	bitrate := fs.bitrate(RecvBytes, endTime)
+func (fs *FlowStats) RecvBitrate() (float64, string) {
+	bitrate := fs.bitrate(RecvBytes)
 	str := FormatSIFloat(bitrate, "bps")
 	return bitrate, str
 }

@@ -67,7 +67,6 @@ func (u *UdpEchoFlow) sender(ctx context.Context) {
 	numOfSend := uint64(u.Arg.NumOfSend)
 
 	nextTime := time.Now()
-	startTime := nextTime
 	nextTimeChan := time.After(0)
 
 	// skipFlg represents that sending a packet will be skipped at this time of loop
@@ -117,11 +116,10 @@ loop:
 			break loop
 		}
 	}
-	endTime := time.Now()
 
 	log.Info("End a UDP Flow sender goroutine")
-	durationSec := float64(endTime.Sub(startTime)) / float64(time.Second)
-	_, bitrate := u.stats.SendBitrate(endTime)
+	durationSec := u.stats.Duration()
+	_, bitrate := u.stats.SendBitrate()
 	_, sendBytes := u.stats.SendBytes()
 	_, sendPackets := u.stats.SendPackets()
 	_, sendBytesSkipped := u.stats.SendBytesSkipped()
@@ -137,7 +135,6 @@ func (u *UdpEchoFlow) receiver(ctx context.Context) {
 	myLog := u.newMyLog("UdpFlowReceiver")
 	myLog.Info("Start a UDP Flow receiver goroutine")
 	ipv4emu := ipemu.NewIPv4Emulator(ipemu.UDP, u.Arg.DestAddr.IP, u.session.Paa(), config.MTU())
-	startTime := time.Now()
 loop:
 	select {
 	case pkt := <-u.fromSessDataReceiver:
@@ -156,10 +153,9 @@ loop:
 	case <-ctx.Done():
 		break loop
 	}
-	endTime := time.Now()
 	log.Info("End a UDP Flow receiver goroutine")
-	durationSec := float64(endTime.Sub(startTime)) / float64(time.Second)
-	_, bitrate := u.stats.RecvBitrate(endTime)
+	durationSec := u.stats.Duration()
+	_, bitrate := u.stats.RecvBitrate()
 	_, recvBytes := u.stats.RecvBytes()
 	_, recvPackets := u.stats.RecvPackets()
 	_, recvBytesInvalid := u.stats.RecvBytesInvalid()
@@ -183,4 +179,10 @@ func (u *UdpEchoFlow) newMyLog(routine string) *logrus.Entry {
 		"NumOfSend":      u.Arg.NumOfSend,
 		"RecvPacketSize": u.Arg.RecvPacketSize,
 	})
+}
+
+// getters and setters
+
+func (u *UdpEchoFlow) Stats() *stats.FlowStats {
+	return u.stats
 }

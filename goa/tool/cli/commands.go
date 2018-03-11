@@ -78,6 +78,16 @@ type (
 		SgwAddr     string
 		PrettyPrint bool
 	}
+
+	// ShowUDPEchoFlowByimsIandebiCommand is the command line data structure for the show action of udpEchoFlowByIMSIandEBI
+	ShowUDPEchoFlowByimsIandebiCommand struct {
+		// EPS Bearer ID
+		Ebi  int
+		Imsi string
+		// SGW GTPv2-C loopback address
+		SgwAddr     string
+		PrettyPrint bool
+	}
 )
 
 // RegisterCommands registers the resource action CLI commands.
@@ -149,12 +159,12 @@ Payload example:
 	command.AddCommand(sub)
 	app.AddCommand(command)
 	command = &cobra.Command{
-		Use:   "show-byid",
-		Short: `Show the gtp session by session ID`,
+		Use:   "show",
+		Short: `Show UDP ECHO flow by IMSI and EBI. The flow is Current flow or last processed flow.`,
 	}
-	tmp4 := new(ShowByIDGtpsessionCommand)
+	tmp4 := new(ShowUDPEchoFlowByimsIandebiCommand)
 	sub = &cobra.Command{
-		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions/id/SID"]`,
+		Use:   `udp-echo-flow-byims-iandebi ["/sgw/SGWADDR/gtpsessions/imsi/IMSI/ebi/EBI/udp_echo_flow"]`,
 		Short: ``,
 		RunE:  func(cmd *cobra.Command, args []string) error { return tmp4.Run(c, args) },
 	}
@@ -163,17 +173,31 @@ Payload example:
 	command.AddCommand(sub)
 	app.AddCommand(command)
 	command = &cobra.Command{
-		Use:   "show-byims-iandebi",
-		Short: `Show the gtp session by IMSI and EBI`,
+		Use:   "show-byid",
+		Short: `Show the gtp session by session ID`,
 	}
-	tmp5 := new(ShowByIMSIandEBIGtpsessionCommand)
+	tmp5 := new(ShowByIDGtpsessionCommand)
 	sub = &cobra.Command{
-		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions/imsi/IMSI/ebi/EBI"]`,
+		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions/id/SID"]`,
 		Short: ``,
 		RunE:  func(cmd *cobra.Command, args []string) error { return tmp5.Run(c, args) },
 	}
 	tmp5.RegisterFlags(sub, c)
 	sub.PersistentFlags().BoolVar(&tmp5.PrettyPrint, "pp", false, "Pretty print response body")
+	command.AddCommand(sub)
+	app.AddCommand(command)
+	command = &cobra.Command{
+		Use:   "show-byims-iandebi",
+		Short: `Show the gtp session by IMSI and EBI`,
+	}
+	tmp6 := new(ShowByIMSIandEBIGtpsessionCommand)
+	sub = &cobra.Command{
+		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions/imsi/IMSI/ebi/EBI"]`,
+		Short: ``,
+		RunE:  func(cmd *cobra.Command, args []string) error { return tmp6.Run(c, args) },
+	}
+	tmp6.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp6.PrettyPrint, "pp", false, "Pretty print response body")
 	command.AddCommand(sub)
 	app.AddCommand(command)
 }
@@ -483,6 +507,35 @@ func (cmd *DeleteUDPEchoFlowByimsIandebiCommand) Run(c *client.Client, args []st
 
 // RegisterFlags registers the command flags with the command line.
 func (cmd *DeleteUDPEchoFlowByimsIandebiCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
+	cc.Flags().IntVar(&cmd.Ebi, "ebi", 5, `EPS Bearer ID`)
+	var imsi string
+	cc.Flags().StringVar(&cmd.Imsi, "imsi", imsi, ``)
+	var sgwAddr string
+	cc.Flags().StringVar(&cmd.SgwAddr, "sgwAddr", sgwAddr, `SGW GTPv2-C loopback address`)
+}
+
+// Run makes the HTTP request corresponding to the ShowUDPEchoFlowByimsIandebiCommand command.
+func (cmd *ShowUDPEchoFlowByimsIandebiCommand) Run(c *client.Client, args []string) error {
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	} else {
+		path = fmt.Sprintf("/sgw/%v/gtpsessions/imsi/%v/ebi/%v/udp_echo_flow", url.QueryEscape(cmd.SgwAddr), url.QueryEscape(cmd.Imsi), cmd.Ebi)
+	}
+	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
+	ctx := goa.WithLogger(context.Background(), logger)
+	resp, err := c.ShowUDPEchoFlowByIMSIandEBI(ctx, path)
+	if err != nil {
+		goa.LogError(ctx, "failed", "err", err)
+		return err
+	}
+
+	goaclient.HandleResponse(c.Client, resp, cmd.PrettyPrint)
+	return nil
+}
+
+// RegisterFlags registers the command flags with the command line.
+func (cmd *ShowUDPEchoFlowByimsIandebiCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
 	cc.Flags().IntVar(&cmd.Ebi, "ebi", 5, `EPS Bearer ID`)
 	var imsi string
 	cc.Flags().StringVar(&cmd.Imsi, "imsi", imsi, ``)

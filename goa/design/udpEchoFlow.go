@@ -22,6 +22,14 @@ var _ = Resource("udpEchoFlowByIMSIandEBI", func() {
 		Response(InternalServerError, ErrorMedia)
 	})
 
+	Action("show", func() {
+		Description("Show UDP ECHO flow by IMSI and EBI. The flow is Current flow or last processed flow.")
+		Routing(GET(""))
+		Response(OK, UdpEchoFlowMedia)
+		Response(NotFound, ErrorMedia)
+		Response(InternalServerError, ErrorMedia)
+	})
+
 	Action("delete", func() {
 		Description("End UDP ECHO flow by IMSI and EBI")
 		Routing(DELETE(""))
@@ -83,7 +91,9 @@ var UdpEchoFlowPayload = Type("UdpEchoFlowPayload", func() {
 var UdpEchoFlowMedia = MediaType("application/vnd.udpechoflow+json", func() {
 	Description("A UDP ECHO flow")
 	Attribute("param", UdpEchoFlowPayload)
+	Attribute("stats", SendRecvStats)
 	View("default", func() {
 		Attribute("param")
+		Attribute("stats")
 	})
 })

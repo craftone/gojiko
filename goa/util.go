@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"net"
+	"time"
+
+	"github.com/craftone/gojiko/domain/stats"
 
 	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/domain/gtp"
@@ -54,4 +57,55 @@ func newGtpsessionMedia(sess *domain.GtpSession) *app.Gtpsession {
 		Mnc:    sess.Mnc(),
 		Msisdn: sess.Msisdn(),
 	}
+}
+
+func newStatsMedia(sts *stats.FlowStats) *app.SendRecvStatistics {
+	sendBitrate, sendBitrateStr := sts.SendBitrate()
+	recvBitrate, recvBitrateStr := sts.RecvBitrate()
+	sendBytes, sendBytesStr := sts.SendBytes()
+	recvBytes, recvBytesStr := sts.RecvBytes()
+	sendPackets, sendPacketsStr := sts.SendPackets()
+	recvPackets, recvPacketsStr := sts.RecvPackets()
+	sendBytesSkipped, sendBytesSkippedStr := sts.SendBytesSkipped()
+	recvBytesInvalid, recvBytesInvalidStr := sts.RecvBytesInvalid()
+	sendPktsSkipped, sendPktsSkippedStr := sts.SendPacketsSkipped()
+	recvPktsInvalid, recvPktsInvalidStr := sts.RecvPacketsInvalid()
+
+	statsMedia := &app.SendRecvStatistics{
+		StartTime: sts.ReadTime(stats.StartTime),
+		Duration:  sts.Duration(),
+		SendStats: &app.SendStatForMachie{
+			Bitrate:        sendBitrate,
+			Bytes:          int(sendBytes),
+			Packets:        int(sendPackets),
+			SkippedBytes:   int(sendBytesSkipped),
+			SkippedPackets: int(sendPktsSkipped),
+		},
+		SendStatsHumanize: &app.SendStatForHuman{
+			Bitrate:        sendBitrateStr,
+			Bytes:          sendBytesStr,
+			Packets:        sendPacketsStr,
+			SkippedBytes:   sendBytesSkippedStr,
+			SkippedPackets: sendPktsSkippedStr,
+		},
+		RecvStats: &app.RecvStatForMachie{
+			Bitrate:        recvBitrate,
+			Bytes:          int(recvBytes),
+			Packets:        int(recvPackets),
+			InvalidBytes:   int(recvBytesInvalid),
+			InvalidPackets: int(recvPktsInvalid),
+		},
+		RecvStatsHumanize: &app.RecvStatForHuman{
+			Bitrate:        recvBitrateStr,
+			Bytes:          recvBytesStr,
+			Packets:        recvPacketsStr,
+			InvalidBytes:   recvBytesInvalidStr,
+			InvalidPackets: recvPktsInvalidStr,
+		},
+	}
+	if !sts.ReadTime(stats.EndTime).Equal(time.Time{}) {
+		endTime := sts.ReadTime(stats.EndTime)
+		statsMedia.EndTime = &endTime
+	}
+	return statsMedia
 }

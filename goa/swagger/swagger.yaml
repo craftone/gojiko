@@ -147,6 +147,221 @@ definitions:
     - msisdn
     title: 'Mediatype identifier: application/vnd.gtpsession+json; view=default'
     type: object
+  RecvStatForHuman:
+    example:
+      bitrate: Inventore quis doloremque repudiandae quidem assumenda.
+      bytes: Hic itaque non id.
+      invalidBytes: Quis dolorem.
+      invalidPackets: Repudiandae quia voluptatum aspernatur debitis asperiores qui.
+      packets: Aut nemo.
+    properties:
+      bitrate:
+        description: Received bitrate
+        example: Inventore quis doloremque repudiandae quidem assumenda.
+        type: string
+      bytes:
+        description: Received bytes
+        example: Hic itaque non id.
+        type: string
+      invalidBytes:
+        description: Received invalid bytes
+        example: Quis dolorem.
+        type: string
+      invalidPackets:
+        description: Received invalid packets
+        example: Repudiandae quia voluptatum aspernatur debitis asperiores qui.
+        type: string
+      packets:
+        description: Received packets
+        example: Aut nemo.
+        type: string
+    required:
+    - bitrate
+    - bytes
+    - packets
+    - invalidBytes
+    - invalidPackets
+    title: RecvStatForHuman
+    type: object
+  RecvStatForMachie:
+    example:
+      bitrate: 0.27776444
+      bytes: 3.184749e+18
+      invalidBytes: 5.7772415e+18
+      invalidPackets: 2.1308915e+18
+      packets: 9.043952e+18
+    properties:
+      bitrate:
+        description: Received bitrate
+        example: 0.27776444
+        format: double
+        type: number
+      bytes:
+        description: Received bytes
+        example: 3.184749e+18
+        format: int64
+        type: integer
+      invalidBytes:
+        description: Received invalid bytes
+        example: 5.7772415e+18
+        format: int64
+        type: integer
+      invalidPackets:
+        description: Received invalid packets
+        example: 2.1308915e+18
+        format: int64
+        type: integer
+      packets:
+        description: Received packets
+        example: 9.043952e+18
+        format: int64
+        type: integer
+    required:
+    - bitrate
+    - bytes
+    - packets
+    - invalidBytes
+    - invalidPackets
+    title: RecvStatForMachie
+    type: object
+  SendRecvStatistics:
+    example:
+      duration: 0.2850267
+      endTime: 1993-12-26T05:24:41Z
+      recvStats:
+        bitrate: 0.27776444
+        bytes: 3.184749e+18
+        invalidBytes: 5.7772415e+18
+        invalidPackets: 2.1308915e+18
+        packets: 9.043952e+18
+      recvStatsHumanize:
+        bitrate: Inventore quis doloremque repudiandae quidem assumenda.
+        bytes: Hic itaque non id.
+        invalidBytes: Quis dolorem.
+        invalidPackets: Repudiandae quia voluptatum aspernatur debitis asperiores
+          qui.
+        packets: Aut nemo.
+      sendStats:
+        bitrate: 0.92243063
+        bytes: 7.6018755e+18
+        packets: 2.8391314e+18
+        skippedBytes: 3.8826254e+18
+        skippedPackets: 7.152922e+17
+      sendStatsHumanize:
+        bitrate: Quasi deleniti facilis cumque sed culpa.
+        bytes: Neque doloremque qui labore sint alias cum.
+        packets: Quaerat commodi et molestiae ducimus.
+        skippedBytes: Id rem temporibus et omnis aperiam.
+        skippedPackets: Facere velit dolorem.
+      startTime: 1988-01-04T00:36:41Z
+    properties:
+      duration:
+        description: seconds
+        example: 0.2850267
+        format: double
+        type: number
+      endTime:
+        example: 1993-12-26T05:24:41Z
+        format: date-time
+        type: string
+      recvStats:
+        $ref: '#/definitions/RecvStatForMachie'
+      recvStatsHumanize:
+        $ref: '#/definitions/RecvStatForHuman'
+      sendStats:
+        $ref: '#/definitions/SendStatForMachie'
+      sendStatsHumanize:
+        $ref: '#/definitions/SendStatForHuman'
+      startTime:
+        example: 1988-01-04T00:36:41Z
+        format: date-time
+        type: string
+    required:
+    - startTime
+    - duration
+    - sendStats
+    - sendStatsHumanize
+    - recvStats
+    - recvStatsHumanize
+    title: SendRecvStatistics
+    type: object
+  SendStatForHuman:
+    example:
+      bitrate: Quasi deleniti facilis cumque sed culpa.
+      bytes: Neque doloremque qui labore sint alias cum.
+      packets: Quaerat commodi et molestiae ducimus.
+      skippedBytes: Id rem temporibus et omnis aperiam.
+      skippedPackets: Facere velit dolorem.
+    properties:
+      bitrate:
+        description: Send bitrate
+        example: Quasi deleniti facilis cumque sed culpa.
+        type: string
+      bytes:
+        description: Send bytes
+        example: Neque doloremque qui labore sint alias cum.
+        type: string
+      packets:
+        description: Send packets
+        example: Quaerat commodi et molestiae ducimus.
+        type: string
+      skippedBytes:
+        description: Skipped bytes
+        example: Id rem temporibus et omnis aperiam.
+        type: string
+      skippedPackets:
+        description: Skipped packets
+        example: Facere velit dolorem.
+        type: string
+    required:
+    - bitrate
+    - bytes
+    - packets
+    - skippedBytes
+    - skippedPackets
+    title: SendStatForHuman
+    type: object
+  SendStatForMachie:
+    example:
+      bitrate: 0.92243063
+      bytes: 7.6018755e+18
+      packets: 2.8391314e+18
+      skippedBytes: 3.8826254e+18
+      skippedPackets: 7.152922e+17
+    properties:
+      bitrate:
+        description: Send bitrate
+        example: 0.92243063
+        format: double
+        type: number
+      bytes:
+        description: Send bytes
+        example: 7.6018755e+18
+        format: int64
+        type: integer
+      packets:
+        description: Send packets
+        example: 2.8391314e+18
+        format: int64
+        type: integer
+      skippedBytes:
+        description: Skipped bytes
+        example: 3.8826254e+18
+        format: int64
+        type: integer
+      skippedPackets:
+        description: Skipped packets
+        example: 7.152922e+17
+        format: int64
+        type: integer
+    required:
+    - bitrate
+    - bytes
+    - packets
+    - skippedBytes
+    - skippedPackets
+    title: SendStatForMachie
+    type: object
   UdpEchoFlowPayload:
     example:
       destAddr: 48.227.40.225
@@ -236,9 +451,40 @@ definitions:
         targetBps: 1e+08
         tos: 0
         ttl: 255
+      stats:
+        duration: 0.2850267
+        endTime: 1993-12-26T05:24:41Z
+        recvStats:
+          bitrate: 0.27776444
+          bytes: 3.184749e+18
+          invalidBytes: 5.7772415e+18
+          invalidPackets: 2.1308915e+18
+          packets: 9.043952e+18
+        recvStatsHumanize:
+          bitrate: Inventore quis doloremque repudiandae quidem assumenda.
+          bytes: Hic itaque non id.
+          invalidBytes: Quis dolorem.
+          invalidPackets: Repudiandae quia voluptatum aspernatur debitis asperiores
+            qui.
+          packets: Aut nemo.
+        sendStats:
+          bitrate: 0.92243063
+          bytes: 7.6018755e+18
+          packets: 2.8391314e+18
+          skippedBytes: 3.8826254e+18
+          skippedPackets: 7.152922e+17
+        sendStatsHumanize:
+          bitrate: Quasi deleniti facilis cumque sed culpa.
+          bytes: Neque doloremque qui labore sint alias cum.
+          packets: Quaerat commodi et molestiae ducimus.
+          skippedBytes: Id rem temporibus et omnis aperiam.
+          skippedPackets: Facere velit dolorem.
+        startTime: 1988-01-04T00:36:41Z
     properties:
       param:
         $ref: '#/definitions/UdpEchoFlowPayload'
+      stats:
+        $ref: '#/definitions/SendRecvStatistics'
     title: 'Mediatype identifier: application/vnd.udpechoflow+json; view=default'
     type: object
   error:
@@ -488,6 +734,51 @@ paths:
       schemes:
       - http
       summary: delete udpEchoFlowByIMSIandEBI
+      tags:
+      - udpEchoFlowByIMSIandEBI
+    get:
+      description: Show UDP ECHO flow by IMSI and EBI. The flow is Current flow or
+        last processed flow.
+      operationId: udpEchoFlowByIMSIandEBI#show
+      parameters:
+      - default: 5
+        description: EPS Bearer ID
+        in: path
+        maximum: 15
+        minimum: 5
+        name: ebi
+        required: true
+        type: integer
+      - in: path
+        name: imsi
+        pattern: ^[0-9]{14,15}$
+        required: true
+        type: string
+      - description: SGW GTPv2-C loopback address
+        format: ipv4
+        in: path
+        name: sgwAddr
+        required: true
+        type: string
+      produces:
+      - application/vnd.goa.error
+      - application/vnd.udpechoflow+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Udpechoflow'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/error'
+      schemes:
+      - http
+      summary: show udpEchoFlowByIMSIandEBI
       tags:
       - udpEchoFlowByIMSIandEBI
     post:

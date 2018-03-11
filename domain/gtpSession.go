@@ -321,6 +321,7 @@ func (sess *GtpSession) StopUDPFlow() error {
 		return errors.New("This session already stopped a UdpFlow")
 	}
 	sess.udpFlow.ctxCencel()
+	sess.udpFlow.stats.SendTimeMsg(stats.EndTime, time.Now())
 	sess.lastUDPFlow = sess.udpFlow
 	sess.udpFlow = nil
 	return nil

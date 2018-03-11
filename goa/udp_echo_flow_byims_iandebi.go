@@ -47,8 +47,11 @@ func (c *UDPEchoFlowByIMSIandEBIController) Create(ctx *app.CreateUDPEchoFlowByI
 		return ctx.InternalServerError(goa.ErrInternal(err))
 	}
 
+	stats := &app.SendRecvStatistics{}
+
 	return ctx.OK(&app.Udpechoflow{
 		Param: pl,
+		Stats: stats,
 	})
 
 	// UDPEchoFlowByIMSIandEBIController_Create: end_implement
@@ -84,9 +87,24 @@ func (c *UDPEchoFlowByIMSIandEBIController) Delete(ctx *app.DeleteUDPEchoFlowByI
 		Tos:            int(udpFlow.Arg.Tos),
 		TTL:            int(udpFlow.Arg.Ttl),
 	}
+
 	res := &app.Udpechoflow{
 		Param: udpFlowArg,
+		Stats: newStatsMedia(udpFlow.Stats()),
 	}
 	return ctx.OK(res)
+
 	// UDPEchoFlowByIMSIandEBIController_Delete: end_implement
+}
+
+// Show runs the show action.
+func (c *UDPEchoFlowByIMSIandEBIController) Show(ctx *app.ShowUDPEchoFlowByIMSIandEBIContext) error {
+	// UDPEchoFlowByIMSIandEBIController_Show: start_implement
+
+	// Put your logic here
+
+	res := &app.Udpechoflow{}
+	return ctx.OK(res)
+
+	// UDPEchoFlowByIMSIandEBIController_Show: end_implement
 }
