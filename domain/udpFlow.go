@@ -164,7 +164,7 @@ loop:
 	_, recvPackets := u.stats.RecvPackets()
 	_, recvBytesInvalid := u.stats.RecvBytesInvalid()
 	_, recvPacketsInvalid := u.stats.RecvPacketsInvalid()
-	log.Infof("[RECV stats] %s in %s(s) : %s / %s : (invalid) %s / %s",
+	log.Infof("[RECV stats] %s in %1.1f(s) : %s / %s : (invalid) %s / %s",
 		bitrate, durationSec,
 		recvBytes, recvPackets,
 		recvBytesInvalid, recvPacketsInvalid)
