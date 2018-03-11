@@ -117,6 +117,7 @@ func unmarshalCreateGtpsessionPayload(ctx context.Context, service *goa.Service,
 type UDPEchoFlowByIMSIandEBIController interface {
 	goa.Muxer
 	Create(*CreateUDPEchoFlowByIMSIandEBIContext) error
+	Delete(*DeleteUDPEchoFlowByIMSIandEBIContext) error
 }
 
 // MountUDPEchoFlowByIMSIandEBIController "mounts" a UDPEchoFlowByIMSIandEBI resource controller on the given service.
@@ -144,6 +145,21 @@ func MountUDPEchoFlowByIMSIandEBIController(service *goa.Service, ctrl UDPEchoFl
 	}
 	service.Mux.Handle("POST", "/sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi/udp_echo_flow", ctrl.MuxHandler("create", h, unmarshalCreateUDPEchoFlowByIMSIandEBIPayload))
 	service.LogInfo("mount", "ctrl", "UDPEchoFlowByIMSIandEBI", "action", "Create", "route", "POST /sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi/udp_echo_flow")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewDeleteUDPEchoFlowByIMSIandEBIContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.Delete(rctx)
+	}
+	service.Mux.Handle("DELETE", "/sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi/udp_echo_flow", ctrl.MuxHandler("delete", h, nil))
+	service.LogInfo("mount", "ctrl", "UDPEchoFlowByIMSIandEBI", "action", "Delete", "route", "DELETE /sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi/udp_echo_flow")
 }
 
 // unmarshalCreateUDPEchoFlowByIMSIandEBIPayload unmarshals the request body into the context request data Payload field.

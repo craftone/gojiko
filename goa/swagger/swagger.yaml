@@ -226,7 +226,7 @@ definitions:
   Udpechoflow:
     description: A UDP ECHO flow (default view)
     example:
-      UdpEchoFlowArg:
+      param:
         destAddr: 48.227.40.225
         destPort: 7777
         numOfSend: 1
@@ -237,7 +237,7 @@ definitions:
         tos: 0
         ttl: 255
     properties:
-      UdpEchoFlowArg:
+      param:
         $ref: '#/definitions/UdpEchoFlowPayload'
     title: 'Mediatype identifier: application/vnd.udpechoflow+json; view=default'
     type: object
@@ -325,7 +325,7 @@ host: localhost:8080
 info:
   description: |-
     Gojiko は日本のL2接続MVNOでの利用に適した簡素な疑似SGWシミュレータです。
-    Jmeter等で操作可能であるため、試験自動化に適しています。
+    Jmeter等で操作可能なため、試験自動化に適しています。
   title: Gojiko API
   version: ""
 paths:
@@ -446,6 +446,50 @@ paths:
       tags:
       - gtpsession
   /sgw/{sgwAddr}/gtpsessions/imsi/{imsi}/ebi/{ebi}/udp_echo_flow:
+    delete:
+      description: End UDP ECHO flow by IMSI and EBI
+      operationId: udpEchoFlowByIMSIandEBI#delete
+      parameters:
+      - default: 5
+        description: EPS Bearer ID
+        in: path
+        maximum: 15
+        minimum: 5
+        name: ebi
+        required: true
+        type: integer
+      - in: path
+        name: imsi
+        pattern: ^[0-9]{14,15}$
+        required: true
+        type: string
+      - description: SGW GTPv2-C loopback address
+        format: ipv4
+        in: path
+        name: sgwAddr
+        required: true
+        type: string
+      produces:
+      - application/vnd.goa.error
+      - application/vnd.udpechoflow+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Udpechoflow'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/error'
+      schemes:
+      - http
+      summary: delete udpEchoFlowByIMSIandEBI
+      tags:
+      - udpEchoFlowByIMSIandEBI
     post:
       description: Start UDP ECHO flow by IMSI and EBI
       operationId: udpEchoFlowByIMSIandEBI#create

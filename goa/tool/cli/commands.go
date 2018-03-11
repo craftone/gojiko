@@ -68,6 +68,16 @@ type (
 		SgwAddr     string
 		PrettyPrint bool
 	}
+
+	// DeleteUDPEchoFlowByimsIandebiCommand is the command line data structure for the delete action of udpEchoFlowByIMSIandEBI
+	DeleteUDPEchoFlowByimsIandebiCommand struct {
+		// EPS Bearer ID
+		Ebi  int
+		Imsi string
+		// SGW GTPv2-C loopback address
+		SgwAddr     string
+		PrettyPrint bool
+	}
 )
 
 // RegisterCommands registers the resource action CLI commands.
@@ -125,12 +135,12 @@ Payload example:
 	command.AddCommand(sub)
 	app.AddCommand(command)
 	command = &cobra.Command{
-		Use:   "show-byid",
-		Short: `Show the gtp session by session ID`,
+		Use:   "delete",
+		Short: `End UDP ECHO flow by IMSI and EBI`,
 	}
-	tmp3 := new(ShowByIDGtpsessionCommand)
+	tmp3 := new(DeleteUDPEchoFlowByimsIandebiCommand)
 	sub = &cobra.Command{
-		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions/id/SID"]`,
+		Use:   `udp-echo-flow-byims-iandebi ["/sgw/SGWADDR/gtpsessions/imsi/IMSI/ebi/EBI/udp_echo_flow"]`,
 		Short: ``,
 		RunE:  func(cmd *cobra.Command, args []string) error { return tmp3.Run(c, args) },
 	}
@@ -139,17 +149,31 @@ Payload example:
 	command.AddCommand(sub)
 	app.AddCommand(command)
 	command = &cobra.Command{
-		Use:   "show-byims-iandebi",
-		Short: `Show the gtp session by IMSI and EBI`,
+		Use:   "show-byid",
+		Short: `Show the gtp session by session ID`,
 	}
-	tmp4 := new(ShowByIMSIandEBIGtpsessionCommand)
+	tmp4 := new(ShowByIDGtpsessionCommand)
 	sub = &cobra.Command{
-		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions/imsi/IMSI/ebi/EBI"]`,
+		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions/id/SID"]`,
 		Short: ``,
 		RunE:  func(cmd *cobra.Command, args []string) error { return tmp4.Run(c, args) },
 	}
 	tmp4.RegisterFlags(sub, c)
 	sub.PersistentFlags().BoolVar(&tmp4.PrettyPrint, "pp", false, "Pretty print response body")
+	command.AddCommand(sub)
+	app.AddCommand(command)
+	command = &cobra.Command{
+		Use:   "show-byims-iandebi",
+		Short: `Show the gtp session by IMSI and EBI`,
+	}
+	tmp5 := new(ShowByIMSIandEBIGtpsessionCommand)
+	sub = &cobra.Command{
+		Use:   `gtpsession ["/sgw/SGWADDR/gtpsessions/imsi/IMSI/ebi/EBI"]`,
+		Short: ``,
+		RunE:  func(cmd *cobra.Command, args []string) error { return tmp5.Run(c, args) },
+	}
+	tmp5.RegisterFlags(sub, c)
+	sub.PersistentFlags().BoolVar(&tmp5.PrettyPrint, "pp", false, "Pretty print response body")
 	command.AddCommand(sub)
 	app.AddCommand(command)
 }
@@ -430,6 +454,35 @@ func (cmd *CreateUDPEchoFlowByimsIandebiCommand) Run(c *client.Client, args []st
 func (cmd *CreateUDPEchoFlowByimsIandebiCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
 	cc.Flags().StringVar(&cmd.Payload, "payload", "", "Request body encoded in JSON")
 	cc.Flags().StringVar(&cmd.ContentType, "content", "", "Request content type override, e.g. 'application/x-www-form-urlencoded'")
+	cc.Flags().IntVar(&cmd.Ebi, "ebi", 5, `EPS Bearer ID`)
+	var imsi string
+	cc.Flags().StringVar(&cmd.Imsi, "imsi", imsi, ``)
+	var sgwAddr string
+	cc.Flags().StringVar(&cmd.SgwAddr, "sgwAddr", sgwAddr, `SGW GTPv2-C loopback address`)
+}
+
+// Run makes the HTTP request corresponding to the DeleteUDPEchoFlowByimsIandebiCommand command.
+func (cmd *DeleteUDPEchoFlowByimsIandebiCommand) Run(c *client.Client, args []string) error {
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	} else {
+		path = fmt.Sprintf("/sgw/%v/gtpsessions/imsi/%v/ebi/%v/udp_echo_flow", url.QueryEscape(cmd.SgwAddr), url.QueryEscape(cmd.Imsi), cmd.Ebi)
+	}
+	logger := goa.NewLogger(log.New(os.Stderr, "", log.LstdFlags))
+	ctx := goa.WithLogger(context.Background(), logger)
+	resp, err := c.DeleteUDPEchoFlowByIMSIandEBI(ctx, path)
+	if err != nil {
+		goa.LogError(ctx, "failed", "err", err)
+		return err
+	}
+
+	goaclient.HandleResponse(c.Client, resp, cmd.PrettyPrint)
+	return nil
+}
+
+// RegisterFlags registers the command flags with the command line.
+func (cmd *DeleteUDPEchoFlowByimsIandebiCommand) RegisterFlags(cc *cobra.Command, c *client.Client) {
 	cc.Flags().IntVar(&cmd.Ebi, "ebi", 5, `EPS Bearer ID`)
 	var imsi string
 	cc.Flags().StringVar(&cmd.Imsi, "imsi", imsi, ``)

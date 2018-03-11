@@ -59,8 +59,9 @@ type GtpSession struct {
 	servingNetwork *ie.ServingNetwork
 	pdnType        *ie.PdnType
 
-	udpFlow  *UdpEchoFlow
-	mtx4flow sync.RWMutex
+	udpFlow     *UdpEchoFlow
+	lastUDPFlow *UdpEchoFlow
+	mtx4flow    sync.RWMutex
 }
 
 func (sess *GtpSession) changeState(curState, nextState GtpSessionStatus) error {
@@ -275,6 +276,18 @@ func (sess *GtpSession) setUdpFlow(udpEchoFlow *UdpEchoFlow) error {
 	return nil
 }
 
+func (sess *GtpSession) StopUDPFlow() error {
+	sess.mtx4flow.Lock()
+	defer sess.mtx4flow.Unlock()
+	if sess.udpFlow == nil {
+		return errors.New("This session already stopped a UdpFlow")
+	}
+	sess.udpFlow.Stop()
+	sess.lastUDPFlow = sess.udpFlow
+	sess.udpFlow = nil
+	return nil
+}
+
 func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
 	if sess.status != GssConnected {
 		return errors.New("This session is not connected")
@@ -290,7 +303,7 @@ func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
 		Arg:                  udpEchoFlowArg,
 		session:              sess,
 		fromSessDataReceiver: make(chan UDPpacket, 100),
-		statsCtxCencel:       cancel,
+		ctxCencel:            cancel,
 		stats:                stats.NewFlowStats(ctx),
 	}
 	err := sess.setUdpFlow(udpEchoFlow)
@@ -302,6 +315,15 @@ func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
 	go sess.udpFlow.receiver(ctx)
 
 	return nil
+}
+
+func (sess *GtpSession) UdpFlow() (*UdpEchoFlow, bool) {
+	sess.mtx4flow.RLock()
+	defer sess.mtx4flow.RUnlock()
+	if sess.udpFlow == nil {
+		return nil, false
+	}
+	return sess.udpFlow, true
 }
 
 // setter & getter

@@ -31,7 +31,7 @@ type UdpEchoFlow struct {
 	session              *GtpSession
 	fromSessDataReceiver chan UDPpacket
 	stats                *stats.FlowStats
-	statsCtxCencel       context.CancelFunc
+	ctxCencel            context.CancelFunc
 }
 
 // sender is for goroutine
@@ -79,14 +79,14 @@ loop:
 		select {
 		case <-nextTimeChan:
 			if sess.status != GssConnected {
-				log.Info("Session status is not connected")
-				sess.udpFlow.statsCtxCencel()
+				log.Info("The session is not connecting")
+				sess.StopUDPFlow()
 				break loop
 			}
 			seqNum++
 			if seqNum > numOfSend {
 				time.Sleep(config.FlowUdpEchoWaitReceive())
-				sess.udpFlow.statsCtxCencel()
+				sess.StopUDPFlow()
 				break loop
 			}
 			if !skipFlg {
@@ -130,7 +130,6 @@ loop:
 		bitrate, durationSec,
 		sendBytes, sendPackets,
 		sendBytesSkipped, sendPacketsSkipped)
-	sess.udpFlow = nil
 }
 
 // receiver is for goroutine
@@ -184,4 +183,8 @@ func (u *UdpEchoFlow) newMyLog(routine string) *logrus.Entry {
 		"NumOfSend":      u.Arg.NumOfSend,
 		"RecvPacketSize": u.Arg.RecvPacketSize,
 	})
+}
+
+func (u *UdpEchoFlow) Stop() {
+	u.ctxCencel()
 }

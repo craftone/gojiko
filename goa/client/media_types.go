@@ -116,13 +116,13 @@ func (c *Client) DecodeGtpsession(resp *http.Response) (*Gtpsession, error) {
 //
 // Identifier: application/vnd.udpechoflow+json; view=default
 type Udpechoflow struct {
-	UDPEchoFlowArg *UDPEchoFlowPayload `form:"UdpEchoFlowArg,omitempty" json:"UdpEchoFlowArg,omitempty" xml:"UdpEchoFlowArg,omitempty"`
+	Param *UDPEchoFlowPayload `form:"param,omitempty" json:"param,omitempty" xml:"param,omitempty"`
 }
 
 // Validate validates the Udpechoflow media type instance.
 func (mt *Udpechoflow) Validate() (err error) {
-	if mt.UDPEchoFlowArg != nil {
-		if err2 := mt.UDPEchoFlowArg.Validate(); err2 != nil {
+	if mt.Param != nil {
+		if err2 := mt.Param.Validate(); err2 != nil {
 			err = goa.MergeErrors(err, err2)
 		}
 	}

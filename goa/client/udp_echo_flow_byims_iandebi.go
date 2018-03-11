@@ -65,3 +65,35 @@ func (c *Client) NewCreateUDPEchoFlowByIMSIandEBIRequest(ctx context.Context, pa
 	}
 	return req, nil
 }
+
+// DeleteUDPEchoFlowByIMSIandEBIPath computes a request path to the delete action of udpEchoFlowByIMSIandEBI.
+func DeleteUDPEchoFlowByIMSIandEBIPath(sgwAddr string, imsi string, ebi int) string {
+	param0 := sgwAddr
+	param1 := imsi
+	param2 := strconv.Itoa(ebi)
+
+	return fmt.Sprintf("/sgw/%s/gtpsessions/imsi/%s/ebi/%s/udp_echo_flow", param0, param1, param2)
+}
+
+// End UDP ECHO flow by IMSI and EBI
+func (c *Client) DeleteUDPEchoFlowByIMSIandEBI(ctx context.Context, path string) (*http.Response, error) {
+	req, err := c.NewDeleteUDPEchoFlowByIMSIandEBIRequest(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	return c.Client.Do(ctx, req)
+}
+
+// NewDeleteUDPEchoFlowByIMSIandEBIRequest create the request corresponding to the delete action endpoint of the udpEchoFlowByIMSIandEBI resource.
+func (c *Client) NewDeleteUDPEchoFlowByIMSIandEBIRequest(ctx context.Context, path string) (*http.Request, error) {
+	scheme := c.Scheme
+	if scheme == "" {
+		scheme = "http"
+	}
+	u := url.URL{Host: c.Host, Scheme: scheme, Path: path}
+	req, err := http.NewRequest("DELETE", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
+}
