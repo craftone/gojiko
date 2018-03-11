@@ -4,10 +4,10 @@ import "time"
 
 type Msg interface{}
 
-type Int64Msg struct {
+type Uint64Msg struct {
 	timestamp time.Time
 	key       Key
-	value     int64
+	value     uint64
 }
 
 type TimeMsg struct {

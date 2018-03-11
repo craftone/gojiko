@@ -97,12 +97,12 @@ loop:
 				} else {
 					senderChan <- UDPpacket{sess.pgwDataAddr, packet}
 					log.Debugf("Send a packet #%d at %s", seqNum, time.Now())
-					u.stats.SendInt64Msg(stats.SendPackets, 1)
-					u.stats.SendInt64Msg(stats.SendBytes, int64(28+packetSize))
+					u.stats.SendUint64Msg(stats.SendPackets, 1)
+					u.stats.SendUint64Msg(stats.SendBytes, 28+uint64(packetSize))
 				}
 			} else {
-				u.stats.SendInt64Msg(stats.SendPacketsSkipped, 1)
-				u.stats.SendInt64Msg(stats.SendBytesSkipped, int64(28+packetSize))
+				u.stats.SendUint64Msg(stats.SendPacketsSkipped, 1)
+				u.stats.SendUint64Msg(stats.SendBytesSkipped, 28+uint64(packetSize))
 			}
 
 			nextTime = nextTime.Add(sendInterval)
@@ -144,14 +144,14 @@ loop:
 	case pkt := <-u.fromSessDataReceiver:
 		payload, err := ipv4emu.PickOutPayload(u.Arg.SourcePort, pkt.body)
 		if err != nil {
-			u.stats.SendInt64Msg(stats.RecvPacketsInvalid, 1)
-			u.stats.SendInt64Msg(stats.RecvBytesInvalid, int64(20+len(pkt.body)))
+			u.stats.SendUint64Msg(stats.RecvPacketsInvalid, 1)
+			u.stats.SendUint64Msg(stats.RecvBytesInvalid, 20+uint64(len(pkt.body)))
 			myLog.Debug(err)
 			goto loop
 		}
 		seqNum := binary.BigEndian.Uint64(payload[2:])
-		u.stats.SendInt64Msg(stats.RecvPackets, 1)
-		u.stats.SendInt64Msg(stats.RecvBytes, int64(20+len(pkt.body)))
+		u.stats.SendUint64Msg(stats.RecvPackets, 1)
+		u.stats.SendUint64Msg(stats.RecvBytes, 20+uint64(len(pkt.body)))
 		myLog.Debugf("Received #%d", seqNum)
 		goto loop
 	case <-ctx.Done():

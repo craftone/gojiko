@@ -22,7 +22,7 @@ func NewFlowStats(ctx context.Context) *FlowStats {
 func (fs *FlowStats) bitrate(key Key, endTime time.Time) float64 {
 	duration := endTime.Sub(fs.ReadTime(StartTime))
 	durationSec := float64(duration) / float64(time.Second)
-	bitrate := float64(fs.ReadInt64(key)) * 8 / durationSec
+	bitrate := float64(fs.ReadUint64(key)) * 8 / durationSec
 	return bitrate
 }
 
@@ -39,41 +39,41 @@ func (fs *FlowStats) RecvBitrate(endTime time.Time) (float64, string) {
 }
 
 func (fs *FlowStats) SendBytes() (uint64, string) {
-	b := uint64(fs.ReadInt64(SendBytes))
+	b := uint64(fs.ReadUint64(SendBytes))
 	return b, humanize.IBytes(b)
 }
 
 func (fs *FlowStats) RecvBytes() (uint64, string) {
-	b := uint64(fs.ReadInt64(RecvBytes))
+	b := uint64(fs.ReadUint64(RecvBytes))
 	return b, humanize.IBytes(b)
 }
 
 func (fs *FlowStats) SendPackets() (uint64, string) {
-	p := uint64(fs.ReadInt64(SendPackets))
+	p := uint64(fs.ReadUint64(SendPackets))
 	return p, FormatSIUint(p, "pkts")
 }
 
 func (fs *FlowStats) RecvPackets() (uint64, string) {
-	p := uint64(fs.ReadInt64(RecvPackets))
+	p := uint64(fs.ReadUint64(RecvPackets))
 	return p, FormatSIUint(p, "pkts")
 }
 
 func (fs *FlowStats) SendBytesSkipped() (uint64, string) {
-	b := uint64(fs.ReadInt64(SendBytesSkipped))
+	b := uint64(fs.ReadUint64(SendBytesSkipped))
 	return b, humanize.IBytes(b)
 }
 
 func (fs *FlowStats) RecvBytesInvalid() (uint64, string) {
-	b := uint64(fs.ReadInt64(RecvBytesInvalid))
+	b := uint64(fs.ReadUint64(RecvBytesInvalid))
 	return b, humanize.IBytes(b)
 }
 
 func (fs *FlowStats) SendPacketsSkipped() (uint64, string) {
-	p := uint64(fs.ReadInt64(SendPacketsSkipped))
+	p := uint64(fs.ReadUint64(SendPacketsSkipped))
 	return p, FormatSIUint(p, "pkts")
 }
 
 func (fs *FlowStats) RecvPacketsInvalid() (uint64, string) {
-	p := uint64(fs.ReadInt64(RecvPacketsInvalid))
+	p := uint64(fs.ReadUint64(RecvPacketsInvalid))
 	return p, FormatSIUint(p, "pkts")
 }

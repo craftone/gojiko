@@ -24,19 +24,19 @@ const (
 )
 
 const (
-	KTInt64 KeyType = iota
+	KTUint64 KeyType = iota
 	KTTime
 )
 
 var keyTypeMap = map[Key]KeyType{
-	SendPackets:        KTInt64,
-	SendPacketsSkipped: KTInt64,
-	SendBytes:          KTInt64,
-	SendBytesSkipped:   KTInt64,
-	RecvPackets:        KTInt64,
-	RecvPacketsInvalid: KTInt64,
-	RecvBytes:          KTInt64,
-	RecvBytesInvalid:   KTInt64,
+	SendPackets:        KTUint64,
+	SendPacketsSkipped: KTUint64,
+	SendBytes:          KTUint64,
+	SendBytesSkipped:   KTUint64,
+	RecvPackets:        KTUint64,
+	RecvPacketsInvalid: KTUint64,
+	RecvBytes:          KTUint64,
+	RecvBytesInvalid:   KTUint64,
 	StartTime:          KTTime,
 	EndTime:            KTTime,
 }

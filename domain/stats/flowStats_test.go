@@ -11,21 +11,21 @@ import (
 func Test_FlowStats(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	fs := NewFlowStats(ctx)
-	fs.SendInt64Msg(SendPackets, 1)
-	fs.SendInt64Msg(SendBytes, 1460)
+	fs.SendUint64Msg(SendPackets, 1)
+	fs.SendUint64Msg(SendBytes, 1460)
 
 	// wait untill the receiver take all message
 	for len(fs.toMsgReceiverChan) != 0 {
 		time.Sleep(1 * time.Millisecond)
 	}
 
-	assert.Equal(t, int64(1), fs.ReadInt64(SendPackets))
-	assert.Equal(t, int64(1460), fs.ReadInt64(SendBytes))
-	assert.Equal(t, int64(0), fs.ReadInt64(RecvPackets))
+	assert.Equal(t, uint64(1), fs.ReadUint64(SendPackets))
+	assert.Equal(t, uint64(1460), fs.ReadUint64(SendBytes))
+	assert.Equal(t, uint64(0), fs.ReadUint64(RecvPackets))
 
 	// SetInt64 test
-	fs.SetInt64(SendPackets, 0)
-	assert.Equal(t, int64(0), fs.ReadInt64(SendPackets))
+	fs.SetUint64(SendPackets, 0)
+	assert.Equal(t, uint64(0), fs.ReadUint64(SendPackets))
 
 	// cancel test
 	cancel()
@@ -53,14 +53,14 @@ func Test_Bitrate(t *testing.T) {
 	fs := NewFlowStats(ctx)
 	startTime := time.Now()
 	fs.SendTimeMsg(StartTime, startTime)
-	fs.SendInt64Msg(SendBytes, 100000000)
-	fs.SendInt64Msg(SendPackets, 100)
-	fs.SendInt64Msg(RecvBytes, 1000000000)
-	fs.SendInt64Msg(RecvPackets, 10000)
-	fs.SendInt64Msg(SendBytesSkipped, 1024)
-	fs.SendInt64Msg(SendPacketsSkipped, 1000)
-	fs.SendInt64Msg(RecvBytesInvalid, 10240)
-	fs.SendInt64Msg(RecvPacketsInvalid, 10000)
+	fs.SendUint64Msg(SendBytes, 100000000)
+	fs.SendUint64Msg(SendPackets, 100)
+	fs.SendUint64Msg(RecvBytes, 1000000000)
+	fs.SendUint64Msg(RecvPackets, 10000)
+	fs.SendUint64Msg(SendBytesSkipped, 1024)
+	fs.SendUint64Msg(SendPacketsSkipped, 1000)
+	fs.SendUint64Msg(RecvBytesInvalid, 10240)
+	fs.SendUint64Msg(RecvPacketsInvalid, 10000)
 	endTime := startTime.Add(3 * time.Second)
 
 	// wait untill the receiver take all message

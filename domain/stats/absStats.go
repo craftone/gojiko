@@ -9,14 +9,14 @@ import (
 type absStats struct {
 	mtx               sync.RWMutex
 	toMsgReceiverChan chan Msg
-	int64book         map[Key]int64
+	uint64book        map[Key]uint64
 	timeBook          map[Key]time.Time
 }
 
 func newAbsStats(ctx context.Context, chanLen int) *absStats {
 	as := &absStats{
 		toMsgReceiverChan: make(chan Msg, chanLen),
-		int64book:         make(map[Key]int64),
+		uint64book:        make(map[Key]uint64),
 		timeBook:          make(map[Key]time.Time),
 	}
 	go as.msgReceiver(ctx)
@@ -35,9 +35,9 @@ loop:
 	select {
 	case recMsg := <-as.toMsgReceiverChan:
 		switch msg := recMsg.(type) {
-		case Int64Msg:
+		case Uint64Msg:
 			as.mtx.Lock()
-			as.int64book[msg.key] += int64(msg.value)
+			as.uint64book[msg.key] += msg.value
 			as.mtx.Unlock()
 		case TimeMsg:
 			as.mtx.Lock()
@@ -54,10 +54,10 @@ loop:
 }
 
 //
-// about Int64
+// about Uint64
 //
-func (as *absStats) SendInt64Msg(key Key, value int64) {
-	msg := Int64Msg{
+func (as *absStats) SendUint64Msg(key Key, value uint64) {
+	msg := Uint64Msg{
 		timestamp: time.Now(),
 		key:       key,
 		value:     value,
@@ -65,19 +65,19 @@ func (as *absStats) SendInt64Msg(key Key, value int64) {
 	as.ToMsgReceiverChan() <- msg
 }
 
-func (as *absStats) ReadInt64(key Key) int64 {
+func (as *absStats) ReadUint64(key Key) uint64 {
 	as.mtx.RLock()
 	defer as.mtx.RUnlock()
-	if value, ok := as.int64book[key]; ok {
+	if value, ok := as.uint64book[key]; ok {
 		return value
 	}
 	return 0
 }
 
-func (as *absStats) SetInt64(key Key, val int64) {
+func (as *absStats) SetUint64(key Key, val uint64) {
 	as.mtx.Lock()
 	defer as.mtx.Unlock()
-	as.int64book[key] = val
+	as.uint64book[key] = val
 }
 
 //
