@@ -451,6 +451,24 @@ definitions:
         targetBps: 1e+08
         tos: 0
         ttl: 255
+    properties:
+      param:
+        $ref: '#/definitions/UdpEchoFlowPayload'
+    title: 'Mediatype identifier: application/vnd.udpechoflow+json; view=default'
+    type: object
+  UdpechoflowWithStats:
+    description: A UDP ECHO flow (withStats view)
+    example:
+      param:
+        destAddr: 48.227.40.225
+        destPort: 7777
+        numOfSend: 1
+        recvPacketSize: 1460
+        sendPacketSize: 1460
+        sourcePort: 7777
+        targetBps: 1e+08
+        tos: 0
+        ttl: 255
       stats:
         duration: 0.2850267
         endTime: 1993-12-26T05:24:41Z
@@ -485,7 +503,7 @@ definitions:
         $ref: '#/definitions/UdpEchoFlowPayload'
       stats:
         $ref: '#/definitions/SendRecvStatistics'
-    title: 'Mediatype identifier: application/vnd.udpechoflow+json; view=default'
+    title: 'Mediatype identifier: application/vnd.udpechoflow+json; view=withStats'
     type: object
   error:
     description: Error response media type (default view)
@@ -722,7 +740,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Udpechoflow'
+            $ref: '#/definitions/UdpechoflowWithStats'
         "404":
           description: Not Found
           schema:
@@ -767,7 +785,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Udpechoflow'
+            $ref: '#/definitions/UdpechoflowWithStats'
         "404":
           description: Not Found
           schema:

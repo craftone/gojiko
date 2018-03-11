@@ -102,11 +102,28 @@ func (mt *Gtpsession) Validate() (err error) {
 // Identifier: application/vnd.udpechoflow+json; view=default
 type Udpechoflow struct {
 	Param *UDPEchoFlowPayload `form:"param,omitempty" json:"param,omitempty" xml:"param,omitempty"`
-	Stats *SendRecvStatistics `form:"stats,omitempty" json:"stats,omitempty" xml:"stats,omitempty"`
 }
 
 // Validate validates the Udpechoflow media type instance.
 func (mt *Udpechoflow) Validate() (err error) {
+	if mt.Param != nil {
+		if err2 := mt.Param.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// A UDP ECHO flow (withStats view)
+//
+// Identifier: application/vnd.udpechoflow+json; view=withStats
+type UdpechoflowWithStats struct {
+	Param *UDPEchoFlowPayload `form:"param,omitempty" json:"param,omitempty" xml:"param,omitempty"`
+	Stats *SendRecvStatistics `form:"stats,omitempty" json:"stats,omitempty" xml:"stats,omitempty"`
+}
+
+// Validate validates the UdpechoflowWithStats media type instance.
+func (mt *UdpechoflowWithStats) Validate() (err error) {
 	if mt.Param != nil {
 		if err2 := mt.Param.Validate(); err2 != nil {
 			err = goa.MergeErrors(err, err2)

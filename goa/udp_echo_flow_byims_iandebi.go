@@ -47,11 +47,8 @@ func (c *UDPEchoFlowByIMSIandEBIController) Create(ctx *app.CreateUDPEchoFlowByI
 		return ctx.InternalServerError(goa.ErrInternal(err))
 	}
 
-	stats := &app.SendRecvStatistics{}
-
 	return ctx.OK(&app.Udpechoflow{
 		Param: pl,
-		Stats: stats,
 	})
 
 	// UDPEchoFlowByIMSIandEBIController_Create: end_implement
@@ -76,23 +73,11 @@ func (c *UDPEchoFlowByIMSIandEBIController) Delete(ctx *app.DeleteUDPEchoFlowByI
 		return ctx.InternalServerError(goa.ErrInternal(err))
 	}
 
-	udpFlowArg := &app.UDPEchoFlowPayload{
-		DestAddr:       udpFlow.Arg.DestAddr.IP.String(),
-		DestPort:       udpFlow.Arg.DestAddr.Port,
-		NumOfSend:      udpFlow.Arg.NumOfSend,
-		RecvPacketSize: int(udpFlow.Arg.RecvPacketSize),
-		SendPacketSize: int(udpFlow.Arg.SendPacketSize),
-		SourcePort:     int(udpFlow.Arg.SourcePort),
-		TargetBps:      int(udpFlow.Arg.TargetBps),
-		Tos:            int(udpFlow.Arg.Tos),
-		TTL:            int(udpFlow.Arg.Ttl),
-	}
-
-	res := &app.Udpechoflow{
-		Param: udpFlowArg,
+	res := &app.UdpechoflowWithStats{
+		Param: newUDPEchoFlowPayload(udpFlow.Arg),
 		Stats: newStatsMedia(udpFlow.Stats()),
 	}
-	return ctx.OK(res)
+	return ctx.OKWithStats(res)
 
 	// UDPEchoFlowByIMSIandEBIController_Delete: end_implement
 }
@@ -101,10 +86,21 @@ func (c *UDPEchoFlowByIMSIandEBIController) Delete(ctx *app.DeleteUDPEchoFlowByI
 func (c *UDPEchoFlowByIMSIandEBIController) Show(ctx *app.ShowUDPEchoFlowByIMSIandEBIContext) error {
 	// UDPEchoFlowByIMSIandEBIController_Show: start_implement
 
-	// Put your logic here
+	sess, err := querySessionByIMSIandEBI(ctx.SgwAddr, ctx.Imsi, ctx.Ebi)
+	if err != nil {
+		return ctx.NotFound(goa.ErrNotFound(err))
+	}
 
-	res := &app.Udpechoflow{}
-	return ctx.OK(res)
+	udpFlow, ok := sess.UdpFlow()
+	if !ok {
+		return ctx.NotFound(goa.ErrNotFound(errors.New("No UDP ECHO flow")))
+	}
+
+	res := &app.UdpechoflowWithStats{
+		Param: newUDPEchoFlowPayload(udpFlow.Arg),
+		Stats: newStatsMedia(udpFlow.Stats()),
+	}
+	return ctx.OKWithStats(res)
 
 	// UDPEchoFlowByIMSIandEBIController_Show: end_implement
 }

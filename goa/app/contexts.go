@@ -460,6 +460,14 @@ func (ctx *CreateUDPEchoFlowByIMSIandEBIContext) OK(r *Udpechoflow) error {
 	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
 }
 
+// OKWithStats sends a HTTP response with status code 200.
+func (ctx *CreateUDPEchoFlowByIMSIandEBIContext) OKWithStats(r *UdpechoflowWithStats) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.udpechoflow+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
 // NotFound sends a HTTP response with status code 404.
 func (ctx *CreateUDPEchoFlowByIMSIandEBIContext) NotFound(r error) error {
 	if ctx.ResponseData.Header().Get("Content-Type") == "" {
@@ -531,8 +539,8 @@ func NewDeleteUDPEchoFlowByIMSIandEBIContext(ctx context.Context, r *http.Reques
 	return &rctx, err
 }
 
-// OK sends a HTTP response with status code 200.
-func (ctx *DeleteUDPEchoFlowByIMSIandEBIContext) OK(r *Udpechoflow) error {
+// OKWithStats sends a HTTP response with status code 200.
+func (ctx *DeleteUDPEchoFlowByIMSIandEBIContext) OKWithStats(r *UdpechoflowWithStats) error {
 	if ctx.ResponseData.Header().Get("Content-Type") == "" {
 		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.udpechoflow+json")
 	}
@@ -610,8 +618,8 @@ func NewShowUDPEchoFlowByIMSIandEBIContext(ctx context.Context, r *http.Request,
 	return &rctx, err
 }
 
-// OK sends a HTTP response with status code 200.
-func (ctx *ShowUDPEchoFlowByIMSIandEBIContext) OK(r *Udpechoflow) error {
+// OKWithStats sends a HTTP response with status code 200.
+func (ctx *ShowUDPEchoFlowByIMSIandEBIContext) OKWithStats(r *UdpechoflowWithStats) error {
 	if ctx.ResponseData.Header().Get("Content-Type") == "" {
 		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.udpechoflow+json")
 	}

@@ -59,6 +59,20 @@ func newGtpsessionMedia(sess *domain.GtpSession) *app.Gtpsession {
 	}
 }
 
+func newUDPEchoFlowPayload(arg domain.UdpEchoFlowArg) *app.UDPEchoFlowPayload {
+	return &app.UDPEchoFlowPayload{
+		DestAddr:       arg.DestAddr.IP.String(),
+		DestPort:       arg.DestAddr.Port,
+		NumOfSend:      arg.NumOfSend,
+		RecvPacketSize: int(arg.RecvPacketSize),
+		SendPacketSize: int(arg.SendPacketSize),
+		SourcePort:     int(arg.SourcePort),
+		TargetBps:      int(arg.TargetBps),
+		Tos:            int(arg.Tos),
+		TTL:            int(arg.Ttl),
+	}
+}
+
 func newStatsMedia(sts *stats.FlowStats) *app.SendRecvStatistics {
 	sendBitrate, sendBitrateStr := sts.SendBitrate()
 	recvBitrate, recvBitrateStr := sts.RecvBitrate()
