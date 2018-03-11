@@ -305,13 +305,22 @@ func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
 	return nil
 }
 
-func (sess *GtpSession) UdpFlow() (*UdpEchoFlow, bool) {
+func (sess *GtpSession) UDPFlow() (*UdpEchoFlow, bool) {
 	sess.mtx4flow.RLock()
 	defer sess.mtx4flow.RUnlock()
 	if sess.udpFlow == nil {
 		return nil, false
 	}
 	return sess.udpFlow, true
+}
+
+func (sess *GtpSession) LastUDPFlow() (*UdpEchoFlow, bool) {
+	sess.mtx4flow.RLock()
+	defer sess.mtx4flow.RUnlock()
+	if sess.lastUDPFlow == nil {
+		return nil, false
+	}
+	return sess.lastUDPFlow, true
 }
 
 func (sess *GtpSession) StopUDPFlow() error {

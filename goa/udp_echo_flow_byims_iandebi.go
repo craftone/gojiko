@@ -63,7 +63,7 @@ func (c *UDPEchoFlowByIMSIandEBIController) Delete(ctx *app.DeleteUDPEchoFlowByI
 		return ctx.NotFound(goa.ErrNotFound(err))
 	}
 
-	udpFlow, ok := sess.UdpFlow()
+	udpFlow, ok := sess.UDPFlow()
 	if !ok {
 		return ctx.NotFound(goa.ErrNotFound(errors.New("No UDP ECHO flow")))
 	}
@@ -91,9 +91,12 @@ func (c *UDPEchoFlowByIMSIandEBIController) Show(ctx *app.ShowUDPEchoFlowByIMSIa
 		return ctx.NotFound(goa.ErrNotFound(err))
 	}
 
-	udpFlow, ok := sess.UdpFlow()
+	udpFlow, ok := sess.UDPFlow()
 	if !ok {
-		return ctx.NotFound(goa.ErrNotFound(errors.New("No UDP ECHO flow")))
+		udpFlow, ok = sess.LastUDPFlow()
+		if !ok {
+			return ctx.NotFound(goa.ErrNotFound(errors.New("There have been no UDP ECHO flow")))
+		}
 	}
 
 	res := &app.UdpechoflowWithStats{
