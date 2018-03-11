@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/goa/app"
 	"github.com/goadesign/goa"
 )
@@ -19,10 +22,27 @@ func NewGtpsessionController(service *goa.Service) *GtpsessionController {
 func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 	// GtpsessionController_Create: start_implement
 
-	// Put your logic here
+	sgwCtrl, err := querySgw(ctx.SgwAddr)
+	if err != nil {
+		return ctx.NotFound(err)
+	}
 
-	res := &app.Gtpsession{}
-	return ctx.OK(res)
+	payload := ctx.Payload
+	csRes, err := sgwCtrl.CreateSession(
+		payload.Imsi, payload.Msisdn, payload.Mei, payload.Mcc, payload.Mnc,
+		payload.Apn, byte(payload.Ebi))
+	if err != nil {
+		return ctx.InternalServerError(goa.ErrInternal(err))
+	}
+
+	switch csRes.Code {
+	case domain.GscResOK:
+		sess := csRes.Session
+		res := newGtpsessionMedia(sess)
+		return ctx.OK(res)
+	}
+	return ctx.InternalServerError(goa.ErrInternal(csRes.Msg))
+
 	// GtpsessionController_Create: end_implement
 }
 
@@ -30,10 +50,17 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 func (c *GtpsessionController) ShowByID(ctx *app.ShowByIDGtpsessionContext) error {
 	// GtpsessionController_ShowByID: start_implement
 
-	// Put your logic here
-
-	res := &app.Gtpsession{}
+	sgwCtrl, err := querySgw(ctx.SgwAddr)
+	if err != nil {
+		return ctx.NotFound(err)
+	}
+	sess := sgwCtrl.FindBySessionID(domain.SessionID(ctx.Sid))
+	if sess == nil {
+		return ctx.NotFound(goa.ErrNotFound(fmt.Errorf("There is no session that's ID is %d", ctx.Sid)))
+	}
+	res := newGtpsessionMedia(sess)
 	return ctx.OK(res)
+
 	// GtpsessionController_ShowByID: end_implement
 }
 
@@ -41,9 +68,11 @@ func (c *GtpsessionController) ShowByID(ctx *app.ShowByIDGtpsessionContext) erro
 func (c *GtpsessionController) ShowByIMSIandEBI(ctx *app.ShowByIMSIandEBIGtpsessionContext) error {
 	// GtpsessionController_ShowByIMSIandEBI: start_implement
 
-	// Put your logic here
+	sess, err := querySessionByIMSIandEBI(ctx.SgwAddr, ctx.Imsi, ctx.Ebi)
+	if err != nil {
+		return ctx.NotFound(err)
+	}
+	return ctx.OK(newGtpsessionMedia(sess))
 
-	res := &app.Gtpsession{}
-	return ctx.OK(res)
 	// GtpsessionController_ShowByIMSIandEBI: end_implement
 }
