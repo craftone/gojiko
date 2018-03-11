@@ -276,18 +276,6 @@ func (sess *GtpSession) setUdpFlow(udpEchoFlow *UdpEchoFlow) error {
 	return nil
 }
 
-func (sess *GtpSession) StopUDPFlow() error {
-	sess.mtx4flow.Lock()
-	defer sess.mtx4flow.Unlock()
-	if sess.udpFlow == nil {
-		return errors.New("This session already stopped a UdpFlow")
-	}
-	sess.udpFlow.Stop()
-	sess.lastUDPFlow = sess.udpFlow
-	sess.udpFlow = nil
-	return nil
-}
-
 func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
 	if sess.status != GssConnected {
 		return errors.New("This session is not connected")
@@ -324,6 +312,18 @@ func (sess *GtpSession) UdpFlow() (*UdpEchoFlow, bool) {
 		return nil, false
 	}
 	return sess.udpFlow, true
+}
+
+func (sess *GtpSession) StopUDPFlow() error {
+	sess.mtx4flow.Lock()
+	defer sess.mtx4flow.Unlock()
+	if sess.udpFlow == nil {
+		return errors.New("This session already stopped a UdpFlow")
+	}
+	sess.udpFlow.ctxCencel()
+	sess.lastUDPFlow = sess.udpFlow
+	sess.udpFlow = nil
+	return nil
 }
 
 // setter & getter

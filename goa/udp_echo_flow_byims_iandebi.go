@@ -68,7 +68,10 @@ func (c *UDPEchoFlowByIMSIandEBIController) Delete(ctx *app.DeleteUDPEchoFlowByI
 		return ctx.NotFound(goa.ErrNotFound(errors.New("No UDP ECHO flow")))
 	}
 
-	udpFlow.Stop()
+	err = sess.StopUDPFlow()
+	if err != nil {
+		return ctx.InternalServerError(goa.ErrInternal(err))
+	}
 
 	udpFlowArg := &app.UDPEchoFlowPayload{
 		DestAddr:       udpFlow.Arg.DestAddr.IP.String(),

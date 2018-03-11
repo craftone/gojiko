@@ -184,7 +184,3 @@ func (u *UdpEchoFlow) newMyLog(routine string) *logrus.Entry {
 		"RecvPacketSize": u.Arg.RecvPacketSize,
 	})
 }
-
-func (u *UdpEchoFlow) Stop() {
-	u.ctxCencel()
-}
