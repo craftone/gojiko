@@ -45,7 +45,23 @@ func (u *UdpEchoFlow) sender(ctx context.Context) {
 	sendIntervalSec := float64(packetSize*8) / float64(u.Arg.TargetBps)
 	sendInterval := time.Duration(sendIntervalSec * float64(time.Second))
 
-	udpBody := make([]byte, udpSize)
+	sess := u.session
+	ipv4Emu := ipemu.NewIPv4Emulator(ipemu.UDP, sess.Paa(), u.Arg.DestAddr.IP, config.MTU())
+	teid := sess.pgwDataFTEID.Teid()
+	senderChan := sess.sgwCtrl.Pair().ToSender()
+	seqNum := uint64(0)
+	numOfSend := uint64(u.Arg.NumOfSend)
+
+	// pseudo IPv4 packet to calculate UDP checksum
+	pseudoIPv4 := make([]byte, udpSize+12)
+	// make ipv4 pseudo header
+	copy(pseudoIPv4[0:4], sess.Paa())        // Source IPv4 Address
+	copy(pseudoIPv4[4:8], u.Arg.DestAddr.IP) // Destination IPv4 Address
+	pseudoIPv4[9] = byte(ipemu.UDP)          // Protocol : UDP(17)
+	binary.BigEndian.PutUint16(              // UDP length
+		pseudoIPv4[10:12], uint16(udpSize)+12)
+
+	udpBody := pseudoIPv4[12:]
 	// 0 -  1 : Source Port
 	binary.BigEndian.PutUint16(udpBody[0:], u.Arg.SourcePort)
 	// 2 -  3 : Destination Port
@@ -59,12 +75,10 @@ func (u *UdpEchoFlow) sender(ctx context.Context) {
 	// 2 - 10 : Sequence Number (64bit)
 	//   set later
 
-	sess := u.session
-	ipv4Emu := ipemu.NewIPv4Emulator(ipemu.UDP, sess.Paa(), u.Arg.DestAddr.IP, config.MTU())
-	teid := sess.pgwDataFTEID.Teid()
-	senderChan := sess.sgwCtrl.Pair().ToSender()
-	seqNum := uint64(0)
-	numOfSend := uint64(u.Arg.NumOfSend)
+	// 12: Pseudo IPv4 header,
+	//  8: UDP header
+	//  2: RecvPacketSize
+	udpChecksumBase := ipemu.Checksum(0, pseudoIPv4[0:12+8+2])
 
 	nextTime := time.Now()
 	nextTimeChan := time.After(0)
@@ -90,6 +104,13 @@ loop:
 			}
 			if !skipFlg {
 				binary.BigEndian.PutUint64(payload[2:], seqNum)
+				// calc udp checksum
+				udpChecksum := ipemu.Checksum(udpChecksumBase, payload[2:10])
+				if udpChecksum == 0 {
+					udpChecksum = 0xFFFF
+				}
+				binary.BigEndian.PutUint16(udpBody[6:8], udpChecksum)
+
 				packet, err := ipv4Emu.NewIPv4GPDU(teid, u.Arg.Tos, u.Arg.Ttl, udpBody)
 				if err != nil {
 					log.Error(err)
