@@ -350,13 +350,31 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	c := make(chan UDPpacket)
 	sgwData.toSender = c
 
+	// assert no udpFlow and lastUDPFlow
+	udpFlowPointer, ok := session.UDPFlow()
+	assert.Nil(t, udpFlowPointer)
+	assert.False(t, ok)
+	lastUDPFlowPointer, ok := session.LastUDPFlow()
+	assert.Nil(t, lastUDPFlowPointer)
+	assert.False(t, ok)
+
+	// New UDPFlow
 	err := session.NewUdpFlow(udpFlow)
 	assert.NoError(t, err)
+
 	packet := <-c // @ 0.00 s
 	packet = <-c  // @ 0.02 s
 	packet = <-c  // @ 0.04 s
 	packet = <-c  // @ 0.06 s
 	packet = <-c  // @ 0.08 s
+
+	// assert udpFlow exists and no lastUDPFlow
+	udpFlowPointer, ok = session.UDPFlow()
+	assert.NotNil(t, udpFlowPointer)
+	assert.True(t, ok)
+	lastUDPFlowPointer, ok = session.LastUDPFlow()
+	assert.Nil(t, lastUDPFlowPointer)
+	assert.False(t, ok)
 
 	assert.Equal(t, []byte{
 		0x30,     // GTP version:1, PT=1(GTP), all flags are 0
@@ -378,10 +396,26 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 		0x27, 0x11, // source port : 10001
 		0x27, 0x10, // destination port : 10000
 		0x00, 0x12, // udp size : 8+10
-		0x00, 0x00, // checksum
+		0x68, 0x1d, // checksum
 		0x05, 0xaa, // receive udp packet size : 1450
 		0, 0, 0, 0, 0, 0, 0, 5, // seqNum : 5
 	}, packet.body)
+
+	// assert no udpFlow and lastUDPFlow exits
+	// wait till UDPFlow will done.
+	for {
+		udpFlowPointer, ok = session.UDPFlow()
+		if udpFlowPointer == nil {
+			break
+		}
+		time.Sleep(time.Microsecond)
+	}
+	udpFlowPointer, ok = session.UDPFlow()
+	assert.Nil(t, udpFlowPointer)
+	assert.False(t, ok)
+	lastUDPFlowPointer, ok = session.LastUDPFlow()
+	assert.NotNil(t, lastUDPFlowPointer)
+	assert.True(t, ok)
 
 	//
 	// Delete Bearer Test
@@ -532,7 +566,7 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 		0x27, 0x11, // source port : 10001
 		0x27, 0x10, // destination port : 10000
 		0x00, 0x12, // udp size : 8+10
-		0x00, 0x00, // checksum
+		0x6a, 0x1e, // checksum
 		0x05, 0xaa, // receive udp packet size : 1450
 		0, 0, 0, 0, 0, 0, 0, 4, // seqNum : 5
 	}, packet.body)

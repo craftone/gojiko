@@ -81,23 +81,32 @@ func (e *IPv4Emulator) NewIPv4GPDU(teid gtp.Teid, tos, ttl byte, payload []byte)
 	copy(packet[16:20], e.destAddr)
 	copy(packet[20:], payload)
 
-	// checksum
-	crc := 0
-	for _, i := range []int{0, 2, 4, 6, 8, 12, 14, 16, 18} {
-		crc += int(binary.BigEndian.Uint16(packet[i : i+2]))
-	}
-	for {
-		carry := crc >> 16
-		if carry == 0 {
-			break
-		}
-		crc = crc & 0xFFFF
-		crc += carry
-	}
-	checksum := ^uint16(crc)
+	checksum := Checksum(0, packet[0:20])
 	binary.BigEndian.PutUint16(packet[10:], checksum)
 
 	return gpdu, nil
+}
+
+// Checksum calculates IPv4/UDP/TCP checksum.
+func Checksum(initial uint16, data []byte) uint16 {
+	cksum := uint(initial)
+	for i := 0; i < len(data); i += 2 {
+		if len(data)-i >= 2 {
+			cksum += uint(binary.BigEndian.Uint16(data[i : i+2]))
+		} else {
+			// when data length is odd, 0 is added at the end.
+			cksum += (uint(data[i]) << 8)
+		}
+	}
+
+	for {
+		carry := cksum >> 16
+		if carry == 0 {
+			break
+		}
+		cksum = cksum&0xFFFF + carry
+	}
+	return ^uint16(cksum)
 }
 
 func (e *IPv4Emulator) getIdentification() uint16 {
