@@ -119,10 +119,9 @@ func sender(udpConn *net.UDPConn, toSender chan RecvPacket) {
 	for recv := range toSender {
 		binary.BigEndian.PutUint16(buf[0:2], recv.sendPacketSize)
 		binary.BigEndian.PutUint64(buf[2:10], recv.seqNum)
-		udpConn.WriteTo(buf[0:recv.sendPacketSize], recv.raddr)
-		if DebugMode {
-			log.Printf("Send a packet raddr: %s, len: %d, seqNum: %d",
-				recv.raddr.String(), recv.sendPacketSize, recv.seqNum)
-		}
+		size := recv.sendPacketSize - 28 // 20:IP header, 8: UDP header
+		udpConn.WriteTo(buf[0:size], recv.raddr)
+		log.Printf("Send a packet raddr: %s, len: %d, seqNum: %d",
+			recv.raddr.String(), recv.sendPacketSize, recv.seqNum)
 	}
 }
