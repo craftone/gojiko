@@ -68,7 +68,7 @@ func (sgwData *SgwData) sgwDataReceiverRoutine() {
 				continue
 			}
 			received := make([]byte, n)
-			copy(received, buf[:n])
+			copy(received, buf[8:n])
 			sess.fromSgwDataReceiverChan <- UDPpacket{*raddr, received}
 		default:
 			myLog.Debugf("Unkown Message Type : %d", msgType)

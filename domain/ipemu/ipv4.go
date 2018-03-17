@@ -89,24 +89,21 @@ func (e *IPv4Emulator) NewIPv4GPDU(teid gtp.Teid, tos, ttl byte, payload []byte)
 
 // Checksum calculates IPv4/UDP/TCP checksum.
 func Checksum(initial uint16, data []byte) uint16 {
-	cksum := uint(initial)
+	sum := uint(initial)
 	for i := 0; i < len(data); i += 2 {
 		if len(data)-i >= 2 {
-			cksum += uint(binary.BigEndian.Uint16(data[i : i+2]))
+			sum += uint(binary.BigEndian.Uint16(data[i : i+2]))
 		} else {
 			// when data length is odd, 0 is added at the end.
-			cksum += (uint(data[i]) << 8)
+			sum += (uint(data[i]) << 8)
 		}
 	}
 
-	for {
-		carry := cksum >> 16
-		if carry == 0 {
-			break
-		}
-		cksum = cksum&0xFFFF + carry
+	for sum > 0xFFFF {
+		carry := sum >> 16
+		sum = sum&0xFFFF + carry
 	}
-	return ^uint16(cksum)
+	return ^uint16(sum)
 }
 
 func (e *IPv4Emulator) getIdentification() uint16 {
@@ -128,7 +125,7 @@ func (e *IPv4Emulator) PickOutPayload(destPort uint16, body []byte) ([]byte, err
 	ihl := body[0] & 0xf
 	proto := Protocol(body[9])
 	if proto != e.protocol {
-		return nil, fmt.Errorf("Not a Expected packet : protocol %d", proto)
+		return nil, fmt.Errorf("Not expected packet : protocol %d", proto)
 	}
 	srcAddr := net.IP(body[12:16])
 	if !e.sourceAddr.Equal(srcAddr) {
