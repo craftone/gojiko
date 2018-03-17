@@ -396,7 +396,7 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 		0x27, 0x11, // source port : 10001
 		0x27, 0x10, // destination port : 10000
 		0x00, 0x12, // udp size : 8+10
-		0x68, 0x11, // checksum
+		0x30, 0xda, // checksum
 		0x05, 0xaa, // receive udp packet size : 1450
 		0, 0, 0, 0, 0, 0, 0, 5, // seqNum : 5
 	}, packet.body)
@@ -566,7 +566,7 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 		0x27, 0x11, // source port : 10001
 		0x27, 0x10, // destination port : 10000
 		0x00, 0x12, // udp size : 8+10
-		0x6a, 0x12, // checksum
+		0x32, 0xdb, // checksum
 		0x05, 0xaa, // receive udp packet size : 1450
 		0, 0, 0, 0, 0, 0, 0, 4, // seqNum : 5
 	}, packet.body)

@@ -55,10 +55,10 @@ func (u *UdpEchoFlow) sender(ctx context.Context) {
 	// pseudo IPv4 packet to calculate UDP checksum
 	pseudoIPv4 := make([]byte, udpSize+12)
 	// make ipv4 pseudo header
-	copy(pseudoIPv4[0:4], sess.Paa())        // Source IPv4 Address
-	copy(pseudoIPv4[4:8], u.Arg.DestAddr.IP) // Destination IPv4 Address
-	pseudoIPv4[9] = byte(ipemu.UDP)          // Protocol : UDP(17)
-	binary.BigEndian.PutUint16(              // UDP length
+	copy(pseudoIPv4[0:4], sess.Paa())              // Source IPv4 Address
+	copy(pseudoIPv4[4:8], u.Arg.DestAddr.IP.To4()) // Destination IPv4 Address
+	pseudoIPv4[9] = byte(ipemu.UDP)                // Protocol : UDP(17)
+	binary.BigEndian.PutUint16(                    // UDP length
 		pseudoIPv4[10:12], uint16(udpSize))
 
 	udpBody := pseudoIPv4[12:]
