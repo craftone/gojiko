@@ -59,7 +59,7 @@ func (u *UdpEchoFlow) sender(ctx context.Context) {
 	copy(pseudoIPv4[4:8], u.Arg.DestAddr.IP) // Destination IPv4 Address
 	pseudoIPv4[9] = byte(ipemu.UDP)          // Protocol : UDP(17)
 	binary.BigEndian.PutUint16(              // UDP length
-		pseudoIPv4[10:12], uint16(udpSize)+12)
+		pseudoIPv4[10:12], uint16(udpSize))
 
 	udpBody := pseudoIPv4[12:]
 	// 0 -  1 : Source Port
