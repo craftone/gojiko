@@ -98,6 +98,7 @@ func Checksum(initial uint16, data []byte) uint16 {
 			cksum += (uint(data[i]) << 8)
 		}
 	}
+	fmt.Printf("Checksum summed: %04x\n", cksum)
 
 	for {
 		carry := cksum >> 16

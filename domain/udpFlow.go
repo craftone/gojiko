@@ -78,7 +78,9 @@ func (u *UdpEchoFlow) sender(ctx context.Context) {
 	// 12: Pseudo IPv4 header,
 	//  8: UDP header
 	//  2: RecvPacketSize
-	udpChecksumBase := ipemu.Checksum(0, pseudoIPv4[0:12+8+2])
+	// BIT-NOT(^) is nessesary because checksum did BIT-NOT at last but
+	// udpChecksumBase should not be BIT-NOTed.
+	udpChecksumBase := ^ipemu.Checksum(0, pseudoIPv4[0:12+8+2])
 
 	nextTime := time.Now()
 	nextTimeChan := time.After(0)
