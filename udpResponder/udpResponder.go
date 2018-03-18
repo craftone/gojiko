@@ -13,6 +13,7 @@ import (
 var Port uint64
 var DebugMode bool
 var QueueSize uint64
+var ReportInterval uint64
 
 type RecvPacket struct {
 	raddr          *net.UDPAddr
@@ -42,6 +43,12 @@ func main() {
 			Usage:       "Queue size",
 			Value:       1000,
 			Destination: &QueueSize,
+		},
+		cli.Uint64Flag{
+			Name:        "interval, i",
+			Usage:       "report interval seconds",
+			Value:       5,
+			Destination: &ReportInterval,
 		},
 	}
 	app.Action = udpResponder
@@ -82,7 +89,7 @@ func udpResponder(c *cli.Context) error {
 	go sender(udpConn, toSender)
 	go sender(udpConn, toSender)
 	go sender(udpConn, toSender)
-	go statReporter(5)
+	go statReporter(ReportInterval)
 
 	log.Printf("Starting UDP responder [ %s ] ...", udpAddr.String())
 	for {
@@ -90,7 +97,7 @@ func udpResponder(c *cli.Context) error {
 		if err != nil {
 			return cli.NewExitError(err, 3)
 		}
-		writeRecv(addr.String(), 1, uint64(n))
+		writeRecv(addr.String(), 1, uint64(n+28))
 		if n < 10 {
 			log.Printf("Received a invalid packet from %s : %#v", addr.String(), buf[:n])
 			continue
@@ -131,7 +138,7 @@ func sender(udpConn *net.UDPConn, toSender chan RecvPacket) {
 	}
 }
 
-func statReporter(interval uint) {
+func statReporter(interval uint64) {
 	t := time.NewTicker(time.Duration(interval) * time.Second)
 	for {
 		select {

@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"sync"
+
+	"github.com/dustin/go-humanize"
 )
 
 type sendRecvStats struct {
@@ -21,6 +24,9 @@ type addrSendRecvStats struct {
 var theAddrSendRecvStats = &addrSendRecvStats{data: make(map[string]*sendRecvStats)}
 
 func (a *addrSendRecvStats) getSendRecvStats(addr string) *sendRecvStats {
+	if addr == "" {
+		log.Panic("blank addr")
+	}
 	a.mtx.Lock()
 	defer a.mtx.Unlock()
 	if s, ok := a.data[addr]; ok {
@@ -34,16 +40,17 @@ func (a *addrSendRecvStats) getSendRecvStats(addr string) *sendRecvStats {
 func (s *sendRecvStats) String() string {
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
-	return fmt.Sprintf("SEND: %dBytes / %dpkts, RECV: %dBytes / %dpkts",
-		s.sendBytes, s.sendPackets, s.recvBytes, s.recvPackets)
+	return fmt.Sprintf("RX: %s / %s pkts, TX: %s / %s pkts",
+		humanize.IBytes(s.recvBytes), humanize.Comma(int64(s.recvPackets)),
+		humanize.IBytes(s.sendBytes), humanize.Comma(int64(s.sendPackets)))
 }
 
 func (a *addrSendRecvStats) Strings() []string {
 	a.mtx.RLock()
 	defer a.mtx.RUnlock()
-	res := make([]string, len(a.data))
+	res := make([]string, 0, len(a.data))
 	for key, val := range a.data {
-		res = append(res, fmt.Sprint("[%s] %s", key, val.String()))
+		res = append(res, fmt.Sprintf("[%s] %s", key, val.String()))
 	}
 	return res
 }
@@ -64,12 +71,12 @@ func writeRecv(addr string, packets, bytes uint64) {
 	s.recvBytes += bytes
 }
 
-func read(addr string) sendRecvStats {
-	s := theAddrSendRecvStats.getSendRecvStats(addr)
-	return sendRecvStats{
-		sendPackets: s.sendPackets,
-		sendBytes:   s.sendBytes,
-		recvPackets: s.recvPackets,
-		recvBytes:   s.recvBytes,
-	}
-}
+// func read(addr string) sendRecvStats {
+// 	s := theAddrSendRecvStats.getSendRecvStats(addr)
+// 	return sendRecvStats{
+// 		sendPackets: s.sendPackets,
+// 		sendBytes:   s.sendBytes,
+// 		recvPackets: s.recvPackets,
+// 		recvBytes:   s.recvBytes,
+// 	}
+// }
