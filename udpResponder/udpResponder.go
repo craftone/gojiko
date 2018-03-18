@@ -82,6 +82,7 @@ func udpResponder(c *cli.Context) error {
 	go sender(udpConn, toSender)
 	go sender(udpConn, toSender)
 	go sender(udpConn, toSender)
+	go statReporter(5)
 
 	log.Printf("Starting UDP responder [ %s ] ...", udpAddr.String())
 	for {
@@ -89,15 +90,16 @@ func udpResponder(c *cli.Context) error {
 		if err != nil {
 			return cli.NewExitError(err, 3)
 		}
+		writeRecv(addr.String(), 1, uint64(n))
 		if n < 10 {
 			log.Printf("Received a invalid packet from %s : %#v", addr.String(), buf[:n])
 			continue
 		}
 		sendPacketSize := binary.BigEndian.Uint16(buf[0:2])
 		seqNum := binary.BigEndian.Uint64(buf[2:10])
-		log.Printf("Received a packet from %s, size: %d, response size: %d, sequence number: %d",
-			addr.String(), n, sendPacketSize, seqNum)
 		if DebugMode {
+			log.Printf("Received a packet from %s, size: %d, response size: %d, sequence number: %d",
+				addr.String(), n, sendPacketSize, seqNum)
 			log.Printf("body: %#v", buf[:n])
 		}
 		toSender <- RecvPacket{
@@ -121,7 +123,24 @@ func sender(udpConn *net.UDPConn, toSender chan RecvPacket) {
 		binary.BigEndian.PutUint64(buf[2:10], recv.seqNum)
 		size := recv.sendPacketSize - 28 // 20:IP header, 8: UDP header
 		udpConn.WriteTo(buf[0:size], recv.raddr)
-		log.Printf("Send a packet raddr: %s, len: %d, seqNum: %d",
-			recv.raddr.String(), recv.sendPacketSize, recv.seqNum)
+		if DebugMode {
+			log.Printf("Send a packet raddr: %s, len: %d, seqNum: %d",
+				recv.raddr.String(), recv.sendPacketSize, recv.seqNum)
+		}
+		writeSend(recv.raddr.String(), 1, uint64(recv.sendPacketSize))
 	}
+}
+
+func statReporter(interval uint) {
+	t := time.NewTicker(time.Duration(interval) * time.Second)
+	for {
+		select {
+		case <-t.C:
+			reports := theAddrSendRecvStats.Strings()
+			for _, report := range reports {
+				log.Print(report)
+			}
+		}
+	}
+
 }
