@@ -1,7 +1,7 @@
 # Gojiko  ( Golang gijiko ) の todo
 
 - ~~ECHO Request/Response の Marshal/Unmarshal を実装~~ @ 2017/09/03
-- CSreq/res の Marshal/Unmarshal を実装
+- ~~CSreq/res の Marshal/Unmarshal を実装~~
   + ~~IMSI~~
   + ~~Cause~~
   + ~~APN~~
@@ -32,15 +32,15 @@
 
 - ~~gtpv2cのTEIDをgtp.Teidに変更~~
 
-- SgwCtrl.CreateSession()を実装
+- ~~SgwCtrl.CreateSession()を実装~~
   + ~~APN repo を実装~~
-  + SgwCtrl.CreateSession() を実装
+  + ~~SgwCtrl.CreateSession() を実装~~
     + ~~Sender/Receiverとの連携チャンネルに宛先アドレスも入れるようにする~~
     + ~~CreateSessionでMakeCSReqArg()利用を止める~~
-    + SgwCtrlSender を実装
+    + ~~SgwCtrlSender を実装~~
       + ~~OpSPgw関連のFindOrCreate等をSgwCtrlではなくAbsSPgwに実装する~~
       + ~~connの保有者をOpSPgwからabsSPgwに移す~~
-    + SgwCtrlReceiver を実装
+    + ~~SgwCtrlReceiver を実装~~
       + ~~receiverで宛先TEIDを見てパケットを振り分ける~~ @ 2017/12/10n
       + ~~受け取ったパケットを解析してセッション情報をアップデートする~~ @ 2017/12/18
       + ~~CreateSessionResのタイムアウトが機能していないので修正する~~ @ 2017/12/21
@@ -48,29 +48,29 @@
     + ~~CSresの戻り値に応じた動作にする~~ @2018/01/01
     + ~~NG時にsessionを削除する~~ @2018/01/01
 
-- Config管理
+- ~~Config管理~~
   + ~~viper利用で進める~~ @ 2017/12/28
   + ~~S5のtimeout, retry数をコンフィグで指定できるようにする~~ @ 2017/12/28
   + ~~SGW, APNを定義できるようにする。~~ @ 2018/02/18
 
-- Webサービス部の作成
+- ~~Webサービス部の作成~~
   + ~~goa利用で進める~~ @ 2018/01/13
   + ~~createSession部作成~~ @ 2018/02/15
   + ~~Error時にJSONで返せるようにする~~ @ 2018/02/23
     + 中身はJSON だが Media Type が application/vnd.goa.error になっていて、
       それを+jsonに変えるのは generator を変える必要があり面倒。そのままとする。
 
-- バグ修正
+- ~~バグ修正~~
   + ~~APN IEが間違っていたので修正~~ @ 2018/02/18
   + ~~APIでsgwが存在しない場合に落ちてしまう~~ @ 2018/02/23
 
 - ~~SgwCtrl.DeleteBearer() を実装~~ @ 2018/02/25
 
-- ECHO-Cを実装する
+- ~~ECHO-Cを実装する~~
   + ~~GTPv2C ECHOパケットに応答する。~~ @ 2018/02/24
   + ~~定期的にECHO-Cパケットを送出し、死活監視を行う。→要らないな。。~~ @ 2018/03/03
 
-- UDP通信を実装する
+- ~~UDP通信を実装する~~
   + ~~gtpSession.SendUDP() を実装~~ @ 2018/03/01
   + ~~受信機能を実装する~~ @ 2018/03/04
   + ~~statsを実装する~~ @ 2018/03/04
@@ -83,18 +83,19 @@
 - ~~UdpEchoFlowSenderで、チャンネルが詰まったり遅延したりに対応する~~ @ 2018/03/04
 - ~~UdpEchoFlowのAPIでエラー時にちゃんと返ってこないのを修正~~ @ 2018/03/11
 
-- GTPv1U ECHOパケットに応答する。
-
 - sessionのステータス遷移をちゃんとして受け付けられるときだけ受け付けるようにする。channelが詰まったりするのを防ぐため。
+
+- GTPv1U ECHOパケットに応答する。
+- UDP Responderで、ログにbitrateを出すようにする
 
 - CreateSessionをリファクタリング。コマンドchanでやる必要がない。
 - SgwCtrl.DeleteSession() を実装
-
+- Error Indicatorに対応
 - contextを使ってキャンセル→goroutine停止を確実に実施する
 
 
-- Monitor を実装
-
 
 - SPgwのgoroutine終了。UDP read timeoutもさせる必要がある。
+
+- Monitor を実装
 
