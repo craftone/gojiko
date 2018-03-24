@@ -14,13 +14,13 @@ import (
 )
 
 type csResStr struct {
-	res *GsRes
+	res GsRes
 	err error
 }
 
 func TestSgwCtrl_CreateSession_OK(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
-	resCh := make(chan *GsRes)
+	resCh := make(chan GsRes)
 	imsi := "440101234567890"
 	ebi := byte(5)
 	go func() {
@@ -89,7 +89,7 @@ retry:
 
 func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
-	resCh := make(chan *GsRes)
+	resCh := make(chan GsRes)
 	imsi := "440101234567891"
 	ebi := byte(5)
 
@@ -135,7 +135,7 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 
 func TestSgwCtrl_CreateSession_NG(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
-	resCh := make(chan *GsRes)
+	resCh := make(chan GsRes)
 	imsi := "440101234567892"
 	ebi := byte(5)
 
@@ -195,7 +195,7 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 	)
 
 	// No Create Sessin Response and the session should be timed out.
-	assert.Equal(t, *res, GsRes{Code: GsResTimeout, Msg: "Create Session Response timed out and retry out"})
+	assert.Equal(t, res, GsRes{Code: GsResTimeout, Msg: "Create Session Response timed out and retry out"})
 }
 
 func TestSgwCtrl_EchoResponse(t *testing.T) {
