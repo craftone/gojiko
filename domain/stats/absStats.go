@@ -29,7 +29,7 @@ func (as *absStats) ToMsgReceiverChan() chan Msg {
 
 // msgReceiver is for goroutine
 func (as *absStats) msgReceiver(ctx context.Context) {
-	log := log.WithField("routine", "msgReceiver")
+	log := log.WithField("routine", "absStats.msgReceiver")
 	log.Debug("Start MsgReceiver goroutine")
 loop:
 	select {
@@ -48,7 +48,7 @@ loop:
 		}
 		goto loop
 	case <-ctx.Done():
-		log.Debug("This goroutine is canceled")
+		// log.Debug("This goroutine is canceled")
 	}
 	log.Debug("End MsgReceiver goroutine")
 }

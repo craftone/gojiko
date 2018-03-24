@@ -63,21 +63,22 @@ func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) 
 
 // absSPgwSenderRoutine is for GoRoutine
 func (sp *absSPgw) absSPgwSenderRoutine() {
-	myLog := log.WithFields(logrus.Fields{
+	log := log.WithFields(logrus.Fields{
 		"laddr":   sp.addr.String(),
 		"routine": "SPgwSender",
 	})
-	myLog.Info("Start a SPgw Sender goroutine")
+	log.Info("Start a SPgw Sender goroutine")
 
 	for msg := range sp.toSender {
-		myLog.WithField("raddr", msg.raddr.String()).Debugf("Sending %d bytes packet", len(msg.body))
+		log.WithField("raddr", msg.raddr.String()).Debugf("Sending %d bytes packet", len(msg.body))
 		conn := sp.conn
 		_, err := conn.WriteToUDP(msg.body, &msg.raddr)
 		if err != nil {
-			myLog.Error(err)
+			log.Error(err)
 			continue
 		}
 	}
+	log.Info("End a SPgw Sender goroutine")
 }
 
 // echoReceiver is for GoRoutine

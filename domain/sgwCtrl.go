@@ -2,6 +2,7 @@ package domain
 
 import (
 	"encoding/binary"
+	"fmt"
 	"net"
 
 	"github.com/craftone/gojiko/domain/apns"
@@ -145,8 +146,8 @@ func (s *SgwCtrl) CreateSession(
 		return GsRes{}, nil, err
 	}
 
-	// Make GTP Session CMD of Create Session Request
-	cmd, err := NewCreateSessionReq(mcc, mnc, mei)
+	// Make Create Session Request argument
+	arg, err := NewCreateSessionReq(mcc, mnc, mei)
 	if err != nil {
 		return GsRes{}, nil, err
 	}
@@ -154,7 +155,7 @@ func (s *SgwCtrl) CreateSession(
 	// Send CSreq and receive CSreq
 	resChan := make(chan GsRes)
 	session := s.GtpSessionRepo.FindBySessionID(gsid)
-	go session.procCreateSession(cmd, log, resChan)
+	go session.procCreateSession(arg, log, resChan)
 
 	// Receive result of the process send CSreq and receive CSres
 	res := <-resChan
@@ -168,6 +169,26 @@ func (s *SgwCtrl) CreateSession(
 	}
 
 	return res, session, nil
+}
+
+func (s *SgwCtrl) DeleteSession(imsi string, ebi byte) (GsRes, error) {
+	session := s.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
+	if session == nil {
+		return GsRes{}, fmt.Errorf("There is no session that's imsi is %s and ebi is %d", imsi, ebi)
+	}
+
+	// Send DSreq and receive DSres
+	resChan := make(chan GsRes)
+	go session.procDeleteSession(resChan, log)
+
+	// Receive result of the process send DSreq and receive DSres
+	res := <-resChan
+	s.GtpSessionRepo.deleteSession(session.id)
+	if res.err != nil {
+		log.Error(res.err)
+		return GsRes{}, res.err
+	}
+	return res, nil
 }
 
 // sgwCtrlReceiverRoutine is for GoRoutine
@@ -200,8 +221,9 @@ func (sgwCtrl *SgwCtrl) sgwCtrlReceiverRoutine() {
 			sgwCtrl.toEchoReceiver <- UDPpacket{*raddr, received}
 		case gtpv2c.EchoResponseNum:
 			myLog.Error("Not yet implemented!")
-			// Not yet be implemented
-		case gtpv2c.CreateSessionResponseNum, gtpv2c.DeleteBearerRequestNum:
+		case gtpv2c.CreateSessionResponseNum,
+			gtpv2c.DeleteSessionResponseNum,
+			gtpv2c.DeleteBearerRequestNum:
 			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
 			sess := sgwCtrl.FindByCtrlTeid(teid)
 			if sess == nil {

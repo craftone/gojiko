@@ -47,6 +47,7 @@ type GtpSession struct {
 	mtx4status sync.RWMutex
 
 	receiveCSresChan        chan *gtpv2c.CreateSessionResponse
+	receiveDSresChan        chan *gtpv2c.DeleteSessionResponse
 	toSgwCtrlSenderChan     chan UDPpacket
 	fromSgwCtrlReceiverChan chan UDPpacket
 	toSgwDataSenderChan     chan UDPpacket
@@ -93,44 +94,52 @@ func (s *GtpSession) changeState(curState, nextState GtpSessionStatus) error {
 
 // this function is for GoRoutine
 func (s *GtpSession) receiveCtrlPacketRoutine() {
-	myLog := log.WithFields(logrus.Fields{
+	log := log.WithFields(logrus.Fields{
 		"SessionID": s.ID(),
 		"routine":   "CtrlPacketReceiver",
 	})
-	myLog.Debug("Start a GTP session's ctrl packet receiver")
+	log.Debug("Start a GTP session's ctrl packet receiver")
 
 	for recv := range s.fromSgwCtrlReceiverChan {
 		// Ensure received packet has sent from correct PGW address
 		if !recv.raddr.IP.Equal(s.pgwCtrlAddr.IP) {
-			myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %s , expected : %s", recv.raddr.String(), s.pgwCtrlAddr.String())
+			log.Debugf("Received invalid GTPv2-C packet from unkown address : %s , expected : %s", recv.raddr.String(), s.pgwCtrlAddr.String())
 			continue
 		}
 
 		// Unmarshal received packet
 		msg, _, err := gtpv2c.Unmarshal(recv.body)
 		if err != nil {
-			myLog.Debugf("Received invalid GTPv2-C packet : %s", err)
+			log.Debugf("Received invalid GTPv2-C packet : %s", err)
 			continue
 		}
-		myLog.Debugf("Received GTPv2-C packet : %#v", msg)
+		log.Debugf("Received GTPv2-C packet : %#v", msg)
 
 		switch typedMsg := msg.(type) {
 		case *gtpv2c.CreateSessionResponse:
 			err := s.changeState(GssCSReqSend, GssCSResReceived)
 			if err != nil {
-				myLog.Error("Received CreateSessionResponse in unexpected state")
+				log.Error("Received CreateSessionResponse in unexpected state")
 			} else {
 				s.receiveCSresChan <- typedMsg
 			}
-		case *gtpv2c.DeleteBearerRequest:
-			err := s.procDeleteBearer(recv.raddr, typedMsg, myLog)
+		case *gtpv2c.DeleteSessionResponse:
+			err := s.changeState(GssDSReqSend, GssDSResReceived)
 			if err != nil {
-				myLog.Error(err)
+				log.Error("Received DeleteSessionResponse in unexpected state")
+			} else {
+				s.receiveDSresChan <- typedMsg
+			}
+		case *gtpv2c.DeleteBearerRequest:
+			err := s.procDeleteBearer(recv.raddr, typedMsg, log)
+			if err != nil {
+				log.Error(err)
 			}
 		default:
-			myLog.Error("Don't know how to precess the packet")
+			log.Error("Don't know how to precess the packet")
 		}
 	}
+	log.Debug("End a GTP session's control packet receiver")
 }
 
 // this function is for GoRoutine
@@ -161,7 +170,7 @@ func (s *GtpSession) receiveDataPacketRoutine() {
 // procCreateSession is for gorutine
 func (s *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus.Entry, gscResChan chan GsRes) {
 	myLog = myLog.WithField("SessionID", s.id)
-	myLog = myLog.WithField("func", "procCreateSession")
+	myLog = myLog.WithField("routine", "procCreateSession")
 
 	// Change state from IDLE to SENDING
 	err := s.changeState(GssNewed, GssCSReqSending)
@@ -257,7 +266,7 @@ loop:
 		}
 
 	case <-timeoutChan:
-		myLog.Error("The Create Session Response timed out")
+		myLog.Info("Wait for Create Session Response is timed out")
 		s.changeState(GssCSReqSend, GssCSReqSending)
 		retryCount++
 		if retryCount <= config.Gtpv2cRetry() {
@@ -266,6 +275,71 @@ loop:
 		}
 		gscResChan <- GsRes{Code: GsResTimeout, Msg: "Create Session Response timed out and retry out"}
 	}
+}
+
+// procDeleteSession is for goroutine
+func (s *GtpSession) procDeleteSession(gscResChan chan GsRes, log *logrus.Entry) {
+	log = log.WithField("SessionID", s.id)
+	log = log.WithField("routine", "procDeleteSession")
+
+	// Change state from CONNECTED to SENDING
+	err := s.changeState(GssConnected, GssDSReqSending)
+	if err != nil {
+		gscResChan <- GsRes{err: err}
+		return
+	}
+
+	// Prepare DeleteSessionRequest message
+	seqNum := s.sgwCtrl.nextSeqNum()
+
+	_, pgwTeid := s.PgwCtrlFTEID()
+	dsReq, err := gtpv2c.NewDeleteSessionRequest(pgwTeid, seqNum, s.Ebi())
+	if err != nil {
+		gscResChan <- GsRes{err: err}
+		return
+	}
+	dsReqBin := dsReq.Marshal()
+	raddr := s.pgwCtrlAddr
+
+	// Send a Delete Session Request message to the PGW
+	retryCount := 0
+retry:
+	s.toSgwCtrlSenderChan <- UDPpacket{raddr, dsReqBin}
+	err = s.changeState(GssDSReqSending, GssDSReqSend)
+	if err != nil {
+		gscResChan <- GsRes{err: err}
+		return
+	}
+	timeoutChan := time.After(config.Gtpv2cTimeoutDuration())
+
+loop:
+	select {
+	case dsRes := <-s.receiveDSresChan:
+		if dsReq.SeqNum() != seqNum {
+			log.Debug("The response's sequense number is invalid")
+			goto loop
+		}
+		causeType, causeMsg := ie.CauseDetail(dsRes.Cause().Value())
+		switch causeType {
+		case ie.CauseTypeAcceptance:
+			gscResChan <- GsRes{Code: GsResOK, Msg: causeMsg}
+		case ie.CauseTypeRetryableRejection:
+			gscResChan <- GsRes{Code: GsResRetryableNG, Msg: causeMsg}
+		default:
+			gscResChan <- GsRes{Code: GsResNG, Msg: causeMsg}
+		}
+
+	case <-timeoutChan:
+		log.Info("Wait for Delete Session Response is timed out")
+		s.changeState(GssDSReqSend, GssDSReqSending)
+		retryCount++
+		if retryCount <= config.Gtpv2cRetry() {
+			log.Debugf("Delete Session Response timed out and retry : %s time", humanize.Ordinal(retryCount))
+			goto retry
+		}
+		gscResChan <- GsRes{Code: GsResTimeout, Msg: "Delete Session Response timed out and retry out"}
+	}
+
 }
 
 func (s *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.DeleteBearerRequest, myLog *logrus.Entry) error {
@@ -280,7 +354,7 @@ func (s *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.DeleteBea
 	if err != nil {
 		return err
 	}
-	myLog.Info("Delete the sessions records")
+	myLog.Info("Delete the bearer(session)'s records")
 	return nil
 }
 

@@ -18,10 +18,10 @@ type csResStr struct {
 	err error
 }
 
-func TestSgwCtrl_CreateSession_OK(t *testing.T) {
+func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
 	resCh := make(chan GsRes)
-	imsi := "440101234567890"
+	imsi := "440100000000000"
 	ebi := byte(5)
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
@@ -42,8 +42,8 @@ func TestSgwCtrl_CreateSession_OK(t *testing.T) {
 
 	// make pseudo response binary that cause is CauseRequestAccepted
 	paaIP := net.IPv4(9, 10, 11, 12)
-	pgwCtrlTEID := gtp.Teid(0x01234567)
-	pgwDataTEID := gtp.Teid(0x76543210)
+	pgwCtrlTEID := gtp.Teid(0x10000000)
+	pgwDataTEID := gtp.Teid(0x70000000)
 	csResArg, _ := gtpv2c.MakeCSResArg(
 		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,     // Cause
@@ -73,6 +73,34 @@ func TestSgwCtrl_CreateSession_OK(t *testing.T) {
 	assert.True(t, session.paa.IPv4().Equal(paaIP))
 	assert.Equal(t, pgwCtrlTEID, session.pgwCtrlFTEID.Teid())
 	assert.Equal(t, pgwDataTEID, session.pgwDataFTEID.Teid())
+
+	// Send Delete Session Request
+	go func() {
+		res, err := sgwCtrl.DeleteSession(imsi, ebi)
+		assert.NoError(t, err)
+		resCh <- res
+	}()
+
+	// wait for send DeleteSessionRequest
+	for session.Status() != GssDSReqSend {
+		time.Sleep(time.Millisecond)
+	}
+
+	// make pseudo response binary that cause is CauseRequestAccepted
+	dsRes, err := gtpv2c.NewDeleteSessionResponse(
+		session.sgwCtrlFTEID.Teid(),
+		0x1235, ie.CauseRequestAccepted,
+		ebi, 0)
+	assert.NoError(t, err)
+	dsResBin := dsRes.Marshal()
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, dsResBin}
+
+	res = <-resCh
+	assert.NoError(t, res.err)
+	assert.Equal(t, GsResOK, res.Code)
+
+	// ensure release GtpSession map's record
+	assert.Nil(t, sgwCtrl.FindByImsiEbi(imsi, ebi))
 }
 
 func ensureTheSession(sgwCtrl *SgwCtrl, imsi string, ebi byte) *GtpSession {
@@ -90,7 +118,7 @@ retry:
 func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
 	resCh := make(chan GsRes)
-	imsi := "440101234567891"
+	imsi := "440100000000001"
 	ebi := byte(5)
 
 	go func() {
@@ -109,8 +137,8 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 
 	// make pseudo response binary that cause is CauseNoResourcesAvailable
 	paaIP := net.IPv4(9, 10, 11, 12)
-	pgwCtrlTEID := gtp.Teid(0x01234567)
-	pgwDataTEID := gtp.Teid(0x76543210)
+	pgwCtrlTEID := gtp.Teid(0x10000001)
+	pgwDataTEID := gtp.Teid(0x70000001)
 	csResArg, _ := gtpv2c.MakeCSResArg(
 		session.sgwCtrlFTEID.Teid(),  // SgwCtrlTEID
 		ie.CauseNoResourcesAvailable, // Cause
@@ -136,7 +164,7 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 func TestSgwCtrl_CreateSession_NG(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
 	resCh := make(chan GsRes)
-	imsi := "440101234567892"
+	imsi := "440100000000002"
 	ebi := byte(5)
 
 	go func() {
@@ -155,8 +183,8 @@ func TestSgwCtrl_CreateSession_NG(t *testing.T) {
 
 	// make pseudo response binary that cause is CauseNoResourcesAvailable
 	paaIP := net.IPv4(9, 10, 11, 12)
-	pgwCtrlTEID := gtp.Teid(0x01234567)
-	pgwDataTEID := gtp.Teid(0x76543210)
+	pgwCtrlTEID := gtp.Teid(0x10000002)
+	pgwDataTEID := gtp.Teid(0x70000002)
 	csResArg, _ := gtpv2c.MakeCSResArg(
 		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseIMSINotKnown,        // Cause
@@ -187,7 +215,7 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 	defer config.SetGtpv2cTimeout(defaultGtpv2cTimeout)
 
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
-	imsi := "440101234567892"
+	imsi := "440100000000003"
 	ebi := byte(5)
 	res, _, _ := sgwCtrl.CreateSession(
 		imsi, "819012345679", "0123456789012345",
@@ -201,6 +229,10 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 func TestSgwCtrl_EchoResponse(t *testing.T) {
 	// preparing
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
+
+	// use pserudo channel
+	orgSgwCtrlToSender := sgwCtrl.toSender
+	defer func() { sgwCtrl.toSender = orgSgwCtrlToSender }()
 	toSender := make(chan UDPpacket, 10)
 	sgwCtrl.toSender = toSender
 
@@ -221,7 +253,7 @@ func TestSgwCtrl_EchoResponse(t *testing.T) {
 func TestSgwCtrl_CreateSessionAndDeleteBearer(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
 	resCh := make(chan csResStr)
-	imsi := "440101234567891"
+	imsi := "440100000000004"
 	ebi := byte(5)
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
@@ -238,8 +270,8 @@ func TestSgwCtrl_CreateSessionAndDeleteBearer(t *testing.T) {
 
 	// make pseudo response binary that cause is CauseRequestAccepted
 	paaIP := net.IPv4(9, 10, 11, 12)
-	pgwCtrlTEID := gtp.Teid(0x01234567)
-	pgwDataTEID := gtp.Teid(0x76543210)
+	pgwCtrlTEID := gtp.Teid(0x10000004)
+	pgwDataTEID := gtp.Teid(0x70000004)
 	csResArg, _ := gtpv2c.MakeCSResArg(
 		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,     // Cause
@@ -282,7 +314,7 @@ retry:
 	}
 	session := repo.FindBySessionID(id)
 	if session != nil {
-		fmt.Println("waiting")
+		// fmt.Println("waiting")
 		time.Sleep(50 * time.Microsecond)
 		goto retry
 	}
@@ -293,7 +325,7 @@ retry:
 func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
 	resCh := make(chan csResStr)
-	imsi := "440101234567894"
+	imsi := "440100000000005"
 	ebi := byte(5)
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
@@ -310,8 +342,8 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 
 	// make pseudo response binary that cause is CauseRequestAccepted
 	paaIP := net.IPv4(9, 10, 11, 12)
-	pgwCtrlTEID := gtp.Teid(0x01234567)
-	pgwDataTEID := gtp.Teid(0x76543210)
+	pgwCtrlTEID := gtp.Teid(0x10000005)
+	pgwDataTEID := gtp.Teid(0x70000005)
 	csResArg, _ := gtpv2c.MakeCSResArg(
 		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,     // Cause
@@ -348,6 +380,8 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	}
 
 	sgwData := session.sgwCtrl.Pair().(*SgwData)
+	orgSgwDataToSender := sgwData.toSender
+	defer func() { sgwData.toSender = orgSgwDataToSender }()
 	c := make(chan UDPpacket)
 	sgwData.toSender = c
 
@@ -381,7 +415,7 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 		0x30,     // GTP version:1, PT=1(GTP), all flags are 0
 		0xFF,     // GTP_TPDU_MSG (0xFF)
 		0x00, 38, // totalLen: 38
-		0x76, 0x54, 0x32, 0x10, // teid
+		0x70, 0x00, 0x00, 0x05, // teid
 
 		0x45,       // version: 4, ihl: 5
 		0x00,       // tos: 0,
@@ -434,10 +468,10 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 
 	resCh1 := make(chan csResStr)
 	resCh2 := make(chan csResStr)
-	imsi1 := "440101234567894"
-	imsi2 := "440101234567895"
-	msisdn1 := "819012345674"
-	msisdn2 := "819012345675"
+	imsi1 := "440100000000006"
+	imsi2 := "440100000000007"
+	msisdn1 := "819012345676"
+	msisdn2 := "819012345677"
 	ebi := byte(5)
 
 	go func() {
@@ -464,10 +498,10 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	// make pseudo response binary that cause is CauseRequestAccepted
 	paaIP1 := net.IPv4(11, 11, 11, 11)
 	paaIP2 := net.IPv4(22, 22, 22, 22)
-	pgwCtrlTEID1 := gtp.Teid(0x01234567)
-	pgwDataTEID1 := gtp.Teid(0x01234567)
-	pgwCtrlTEID2 := gtp.Teid(0x76543210)
-	pgwDataTEID2 := gtp.Teid(0x76543210)
+	pgwCtrlTEID1 := gtp.Teid(0x10000006)
+	pgwDataTEID1 := gtp.Teid(0x10000006)
+	pgwCtrlTEID2 := gtp.Teid(0x70000007)
+	pgwDataTEID2 := gtp.Teid(0x70000007)
 	csResArg1, _ := gtpv2c.MakeCSResArg(
 		session1.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,      // Cause
@@ -532,6 +566,8 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	}
 
 	sgwData := session1.sgwCtrl.Pair().(*SgwData)
+	orgSgwDataToSender := sgwData.toSender
+	defer func() { sgwData.toSender = orgSgwDataToSender }()
 	c := make(chan UDPpacket)
 	sgwData.toSender = c
 
@@ -551,7 +587,7 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 		0x30,     // GTP version:1, PT=1(GTP), all flags are 0
 		0xFF,     // GTP_TPDU_MSG (0xFF)
 		0x00, 38, // totalLen: 38
-		0x01, 0x23, 0x45, 0x67, // teid
+		0x10, 0x00, 0x00, 0x06, // teid
 
 		0x45,       // version: 4, ihl: 5
 		0x00,       // tos: 0,
@@ -587,4 +623,76 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	err = ensureNoSession(sgwCtrl.GtpSessionRepo, session2.ID(), 10)
 	assert.NoError(t, err)
 	// assert.True(t, false) //dummy
+}
+
+func TestSgwCtrl_DeleteSession_NoSessionError(t *testing.T) {
+	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
+	res, err := sgwCtrl.DeleteSession("999999999", 5)
+	assert.Equal(t, GsRes{}, res)
+	assert.Error(t, err)
+}
+
+func TestSgwCtrl_DeleteSession_Timeout(t *testing.T) {
+	// change Gtpv2cTimeout temporarily
+	defaultGtpv2cTimeout := config.Gtpv2cTimeout()
+	config.SetGtpv2cTimeout(1)
+	defer config.SetGtpv2cTimeout(defaultGtpv2cTimeout)
+
+	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
+	resCh := make(chan GsRes)
+	imsi := "440100000000008"
+	ebi := byte(5)
+	go func() {
+		res, _, err := sgwCtrl.CreateSession(
+			imsi, "819012345678", "0123456789012345",
+			"440", "10", "example.com", ebi,
+		)
+		assert.NoError(t, err)
+		resCh <- res
+	}()
+
+	// wait till the session is created
+	session := ensureTheSession(sgwCtrl, imsi, ebi)
+
+	pgwAddr := net.UDPAddr{IP: pgwIP, Port: GtpControlPort}
+
+	// make pseudo response binary that cause is CauseRequestAccepted
+	paaIP := net.IPv4(9, 10, 11, 12)
+	pgwCtrlTEID := gtp.Teid(0x10000008)
+	pgwDataTEID := gtp.Teid(0x70000008)
+	csResArg, _ := gtpv2c.MakeCSResArg(
+		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
+		ie.CauseRequestAccepted,     // Cause
+		pgwIP, pgwCtrlTEID, // PGW Ctrl FTEID
+		pgwIP, pgwDataTEID, // PGW Data FTEID
+		paaIP,                // PDN Allocated IP address
+		net.IPv4(8, 8, 8, 8), // PriDNS
+		net.IPv4(8, 8, 4, 4), // SecDNS
+		5)                    // EBI
+	csRes, _ := gtpv2c.NewCreateSessionResponse(0x1234, csResArg)
+	csResBin := csRes.Marshal()
+
+	// send CSres packet
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
+
+	res := <-resCh
+	assert.NoError(t, res.err)
+	assert.Equal(t, GsResOK, res.Code)
+
+	// Send Delete Session Request
+	go func() {
+		res, err := sgwCtrl.DeleteSession(imsi, ebi)
+		assert.NoError(t, err)
+		log.Debugf("Wait for sgwCtrl.DeleteSession(imsi:%s, ebi:%d)", imsi, ebi)
+		resCh <- res
+	}()
+
+	// wait for timeout
+	res = <-resCh
+	log.Debugf("Wait for DeleteSession(imsi:%s, ebi:%d) response", imsi, ebi)
+	assert.NoError(t, res.err)
+	assert.Equal(t, GsResTimeout, res.Code)
+
+	// ensure release GtpSession map's record
+	assert.Nil(t, sgwCtrl.FindByImsiEbi(imsi, ebi))
 }

@@ -67,6 +67,7 @@ func (r *GtpSessionRepo) newSession(
 		mtx4status: sync.RWMutex{},
 
 		receiveCSresChan: make(chan *gtpv2c.CreateSessionResponse),
+		receiveDSresChan: make(chan *gtpv2c.DeleteSessionResponse),
 
 		toSgwCtrlSenderChan:     sgwCtrlSendChan,
 		fromSgwCtrlReceiverChan: make(chan UDPpacket, 10),
@@ -95,14 +96,14 @@ func (r *GtpSessionRepo) newSession(
 		pdnType:        pdnType,
 	}
 
-	myLog := log.WithFields(logrus.Fields{
+	log := log.WithFields(logrus.Fields{
 		"id":          session.id,
 		"pgwCtrlIPv4": pgwCtrlIPv4.String(),
 		"imsi":        session.imsi.Value(),
 		"ebi":         session.ebi.Value(),
 		"msisdn":      session.msisdn.Value(),
 	})
-	myLog.Info("New GTP session created")
+	log.Info("New GTP session created")
 
 	r.mtx4Map.Lock()
 	defer r.mtx4Map.Unlock()
@@ -163,6 +164,7 @@ func (r *GtpSessionRepo) deleteSession(sessionID SessionID) error {
 	}
 
 	close(session.receiveCSresChan)        // receiveCSresChan is used by gtpSession only
+	close(session.receiveDSresChan)        // receiveDSresChan is used by gtpSession only
 	close(session.fromSgwCtrlReceiverChan) // the sender should care the channel is active
 	close(session.toSgwDataSenderChan)     // tell the data sender to finish
 	close(session.fromSgwDataReceiverChan) // the sender should care the channel is active
