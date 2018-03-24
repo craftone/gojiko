@@ -21,6 +21,8 @@ const (
 	VersionNotSupportedIndication
 	CreateSessionRequest
 	CreateSessionResponse
+	DeleteSessionRequest
+	DeleteSessionResponse
 	DeleteBearerRequest
 	DeleteBearerResponse
 )
@@ -28,9 +30,9 @@ const (
 func msgType2IEDir(t MsgType) (IEDir, error) {
 	res := MsToNetwork
 	switch t {
-	case EchoRequest, CreateSessionRequest, DeleteBearerResponse:
+	case EchoRequest, CreateSessionRequest, DeleteSessionRequest, DeleteBearerResponse:
 		return MsToNetwork, nil
-	case EchoResponse, CreateSessionResponse, DeleteBearerRequest:
+	case EchoResponse, CreateSessionResponse, DeleteSessionResponse, DeleteBearerRequest:
 		return NetworkToMs, nil
 	}
 	return res, fmt.Errorf("Unkown Message Type : %v", t)

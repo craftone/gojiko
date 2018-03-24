@@ -7,34 +7,34 @@ import (
 	"github.com/craftone/gojiko/domain/gtpv2c/ie"
 )
 
-type DeleteBearerRequest struct {
+type DeleteSessionRequest struct {
 	header
 	lbi *ie.Ebi
 }
 
-func NewDeleteBearerRequest(teid gtp.Teid, seqNum uint32, ebi byte) (*DeleteBearerRequest, error) {
+func NewDeleteSessionRequest(teid gtp.Teid, seqNum uint32, ebi byte) (*DeleteSessionRequest, error) {
 	ebiIE, err := ie.NewEbi(0, ebi)
 	if err != nil {
 		return nil, err
 	}
-	return &DeleteBearerRequest{
-		newHeader(DeleteBearerRequestNum, false, true, teid, seqNum),
+	return &DeleteSessionRequest{
+		newHeader(DeleteSessionRequestNum, false, true, teid, seqNum),
 		ebiIE,
 	}, nil
 }
 
-func (d *DeleteBearerRequest) Marshal() []byte {
+func (d *DeleteSessionRequest) Marshal() []byte {
 	return d.header.marshal(d.lbi.Marshal())
 }
 
-func unmarshalDeleteBearerRequest(h header, buf []byte) (*DeleteBearerRequest, error) {
-	if h.messageType != DeleteBearerRequestNum {
+func unmarshalDeleteSessionRequest(h header, buf []byte) (*DeleteSessionRequest, error) {
+	if h.messageType != DeleteSessionRequestNum {
 		panic(fmt.Sprintf("Invalid message Type : %d", h.messageType))
 	}
 
 	var ebiIE *ie.Ebi
 	for len(buf) > 0 {
-		msg, tail, err := ie.Unmarshal(buf, ie.DeleteBearerRequest)
+		msg, tail, err := ie.Unmarshal(buf, ie.DeleteSessionRequest)
 		buf = tail
 		if err != nil {
 			if _, ok := err.(*ie.UnknownIEError); ok {
@@ -58,11 +58,11 @@ func unmarshalDeleteBearerRequest(h header, buf []byte) (*DeleteBearerRequest, e
 	if ebiIE == nil {
 		return nil, fmt.Errorf("No LBI (Linked EPS Bearer ID) Delete Bearer Request message")
 	}
-	return NewDeleteBearerRequest(h.Teid(), h.seqNum, ebiIE.Value())
+	return NewDeleteSessionRequest(h.Teid(), h.seqNum, ebiIE.Value())
 }
 
 // Getters
 
-func (d *DeleteBearerRequest) Lbi() *ie.Ebi {
+func (d *DeleteSessionRequest) Lbi() *ie.Ebi {
 	return d.lbi
 }
