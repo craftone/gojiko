@@ -155,8 +155,8 @@ loop:
 
 // receiver is for goroutine
 func (u *UdpEchoFlow) receiver(ctx context.Context) {
-	myLog := u.newMyLog("UdpFlowReceiver")
-	myLog.Info("Start a UDP Flow receiver goroutine")
+	log := u.newMyLog("UdpFlowReceiver")
+	log.Info("Start a UDP Flow receiver goroutine")
 	ipv4emu := ipemu.NewIPv4Emulator(ipemu.UDP, u.Arg.DestAddr.IP, u.session.Paa(), config.MTU())
 loop:
 	select {
@@ -165,13 +165,13 @@ loop:
 		if err != nil {
 			u.stats.SendUint64Msg(stats.RecvPacketsInvalid, 1)
 			u.stats.SendUint64Msg(stats.RecvBytesInvalid, 20+uint64(len(pkt.body)))
-			myLog.Debug(err)
+			log.Debug(err)
 			goto loop
 		}
 		seqNum := binary.BigEndian.Uint64(payload[2:])
 		u.stats.SendUint64Msg(stats.RecvPackets, 1)
 		u.stats.SendUint64Msg(stats.RecvBytes, 20+uint64(len(pkt.body)))
-		myLog.Debugf("Received #%d", seqNum)
+		log.Debugf("Received #%d", seqNum)
 		goto loop
 	case <-ctx.Done():
 		break loop
@@ -201,6 +201,7 @@ func (u *UdpEchoFlow) newMyLog(routine string) *logrus.Entry {
 		"TargetBps":      u.Arg.TargetBps,
 		"NumOfSend":      u.Arg.NumOfSend,
 		"RecvPacketSize": u.Arg.RecvPacketSize,
+		"sessionID":      u.session.ID(),
 	})
 }
 
