@@ -1,5 +1,5 @@
 task :test do
-    sh "go test -timeout 10s ./..."
+    sh "go test -timeout 5s ./..."
 end
 
 task :build do
