@@ -9,7 +9,7 @@ import (
 
 type DeleteBearerRequest struct {
 	header
-	lbi *ie.Ebi
+	ebi *ie.Ebi
 }
 
 func NewDeleteBearerRequest(teid gtp.Teid, seqNum uint32, ebi byte) (*DeleteBearerRequest, error) {
@@ -24,7 +24,7 @@ func NewDeleteBearerRequest(teid gtp.Teid, seqNum uint32, ebi byte) (*DeleteBear
 }
 
 func (d *DeleteBearerRequest) Marshal() []byte {
-	return d.header.marshal(d.lbi.Marshal())
+	return d.header.marshal(d.ebi.Marshal())
 }
 
 func unmarshalDeleteBearerRequest(h header, buf []byte) (*DeleteBearerRequest, error) {
@@ -64,5 +64,5 @@ func unmarshalDeleteBearerRequest(h header, buf []byte) (*DeleteBearerRequest, e
 // Getters
 
 func (d *DeleteBearerRequest) Lbi() *ie.Ebi {
-	return d.lbi
+	return d.ebi
 }
