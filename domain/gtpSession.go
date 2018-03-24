@@ -13,24 +13,39 @@ import (
 	"github.com/craftone/gojiko/domain/gtpv2c"
 	"github.com/craftone/gojiko/domain/gtpv2c/ie"
 	"github.com/craftone/gojiko/domain/stats"
+	humanize "github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 )
 
 type GtpSessionStatus byte
 
 const (
-	GssIdle GtpSessionStatus = iota
-	GssSendingCSReq
+	GssNewed GtpSessionStatus = iota
+	GssCSReqSending
+	GssCSReqSend
+	GssCSResReceived
 	GssConnected
+	GssDSReqSending
+	GssDSReqSend
+	GssDSResReceived
 )
+
+var gssString = map[GtpSessionStatus]string{
+	GssNewed:         "Newed",
+	GssCSReqSending:  "CSReqSending",
+	GssCSReqSend:     "CSReqSend",
+	GssCSResReceived: "CSResReceived",
+	GssConnected:     "Connected",
+	GssDSReqSending:  "DSReqSending",
+	GssDSReqSend:     "DSReqSend",
+	GssDSResReceived: "DSResReceived",
+}
 
 type GtpSession struct {
 	id         SessionID
 	status     GtpSessionStatus
 	mtx4status sync.RWMutex
 
-	cmdReqChan              chan gtpSessionCmd
-	cmdResChan              chan GscRes
 	receiveCSresChan        chan *gtpv2c.CreateSessionResponse
 	toSgwCtrlSenderChan     chan UDPpacket
 	fromSgwCtrlReceiverChan chan UDPpacket
@@ -64,49 +79,30 @@ type GtpSession struct {
 	mtx4flow    sync.RWMutex
 }
 
-func (sess *GtpSession) changeState(curState, nextState GtpSessionStatus) error {
-	sess.mtx4status.Lock()
-	defer sess.mtx4status.Unlock()
-	if sess.status != curState {
-		return fmt.Errorf("Current State is not %v", curState)
+func (s *GtpSession) changeState(curState, nextState GtpSessionStatus) error {
+	s.mtx4status.Lock()
+	defer s.mtx4status.Unlock()
+	if s.status != curState {
+		return fmt.Errorf("Cannot change state from %s to %s : current State is %s",
+			gssString[curState], gssString[nextState], gssString[s.status])
 	}
-	sess.status = nextState
-	log.WithField("SessionID", sess.id).Debugf("Change GTP session state : %v -> %v", curState, nextState)
+	s.status = nextState
+	log.WithField("SessionID", s.id).Debugf("Change GTP session state : %s -> %s", gssString[curState], gssString[nextState])
 	return nil
 }
 
 // this function is for GoRoutine
-func (session *GtpSession) gtpSessionRoutine() {
-	myLog := log.WithField("SessionID", session.id)
-	myLog.Debug("Start a GTP session CMD goroutine")
-
-	for msg := range session.cmdReqChan {
-		myLog.Debugf("Received CMD : %v", msg)
-
-		switch cmd := msg.(type) {
-		case createSessionReq:
-			err := session.procCreateSession(cmd, myLog)
-			if err != nil {
-				log.Error(err)
-				session.changeState(GssSendingCSReq, GssIdle)
-			}
-		}
-	}
-	myLog.Debug("Stop a GTP session goroutine")
-}
-
-// this function is for GoRoutine
-func (session *GtpSession) receiveCtrlPacketRoutine() {
+func (s *GtpSession) receiveCtrlPacketRoutine() {
 	myLog := log.WithFields(logrus.Fields{
-		"SessionID": session.ID(),
+		"SessionID": s.ID(),
 		"routine":   "CtrlPacketReceiver",
 	})
 	myLog.Debug("Start a GTP session's ctrl packet receiver")
 
-	for recv := range session.fromSgwCtrlReceiverChan {
+	for recv := range s.fromSgwCtrlReceiverChan {
 		// Ensure received packet has sent from correct PGW address
-		if !recv.raddr.IP.Equal(session.pgwCtrlAddr.IP) {
-			myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %s , expected : %s", recv.raddr.String(), session.pgwCtrlAddr.String())
+		if !recv.raddr.IP.Equal(s.pgwCtrlAddr.IP) {
+			myLog.Debugf("Received invalid GTPv2-C packet from unkown address : %s , expected : %s", recv.raddr.String(), s.pgwCtrlAddr.String())
 			continue
 		}
 
@@ -120,9 +116,14 @@ func (session *GtpSession) receiveCtrlPacketRoutine() {
 
 		switch typedMsg := msg.(type) {
 		case *gtpv2c.CreateSessionResponse:
-			session.receiveCSresChan <- typedMsg
+			err := s.changeState(GssCSReqSend, GssCSResReceived)
+			if err != nil {
+				myLog.Error("Received CreateSessionResponse in unexpected state")
+			} else {
+				s.receiveCSresChan <- typedMsg
+			}
 		case *gtpv2c.DeleteBearerRequest:
-			err := session.procDeleteBearer(recv.raddr, typedMsg, myLog)
+			err := s.procDeleteBearer(recv.raddr, typedMsg, myLog)
 			if err != nil {
 				myLog.Error(err)
 			}
@@ -133,68 +134,76 @@ func (session *GtpSession) receiveCtrlPacketRoutine() {
 }
 
 // this function is for GoRoutine
-func (session *GtpSession) receiveDataPacketRoutine() {
+func (s *GtpSession) receiveDataPacketRoutine() {
 	log := log.WithFields(logrus.Fields{
-		"SessionID": session.ID(),
+		"SessionID": s.ID(),
 		"routine":   "DataPacketReceiver",
 	})
 	log.Debug("Start a GTP session's data packet receiver")
 
-	for recv := range session.fromSgwDataReceiverChan {
+	for recv := range s.fromSgwDataReceiverChan {
 		// Ensure received packet has sent from correct PGW address
-		if !recv.raddr.IP.Equal(session.pgwDataAddr.IP) {
-			log.Debugf("Received invalid GTPv1-U packet from unkown address : %s , expected : %s", recv.raddr.String(), session.pgwDataAddr.String())
+		if !recv.raddr.IP.Equal(s.pgwDataAddr.IP) {
+			log.Debugf("Received invalid GTPv1-U packet from unkown address : %s , expected : %s", recv.raddr.String(), s.pgwDataAddr.String())
 			continue
 		}
 
-		if session.udpFlow == nil {
+		if s.udpFlow == nil {
 			log.Debug("There is no flow process in this session")
 			continue
 		}
 
-		session.udpFlow.fromSessDataReceiver <- recv
+		s.udpFlow.fromSessDataReceiver <- recv
 	}
 	log.Debug("End a GTP session's data packet receiver")
 }
 
-func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus.Entry) error {
+// procCreateSession is for gorutine
+func (s *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus.Entry, gscResChan chan GsRes) {
+	myLog = myLog.WithField("SessionID", s.id)
+	myLog = myLog.WithField("func", "procCreateSession")
+
 	// Change state from IDLE to SENDING
-	err := session.changeState(GssIdle, GssSendingCSReq)
+	err := s.changeState(GssNewed, GssCSReqSending)
 	if err != nil {
-		myLog.Debug(err)
+		gscResChan <- GsRes{err: err}
+		return
 	}
 
-	seqNum := session.sgwCtrl.nextSeqNum()
+	// Prepare CreateSessionRequest message
+	seqNum := s.sgwCtrl.nextSeqNum()
 
-	recoveryIE, err := ie.NewRecovery(0, session.sgwCtrl.recovery)
+	recoveryIE, err := ie.NewRecovery(0, s.sgwCtrl.recovery)
 	if err != nil {
-		return err
+		gscResChan <- GsRes{err: err}
+		return
 	}
 	bearerContextTBCIE, err := ie.NewBearerContextToBeCreatedWithinCSReq(
 		ie.BearerContextToBeCreatedWithinCSReqArg{
-			Ebi:          session.ebi,
+			Ebi:          s.ebi,
 			BearerQoS:    cmd.bearerQoS,
-			SgwDataFteid: session.sgwDataFTEID,
+			SgwDataFteid: s.sgwDataFTEID,
 		})
 	if err != nil {
-		return err
+		gscResChan <- GsRes{err: err}
+		return
 	}
 
 	csReqArg := gtpv2c.CreateSessionRequestArg{
-		Imsi:             session.imsi,
-		Msisdn:           session.msisdn,
+		Imsi:             s.imsi,
+		Msisdn:           s.msisdn,
 		Mei:              cmd.mei,
 		Uli:              cmd.uli,
-		ServingNetwork:   session.servingNetwork,
-		RatType:          session.ratType,
+		ServingNetwork:   s.servingNetwork,
+		RatType:          s.ratType,
 		Indication:       cmd.indication,
-		SgwCtrlFteid:     session.sgwCtrlFTEID,
-		Apn:              session.apn,
+		SgwCtrlFteid:     s.sgwCtrlFTEID,
+		Apn:              s.apn,
 		SelectionMode:    cmd.selectionMode,
-		PdnType:          session.pdnType,
-		Paa:              session.paa,
+		PdnType:          s.pdnType,
+		Paa:              s.paa,
 		ApnRestriction:   cmd.apnRestriction,
-		ApnAmbr:          session.ambr,
+		ApnAmbr:          s.ambr,
 		Pco:              cmd.pco,
 		BearerContextTBC: bearerContextTBCIE,
 		Recovery:         recoveryIE,
@@ -202,63 +211,72 @@ func (session *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus
 
 	csReq, err := gtpv2c.NewCreateSessionRequest(seqNum, csReqArg)
 	if err != nil {
-		return err
+		gscResChan <- GsRes{err: err}
+		return
 	}
 	csReqBin := csReq.Marshal()
 
-	raddr := session.pgwCtrlAddr
+	raddr := s.pgwCtrlAddr
 
-	// Send a CSReq packet to the PGW
-	session.toSgwCtrlSenderChan <- UDPpacket{raddr, csReqBin}
+	// Send a Create Session Request message to the PGW
+	retryCount := 0
+retry:
+	s.toSgwCtrlSenderChan <- UDPpacket{raddr, csReqBin}
+	err = s.changeState(GssCSReqSending, GssCSReqSend)
+	if err != nil {
+		gscResChan <- GsRes{err: err}
+		return
+	}
+	timeoutChan := time.After(config.Gtpv2cTimeoutDuration())
 
-	var res GscRes
-	afterChan := time.After(config.Gtpv2cTimeoutDuration())
-
+loop:
 	select {
-	case csRes := <-session.receiveCSresChan:
+	case csRes := <-s.receiveCSresChan:
 		if csReq.SeqNum() != seqNum {
-			res = GscRes{Code: GscResNG, Msg: "The response's sequense number is invalid"}
-			session.changeState(GssSendingCSReq, GssIdle)
-			break
+			myLog.Debug("The response's sequense number is invalid")
+			goto loop
 		}
 		causeType, causeMsg := ie.CauseDetail(csRes.Cause().Value())
 		switch causeType {
 		case ie.CauseTypeAcceptance:
 			// Set PGW's F-TEIDs into the session
-			session.pgwCtrlFTEID = csRes.PgwCtrlFteid()
-			session.pgwDataFTEID = csRes.BearerContextCeated().PgwDataFteid()
+			s.pgwCtrlFTEID = csRes.PgwCtrlFteid()
+			s.pgwDataFTEID = csRes.BearerContextCeated().PgwDataFteid()
 			// Set PDN Address Allocation into the session
-			session.paa = csRes.Paa()
+			s.paa = csRes.Paa()
 
-			session.changeState(GssSendingCSReq, GssConnected)
-			res = GscRes{Code: GscResOK, Msg: causeMsg, Session: session}
+			if err = s.changeState(GssCSResReceived, GssConnected); err != nil {
+				gscResChan <- GsRes{err: err}
+				return
+			}
+			gscResChan <- GsRes{Code: GsResOK, Msg: causeMsg}
 		case ie.CauseTypeRetryableRejection:
-			session.changeState(GssSendingCSReq, GssIdle)
-			res = GscRes{Code: GscResRetryableNG, Msg: causeMsg}
+			gscResChan <- GsRes{Code: GsResRetryableNG, Msg: causeMsg}
 		default:
-			session.changeState(GssSendingCSReq, GssIdle)
-			res = GscRes{Code: GscResNG, Msg: causeMsg}
+			gscResChan <- GsRes{Code: GsResNG, Msg: causeMsg}
 		}
 
-	case <-afterChan:
+	case <-timeoutChan:
 		myLog.Error("The Create Session Response timed out")
-		session.changeState(GssSendingCSReq, GssIdle)
-		res = GscRes{Code: GscResTimeout, Msg: "Create Session Request timed out"}
+		s.changeState(GssCSReqSend, GssCSReqSending)
+		retryCount++
+		if retryCount <= config.Gtpv2cRetry() {
+			log.Debugf("Create Session Response timed out and retry : %s time", humanize.Ordinal(retryCount))
+			goto retry
+		}
+		gscResChan <- GsRes{Code: GsResTimeout, Msg: "Create Session Response timed out and retry out"}
 	}
-	session.cmdResChan <- res
-
-	return nil
 }
 
-func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.DeleteBearerRequest, myLog *logrus.Entry) error {
-	_, pgwTeid := session.PgwCtrlFTEID()
-	dbRes, err := gtpv2c.NewDeleteBearerResponse(pgwTeid, dbReq.SeqNum(), ie.CauseRequestAccepted, session.Ebi(), session.sgwCtrl.recovery)
+func (s *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.DeleteBearerRequest, myLog *logrus.Entry) error {
+	_, pgwTeid := s.PgwCtrlFTEID()
+	dbRes, err := gtpv2c.NewDeleteBearerResponse(pgwTeid, dbReq.SeqNum(), ie.CauseRequestAccepted, s.Ebi(), s.sgwCtrl.recovery)
 	if err != nil {
 		return err
 	}
-	session.toSgwCtrlSenderChan <- UDPpacket{raddr, dbRes.Marshal()}
+	s.toSgwCtrlSenderChan <- UDPpacket{raddr, dbRes.Marshal()}
 	myLog.Infof("Send Delete Bearer Response : %#v", dbRes)
-	err = session.sgwCtrl.GtpSessionRepo.deleteSession(session.ID())
+	err = s.sgwCtrl.GtpSessionRepo.deleteSession(s.ID())
 	if err != nil {
 		return err
 	}
@@ -266,18 +284,18 @@ func (session *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.Del
 	return nil
 }
 
-func (sess *GtpSession) setUdpFlow(udpEchoFlow *UdpEchoFlow) error {
-	sess.mtx4flow.Lock()
-	defer sess.mtx4flow.Unlock()
-	if sess.udpFlow != nil {
+func (s *GtpSession) setUdpFlow(udpEchoFlow *UdpEchoFlow) error {
+	s.mtx4flow.Lock()
+	defer s.mtx4flow.Unlock()
+	if s.udpFlow != nil {
 		return errors.New("This session already have a UdpFlow")
 	}
-	sess.udpFlow = udpEchoFlow
+	s.udpFlow = udpEchoFlow
 	return nil
 }
 
-func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
-	if sess.status != GssConnected {
+func (s *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
+	if s.status != GssConnected {
 		return errors.New("This session is not connected")
 	}
 	if udpEchoFlowArg.SendPacketSize < MIN_UDP_ECHO_PACKET_SIZE {
@@ -289,50 +307,50 @@ func (sess *GtpSession) NewUdpFlow(udpEchoFlowArg UdpEchoFlowArg) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	udpEchoFlow := &UdpEchoFlow{
 		Arg:                  udpEchoFlowArg,
-		session:              sess,
+		session:              s,
 		fromSessDataReceiver: make(chan UDPpacket, 100),
 		ctxCencel:            cancel,
 		stats:                stats.NewFlowStats(ctx),
 	}
-	err := sess.setUdpFlow(udpEchoFlow)
+	err := s.setUdpFlow(udpEchoFlow)
 	if err != nil {
 		return err
 	}
 
-	go sess.udpFlow.sender(ctx)
-	go sess.udpFlow.receiver(ctx)
+	go s.udpFlow.sender(ctx)
+	go s.udpFlow.receiver(ctx)
 
 	return nil
 }
 
-func (sess *GtpSession) UDPFlow() (*UdpEchoFlow, bool) {
-	sess.mtx4flow.RLock()
-	defer sess.mtx4flow.RUnlock()
-	if sess.udpFlow == nil {
+func (s *GtpSession) UDPFlow() (*UdpEchoFlow, bool) {
+	s.mtx4flow.RLock()
+	defer s.mtx4flow.RUnlock()
+	if s.udpFlow == nil {
 		return nil, false
 	}
-	return sess.udpFlow, true
+	return s.udpFlow, true
 }
 
-func (sess *GtpSession) LastUDPFlow() (*UdpEchoFlow, bool) {
-	sess.mtx4flow.RLock()
-	defer sess.mtx4flow.RUnlock()
-	if sess.lastUDPFlow == nil {
+func (s *GtpSession) LastUDPFlow() (*UdpEchoFlow, bool) {
+	s.mtx4flow.RLock()
+	defer s.mtx4flow.RUnlock()
+	if s.lastUDPFlow == nil {
 		return nil, false
 	}
-	return sess.lastUDPFlow, true
+	return s.lastUDPFlow, true
 }
 
-func (sess *GtpSession) StopUDPFlow() error {
-	sess.mtx4flow.Lock()
-	defer sess.mtx4flow.Unlock()
-	if sess.udpFlow == nil {
+func (s *GtpSession) StopUDPFlow() error {
+	s.mtx4flow.Lock()
+	defer s.mtx4flow.Unlock()
+	if s.udpFlow == nil {
 		return errors.New("This session already stopped a UdpFlow")
 	}
-	sess.udpFlow.ctxCencel()
-	sess.udpFlow.stats.SendTimeMsg(stats.EndTime, time.Now())
-	sess.lastUDPFlow = sess.udpFlow
-	sess.udpFlow = nil
+	s.udpFlow.ctxCencel()
+	s.udpFlow.stats.SendTimeMsg(stats.EndTime, time.Now())
+	s.lastUDPFlow = s.udpFlow
+	s.udpFlow = nil
 	return nil
 }
 
@@ -343,6 +361,8 @@ func (s *GtpSession) ID() SessionID {
 }
 
 func (s *GtpSession) Status() GtpSessionStatus {
+	s.mtx4status.RLock()
+	defer s.mtx4status.RUnlock()
 	return s.status
 }
 

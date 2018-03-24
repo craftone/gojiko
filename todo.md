@@ -83,13 +83,13 @@
 - ~~UdpEchoFlowSenderで、チャンネルが詰まったり遅延したりに対応する~~ @ 2018/03/04
 - ~~UdpEchoFlowのAPIでエラー時にちゃんと返ってこないのを修正~~ @ 2018/03/11
 
-- sessionのステータス遷移をちゃんとして受け付けられるときだけ受け付けるようにする。channelが詰まったりするのを防ぐため。
+- ~~sessionのステータス遷移をちゃんとして受け付けられるときだけ受け付けるようにする。channelが詰まったりするのを防ぐため。~~ @ 2018/03/21
+- ~~CreateSessionをリファクタリング。コマンドchanでやる必要がない。~~ @ 2018/03/21
+- SgwCtrl.DeleteSession() を実装
 
 - GTPv1U ECHOパケットに応答する。
 - UDP Responderで、ログにbitrateを出すようにする
 
-- CreateSessionをリファクタリング。コマンドchanでやる必要がない。
-- SgwCtrl.DeleteSession() を実装
 - Error Indicatorに対応
 - contextを使ってキャンセル→goroutine停止を確実に実施する
 

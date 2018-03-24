@@ -4,12 +4,10 @@ import (
 	"encoding/binary"
 	"net"
 
-	"github.com/craftone/gojiko/config"
 	"github.com/craftone/gojiko/domain/apns"
 	"github.com/craftone/gojiko/domain/gtp"
 	"github.com/craftone/gojiko/domain/gtpv2c"
 	"github.com/craftone/gojiko/domain/gtpv2c/ie"
-	humanize "github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 )
 
@@ -48,11 +46,11 @@ func newSgwCtrl(addr net.UDPAddr, dataPort int, recovery byte) (*SgwCtrl, error)
 func (s *SgwCtrl) CreateSession(
 	imsi, msisdn, mei, mcc, mnc, apnNI string,
 	ebi byte,
-) (*GscRes, error) {
+) (*GsRes, *GtpSession, error) {
 	// Query APN's IP address
 	apn, err := apns.TheRepo().Find(apnNI, mcc, mnc)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	pgwCtrlIPv4 := apn.GetIP()
 	pgwCtrlAddr := net.UDPAddr{IP: pgwCtrlIPv4, Port: GtpControlPort}
@@ -60,70 +58,70 @@ func (s *SgwCtrl) CreateSession(
 	// Find or Create OpPgwCtrl
 	_, err = s.findOrCreateOpSPgw(pgwCtrlAddr)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Make SGW Ctrl F-TEID and SGW Data F-TEID
 	sgwCtrlFTEID, err := ie.NewFteid(0, s.addr.IP, nil, ie.S5S8SgwGtpCIf, s.nextTeid())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	sgwData := s.pair
 	sgwDataFTEID, err := ie.NewFteid(0, sgwData.UDPAddr().IP, nil, ie.S5S8SgwGtpUIf, sgwData.nextTeid())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Make IMSI, MSISDN, etc
 	imsiIE, err := ie.NewImsi(0, imsi)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	msisdnIE, err := ie.NewMsisdn(0, msisdn)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	meiIE, err := ie.NewMei(0, mei)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	ebiIE, err := ie.NewEbi(0, ebi)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	paaIE, err := ie.NewPaa(0, ie.PdnTypeIPv4, net.IPv4(0, 0, 0, 0), nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	apnIE, err := ie.NewApn(0, apn.FullString())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	ambrIE, err := ie.NewAmbr(0, 4294967, 4294967)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	ratTypeIE, err := ie.NewRatType(0, 6)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	servingNetworkID, err := ie.NewServingNetwork(0, mcc, mnc)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	pdnType, err := ie.NewPdnType(0, 1)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// make a new session to the GTP Session Repo
@@ -144,35 +142,32 @@ func (s *SgwCtrl) CreateSession(
 		pdnType,
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Make GTP Session CMD of Create Session Request
 	cmd, err := NewCreateSessionReq(mcc, mnc, mei)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	// Send the CMD to the session's CMD chan
+	// Send CSreq and receive CSreq
+	resChan := make(chan GsRes)
 	session := s.GtpSessionRepo.FindBySessionID(gsid)
+	go session.procCreateSession(cmd, log, resChan)
 
-	retryCount := 0
-retry:
-	session.cmdReqChan <- cmd
-	res := <-session.cmdResChan
-	if res.Code == GscResTimeout {
-		retryCount++
-		if retryCount <= config.Gtpv2cRetry() {
-			log.Debugf("Create Session Response timed out and retry : %s time", humanize.Ordinal(retryCount))
-			goto retry
-		}
-		log.Debugf("Create Session Response timed out and retry out")
+	// Receive result of the process send CSreq and receive CSres
+	res := <-resChan
+	if res.err != nil {
+		log.Error(res.err)
+		s.GtpSessionRepo.deleteSession(session.id)
+		return nil, nil, res.err
 	}
-
-	if res.Code != GscResOK {
+	if res.Code != GsResOK {
 		s.GtpSessionRepo.deleteSession(session.id)
 	}
-	return &res, nil
+
+	return &res, session, nil
 }
 
 // sgwCtrlReceiverRoutine is for GoRoutine

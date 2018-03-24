@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/goa/app"
 	"github.com/goadesign/goa"
@@ -27,7 +28,7 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 	}
 
 	payload := ctx.Payload
-	csRes, err := sgwCtrl.CreateSession(
+	csRes, sess, err := sgwCtrl.CreateSession(
 		payload.Imsi, payload.Msisdn, payload.Mei, payload.Mcc, payload.Mnc,
 		payload.Apn, byte(payload.Ebi))
 	if err != nil {
@@ -35,8 +36,7 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 	}
 
 	switch csRes.Code {
-	case domain.GscResOK:
-		sess := csRes.Session
+	case domain.GsResOK:
 		res := newGtpsessionMedia(sess)
 		return ctx.OK(res)
 	}

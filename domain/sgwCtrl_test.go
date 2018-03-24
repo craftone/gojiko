@@ -14,21 +14,22 @@ import (
 )
 
 type csResStr struct {
-	res *GscRes
+	res *GsRes
 	err error
 }
 
 func TestSgwCtrl_CreateSession_OK(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
-	resCh := make(chan csResStr)
+	resCh := make(chan *GsRes)
 	imsi := "440101234567890"
 	ebi := byte(5)
 	go func() {
-		res, err := sgwCtrl.CreateSession(
+		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345678", "0123456789012345",
 			"440", "10", "example.com", ebi,
 		)
-		resCh <- csResStr{res, err}
+		assert.NoError(t, err)
+		resCh <- res
 	}()
 
 	// wait till the session is created
@@ -65,9 +66,9 @@ func TestSgwCtrl_CreateSession_OK(t *testing.T) {
 	// send valid packet
 	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
 
-	csres := <-resCh
-	assert.NoError(t, csres.err)
-	assert.Equal(t, GscResOK, csres.res.Code)
+	res := <-resCh
+	assert.NoError(t, res.err)
+	assert.Equal(t, GsResOK, res.Code)
 
 	assert.True(t, session.paa.IPv4().Equal(paaIP))
 	assert.Equal(t, pgwCtrlTEID, session.pgwCtrlFTEID.Teid())
@@ -88,16 +89,17 @@ retry:
 
 func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
-	resCh := make(chan csResStr)
+	resCh := make(chan *GsRes)
 	imsi := "440101234567891"
 	ebi := byte(5)
 
 	go func() {
-		res, err := sgwCtrl.CreateSession(
+		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345671", "0123456789012345",
 			"440", "10", "example.com", ebi,
 		)
-		resCh <- csResStr{res, err}
+		assert.NoError(t, err)
+		resCh <- res
 	}()
 
 	// wait till the session is created
@@ -124,26 +126,26 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 	// send Retryable NG packet
 	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
 
-	csres := <-resCh
-
+	res := <-resCh
+	assert.Equal(t, GsResRetryableNG, res.Code)
 	session = sgwCtrl.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
 	assert.Nil(t, session)
-	assert.NoError(t, csres.err)
-	assert.Equal(t, GscResRetryableNG, csres.res.Code)
+	assert.NoError(t, res.err)
 }
 
 func TestSgwCtrl_CreateSession_NG(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
-	resCh := make(chan csResStr)
+	resCh := make(chan *GsRes)
 	imsi := "440101234567892"
 	ebi := byte(5)
 
 	go func() {
-		res, err := sgwCtrl.CreateSession(
+		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345671", "0123456789012345",
 			"440", "10", "example.com", ebi,
 		)
-		resCh <- csResStr{res, err}
+		assert.NoError(t, err)
+		resCh <- res
 	}()
 
 	// wait till the session is created
@@ -170,12 +172,12 @@ func TestSgwCtrl_CreateSession_NG(t *testing.T) {
 	// send Retryable NG packet
 	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
 
-	csres := <-resCh
+	res := <-resCh
 
 	session = sgwCtrl.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
 	assert.Nil(t, session)
-	assert.NoError(t, csres.err)
-	assert.Equal(t, GscResNG, csres.res.Code)
+	assert.NoError(t, res.err)
+	assert.Equal(t, GsResNG, res.Code)
 }
 
 func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
@@ -187,14 +189,13 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
 	imsi := "440101234567892"
 	ebi := byte(5)
-	res, _ := sgwCtrl.CreateSession(
+	res, _, _ := sgwCtrl.CreateSession(
 		imsi, "819012345679", "0123456789012345",
 		"440", "10", "example.com", ebi,
 	)
 
 	// No Create Sessin Response and the session should be timed out.
-
-	assert.Equal(t, *res, GscRes{Code: GscResTimeout, Msg: "Create Session Request timed out"})
+	assert.Equal(t, *res, GsRes{Code: GsResTimeout, Msg: "Create Session Response timed out and retry out"})
 }
 
 func TestSgwCtrl_EchoResponse(t *testing.T) {
@@ -223,7 +224,7 @@ func TestSgwCtrl_CreateSessionAndDeleteBearer(t *testing.T) {
 	imsi := "440101234567891"
 	ebi := byte(5)
 	go func() {
-		res, err := sgwCtrl.CreateSession(
+		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345679", "0123456789012345",
 			"440", "10", "example.com", ebi,
 		)
@@ -256,7 +257,7 @@ func TestSgwCtrl_CreateSessionAndDeleteBearer(t *testing.T) {
 
 	csres := <-resCh
 	assert.NoError(t, csres.err)
-	assert.Equal(t, GscResOK, csres.res.Code)
+	assert.Equal(t, GsResOK, csres.res.Code)
 
 	assert.True(t, session.paa.IPv4().Equal(paaIP))
 	assert.Equal(t, pgwCtrlTEID, session.pgwCtrlFTEID.Teid())
@@ -295,7 +296,7 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	imsi := "440101234567894"
 	ebi := byte(5)
 	go func() {
-		res, err := sgwCtrl.CreateSession(
+		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345674", "0123456789012345",
 			"440", "10", "example.com", ebi,
 		)
@@ -328,7 +329,7 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 
 	csres := <-resCh
 	assert.NoError(t, csres.err)
-	assert.Equal(t, GscResOK, csres.res.Code)
+	assert.Equal(t, GsResOK, csres.res.Code)
 
 	assert.True(t, session.paa.IPv4().Equal(paaIP))
 	assert.Equal(t, pgwCtrlTEID, session.pgwCtrlFTEID.Teid())
@@ -440,14 +441,14 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	ebi := byte(5)
 
 	go func() {
-		res1, err := sgwCtrl.CreateSession(
+		res1, _, err := sgwCtrl.CreateSession(
 			imsi1, msisdn1, "0123456789012345",
 			"440", "10", "example.com", ebi,
 		)
 		resCh1 <- csResStr{res1, err}
 	}()
 	go func() {
-		res2, err := sgwCtrl.CreateSession(
+		res2, _, err := sgwCtrl.CreateSession(
 			imsi2, msisdn2, "0123456789012345",
 			"440", "10", "example.com", ebi,
 		)
@@ -496,10 +497,10 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 
 	csres1 := <-resCh1
 	assert.NoError(t, csres1.err)
-	assert.Equal(t, GscResOK, csres1.res.Code)
+	assert.Equal(t, GsResOK, csres1.res.Code)
 	csres2 := <-resCh2
 	assert.NoError(t, csres2.err)
-	assert.Equal(t, GscResOK, csres2.res.Code)
+	assert.Equal(t, GsResOK, csres2.res.Code)
 
 	assert.True(t, session1.paa.IPv4().Equal(paaIP1))
 	assert.Equal(t, pgwCtrlTEID1, session1.pgwCtrlFTEID.Teid())
