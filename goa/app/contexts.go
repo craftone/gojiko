@@ -259,6 +259,14 @@ func (ctx *CreateGtpsessionContext) NotFound(r error) error {
 	return ctx.ResponseData.Service.Send(ctx.Context, 404, r)
 }
 
+// RequestTimeout sends a HTTP response with status code 408.
+func (ctx *CreateGtpsessionContext) RequestTimeout(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 408, r)
+}
+
 // InternalServerError sends a HTTP response with status code 500.
 func (ctx *CreateGtpsessionContext) InternalServerError(r error) error {
 	if ctx.ResponseData.Header().Get("Content-Type") == "" {

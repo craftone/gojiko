@@ -222,7 +222,7 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 	)
 
 	// No Create Sessin Response and the session should be timed out.
-	assert.Equal(t, res, GsRes{Code: GsResTimeout, Msg: "Create Session Response timed out and retry out"})
+	assert.Equal(t, res, GsRes{Code: GsResTimeout, Msg: "Waiting for Create Session Response timed out and retry out"})
 }
 
 func TestSgwCtrl_EchoResponse(t *testing.T) {
@@ -713,7 +713,7 @@ func TestSgwCtrl_DeleteSession_Invalid_Status(t *testing.T) {
 		)
 		assert.NoError(t, err)
 		// No Create Sessin Response and the session should be timed out.
-		assert.Equal(t, res, GsRes{Code: GsResTimeout, Msg: "Create Session Response timed out and retry out"})
+		assert.Equal(t, res, GsRes{Code: GsResTimeout, Msg: "Waiting for Create Session Response timed out and retry out"})
 		resCh <- res
 	}()
 

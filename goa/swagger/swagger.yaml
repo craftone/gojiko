@@ -644,6 +644,10 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/error'
+        "408":
+          description: Request Timeout
+          schema:
+            $ref: '#/definitions/error'
         "500":
           description: Internal Server Error
           schema:

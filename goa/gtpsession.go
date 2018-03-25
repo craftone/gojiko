@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/craftone/gojiko/domain"
@@ -39,6 +40,8 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 	case domain.GsResOK:
 		res := newGtpsessionMedia(sess)
 		return ctx.OK(res)
+	case domain.GsResTimeout:
+		return ctx.RequestTimeout(goa.NewErrorClass("request_timeout", 408)(errors.New(csRes.Msg)))
 	}
 	return ctx.InternalServerError(goa.ErrInternal(csRes.Msg))
 

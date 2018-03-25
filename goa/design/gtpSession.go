@@ -25,6 +25,7 @@ var _ = Resource("gtpsession", func() {
 		Response(NotFound, ErrorMedia)
 		Response(BadRequest, ErrorMedia)
 		Response(InternalServerError, ErrorMedia)
+		Response(RequestTimeout, ErrorMedia)
 	})
 
 	Action("showByID", func() {
