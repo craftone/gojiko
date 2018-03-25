@@ -161,11 +161,11 @@ func (s *SgwCtrl) CreateSession(
 	res := <-resChan
 	if res.err != nil {
 		log.Error(res.err)
-		s.GtpSessionRepo.deleteSession(session.id)
+		s.GtpSessionRepo.deleteSession(session)
 		return GsRes{}, nil, res.err
 	}
 	if res.Code != GsResOK {
-		s.GtpSessionRepo.deleteSession(session.id)
+		s.GtpSessionRepo.deleteSession(session)
 	}
 
 	return res, session, nil
@@ -183,7 +183,7 @@ func (s *SgwCtrl) DeleteSession(imsi string, ebi byte) (GsRes, error) {
 
 	// Receive result of the process send DSreq and receive DSres
 	res := <-resChan
-	s.GtpSessionRepo.deleteSession(session.id)
+	s.GtpSessionRepo.deleteSession(session)
 	if res.err != nil {
 		log.Error(res.err)
 		return GsRes{}, res.err

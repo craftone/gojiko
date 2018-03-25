@@ -5,6 +5,7 @@ import (
 	"net"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/craftone/gojiko/domain/gtp"
 	"github.com/craftone/gojiko/domain/gtpv2c"
@@ -132,8 +133,14 @@ func (r *GtpSessionRepo) newSession(
 	return session.id, nil
 }
 
-func (r *GtpSessionRepo) deleteSession(sessionID SessionID) error {
-	log.WithField("SessionID", sessionID).Info("Delete a session record")
+func (r *GtpSessionRepo) deleteSession(session *GtpSession) error {
+	sessionID := session.ID()
+	log := log.WithField("SessionID", sessionID)
+	log.Info("Delete a session record")
+	for session.Status() == GssCSReqSend || session.Status() == GssDSReqSend {
+		log.Debug("Wait for ready to delete")
+		time.Sleep(time.Millisecond)
+	}
 	r.mtx4Map.Lock()
 	defer r.mtx4Map.Unlock()
 	session, ok := r.sessionsByID[sessionID]

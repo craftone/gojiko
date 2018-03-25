@@ -350,7 +350,7 @@ func (s *GtpSession) procDeleteBearer(raddr net.UDPAddr, dbReq *gtpv2c.DeleteBea
 	}
 	s.toSgwCtrlSenderChan <- UDPpacket{raddr, dbRes.Marshal()}
 	myLog.Infof("Send Delete Bearer Response : %#v", dbRes)
-	err = s.sgwCtrl.GtpSessionRepo.deleteSession(s.ID())
+	err = s.sgwCtrl.GtpSessionRepo.deleteSession(s)
 	if err != nil {
 		return err
 	}
