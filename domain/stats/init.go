@@ -42,6 +42,6 @@ var keyTypeMap = map[Key]KeyType{
 }
 
 func Init() {
-	log = applog.NewLogger("domain/stats")
+	log = applog.NewLogEntry("domain/stats")
 	log.Debug("Initialize domain/stats package")
 }

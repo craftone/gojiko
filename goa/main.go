@@ -3,10 +3,12 @@
 package main
 
 import (
+	"github.com/craftone/gojiko/applog"
 	"github.com/craftone/gojiko/config"
 	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/goa/app"
 	"github.com/goadesign/goa"
+	goalogrus "github.com/goadesign/goa/logging/logrus"
 	"github.com/goadesign/goa/middleware"
 )
 
@@ -16,6 +18,10 @@ func main() {
 
 	// Create service
 	service := goa.New("gojiko api")
+
+	// set log adapter
+	logger := applog.NewLogger("goa")
+	service.WithLogger(goalogrus.New(logger))
 
 	// Mount middleware
 	service.Use(middleware.RequestID())

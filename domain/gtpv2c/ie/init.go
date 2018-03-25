@@ -8,5 +8,5 @@ import (
 var log *logrus.Entry
 
 func Init() {
-	log = applog.NewLogger("gtpv2c/ie")
+	log = applog.NewLogEntry("gtpv2c/ie")
 }

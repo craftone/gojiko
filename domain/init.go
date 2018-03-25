@@ -3,15 +3,12 @@ package domain
 import (
 	"net"
 
-	"github.com/craftone/gojiko/domain/stats"
-
-	"github.com/sirupsen/logrus"
-
 	"github.com/craftone/gojiko/applog"
 	"github.com/craftone/gojiko/config"
-
 	"github.com/craftone/gojiko/domain/apns"
 	"github.com/craftone/gojiko/domain/gtpv2c"
+	"github.com/craftone/gojiko/domain/stats"
+	"github.com/sirupsen/logrus"
 )
 
 var log *logrus.Entry
@@ -20,7 +17,7 @@ var theSgwCtrlRepo *sgwCtrlRepo
 var defaultSgwCtrlAddr = net.UDPAddr{IP: net.IPv4(127, 0, 0, 1), Port: GtpControlPort}
 
 func Init() error {
-	log = applog.NewLogger("domain")
+	log = applog.NewLogEntry("domain")
 	log.Info("Initialize domain package")
 
 	apns.Init()

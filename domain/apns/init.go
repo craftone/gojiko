@@ -16,7 +16,7 @@ func TheRepo() *Repo {
 }
 
 func Init() error {
-	log = applog.NewLogger("domain/apns")
+	log = applog.NewLogEntry("domain/apns")
 	log.Info("Initialize APN package")
 
 	for _, capn := range config.GetAPNs() {

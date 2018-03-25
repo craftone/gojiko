@@ -14,12 +14,17 @@ func Init() {
 	//       ref https://github.com/sirupsen/logrus/issues/391
 }
 
-func NewLogger(pkgName string) *logrus.Entry {
+func NewLogEntry(pkgName string) *logrus.Entry {
+	logger := NewLogger(pkgName)
+	logEntry := logger.WithField("package", pkgName)
+	return logEntry
+}
+
+func NewLogger(pkgName string) *logrus.Logger {
 	logger := logrus.New()
-
 	logger.Out = os.Stdout
-
 	logLevelStr := config.LogLevel(pkgName)
+
 	logger.WithField("package", pkgName).Infof("A logger created at %s level", logLevelStr)
 
 	switch logLevelStr {
@@ -34,6 +39,5 @@ func NewLogger(pkgName string) *logrus.Entry {
 	default:
 		log.Panicf("Invalid logLevel : %s", logLevelStr)
 	}
-	myLog := logger.WithField("package", pkgName)
-	return myLog
+	return logger
 }
