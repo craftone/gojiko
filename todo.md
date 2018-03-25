@@ -85,10 +85,12 @@
 
 - ~~sessionのステータス遷移をちゃんとして受け付けられるときだけ受け付けるようにする。channelが詰まったりするのを防ぐため。~~ @ 2018/03/21
 - ~~CreateSessionをリファクタリング。コマンドchanでやる必要がない。~~ @ 2018/03/21
-- SgwCtrl.DeleteSession() を実装
+- ~~SgwCtrl.DeleteSession() を実装~~ @ 2018/03/25
 
 - GTPv1U ECHOパケットに応答する。
 - UDP Responderで、ログにbitrateを出すようにする
+- Unmarshal で Optional な値を扱えるようにする
+  + Optional な値はポインタで扱うようにする。
 
 - Error Indicatorに対応
 - contextを使ってキャンセル→goroutine停止を確実に実施する

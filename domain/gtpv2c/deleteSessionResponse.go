@@ -9,23 +9,11 @@ import (
 
 type DeleteSessionResponse struct {
 	header
-	cause    *ie.Cause
-	lbi      *ie.Ebi
-	recovery *ie.Recovery
+	cause *ie.Cause
 }
 
-func NewDeleteSessionResponse(teid gtp.Teid, seqNum uint32, cause ie.CauseValue, ebi byte, rec byte) (*DeleteSessionResponse, error) {
+func NewDeleteSessionResponse(teid gtp.Teid, seqNum uint32, cause ie.CauseValue) (*DeleteSessionResponse, error) {
 	causeIE, err := ie.NewCause(0, cause, false, false, false, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	ebiIE, err := ie.NewEbi(0, ebi)
-	if err != nil {
-		return nil, err
-	}
-
-	recoveryIE, err := ie.NewRecovery(0, rec)
 	if err != nil {
 		return nil, err
 	}
@@ -33,16 +21,12 @@ func NewDeleteSessionResponse(teid gtp.Teid, seqNum uint32, cause ie.CauseValue,
 	return &DeleteSessionResponse{
 		newHeader(DeleteSessionResponseNum, false, true, teid, seqNum),
 		causeIE,
-		ebiIE,
-		recoveryIE,
 	}, nil
 }
 
 func (d *DeleteSessionResponse) Marshal() []byte {
 	body := make([]byte, 0, 16)
 	body = append(body, d.cause.Marshal()...)
-	body = append(body, d.lbi.Marshal()...)
-	body = append(body, d.recovery.Marshal()...)
 	return d.header.marshal(body)
 }
 
@@ -52,8 +36,6 @@ func unmarshalDeleteSessionResponse(h header, buf []byte) (*DeleteSessionRespons
 	}
 
 	var causeIE *ie.Cause
-	var ebiIE *ie.Ebi
-	var recoveryIE *ie.Recovery
 	for len(buf) > 0 {
 		msg, tail, err := ie.Unmarshal(buf, ie.DeleteSessionResponse)
 		buf = tail
@@ -72,10 +54,6 @@ func unmarshalDeleteSessionResponse(h header, buf []byte) (*DeleteSessionRespons
 		switch msg := msg.(type) {
 		case *ie.Cause:
 			causeIE = msg
-		case *ie.Ebi:
-			ebiIE = msg
-		case *ie.Recovery:
-			recoveryIE = msg
 		default:
 			log.Printf("Unkown IE : %#v", msg)
 		}
@@ -83,19 +61,11 @@ func unmarshalDeleteSessionResponse(h header, buf []byte) (*DeleteSessionRespons
 	if causeIE == nil {
 		return nil, fmt.Errorf("No Cause Delete Bearer Request message")
 	}
-	return NewDeleteSessionResponse(h.Teid(), h.seqNum, causeIE.Value(), ebiIE.Value(), recoveryIE.Value())
+	return NewDeleteSessionResponse(h.Teid(), h.seqNum, causeIE.Value())
 }
 
 // Getters
 
 func (d *DeleteSessionResponse) Cause() *ie.Cause {
 	return d.cause
-}
-
-func (d *DeleteSessionResponse) Lbi() *ie.Ebi {
-	return d.lbi
-}
-
-func (d *DeleteSessionResponse) Recovery() *ie.Recovery {
-	return d.recovery
 }

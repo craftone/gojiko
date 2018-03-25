@@ -89,8 +89,7 @@ func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 	// make pseudo response binary that cause is CauseRequestAccepted
 	dsRes, err := gtpv2c.NewDeleteSessionResponse(
 		session.sgwCtrlFTEID.Teid(),
-		0x1235, ie.CauseRequestAccepted,
-		ebi, 0)
+		0x1235, ie.CauseRequestAccepted)
 	assert.NoError(t, err)
 	dsResBin := dsRes.Marshal()
 	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, dsResBin}
