@@ -6,7 +6,6 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
-// --regen=true
 // --version=v1.3.0
 
 package client
@@ -76,6 +75,38 @@ func (c *Client) NewCreateGtpsessionRequest(ctx context.Context, path string, pa
 		header.Set("Content-Type", "application/json")
 	} else {
 		header.Set("Content-Type", contentType)
+	}
+	return req, nil
+}
+
+// DeleteByIMSIandEBIGtpsessionPath computes a request path to the deleteByIMSIandEBI action of gtpsession.
+func DeleteByIMSIandEBIGtpsessionPath(sgwAddr string, imsi string, ebi int) string {
+	param0 := sgwAddr
+	param1 := imsi
+	param2 := strconv.Itoa(ebi)
+
+	return fmt.Sprintf("/sgw/%s/gtpsessions/imsi/%s/ebi/%s", param0, param1, param2)
+}
+
+// Delete the gtp session by IMSI and EBI
+func (c *Client) DeleteByIMSIandEBIGtpsession(ctx context.Context, path string) (*http.Response, error) {
+	req, err := c.NewDeleteByIMSIandEBIGtpsessionRequest(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	return c.Client.Do(ctx, req)
+}
+
+// NewDeleteByIMSIandEBIGtpsessionRequest create the request corresponding to the deleteByIMSIandEBI action endpoint of the gtpsession resource.
+func (c *Client) NewDeleteByIMSIandEBIGtpsessionRequest(ctx context.Context, path string) (*http.Request, error) {
+	scheme := c.Scheme
+	if scheme == "" {
+		scheme = "http"
+	}
+	u := url.URL{Host: c.Host, Scheme: scheme, Path: path}
+	req, err := http.NewRequest("DELETE", u.String(), nil)
+	if err != nil {
+		return nil, err
 	}
 	return req, nil
 }

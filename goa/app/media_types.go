@@ -6,7 +6,6 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
-// --regen=true
 // --version=v1.3.0
 
 package app
@@ -93,6 +92,27 @@ func (mt *Gtpsession) Validate() (err error) {
 	}
 	if mt.Sid < 0 {
 		err = goa.MergeErrors(err, goa.InvalidRangeError(`response.sid`, mt.Sid, 0, true))
+	}
+	return
+}
+
+// GTPv2-C Cause (default view)
+//
+// Identifier: application/vnd.gtpv2c.cause+json; view=default
+type Gtpv2cCause struct {
+	// Detail of return code from PGW
+	Detail string `form:"detail" json:"detail" xml:"detail"`
+	// Type of return code from PGW
+	Type string `form:"type" json:"type" xml:"type"`
+}
+
+// Validate validates the Gtpv2cCause media type instance.
+func (mt *Gtpv2cCause) Validate() (err error) {
+	if mt.Type == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "type"))
+	}
+	if mt.Detail == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "detail"))
 	}
 	return
 }

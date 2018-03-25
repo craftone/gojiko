@@ -6,7 +6,6 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
-// --regen=true
 // --version=v1.3.0
 
 package client
@@ -108,6 +107,34 @@ func (mt *Gtpsession) Validate() (err error) {
 // DecodeGtpsession decodes the Gtpsession instance encoded in resp body.
 func (c *Client) DecodeGtpsession(resp *http.Response) (*Gtpsession, error) {
 	var decoded Gtpsession
+	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
+	return &decoded, err
+}
+
+// GTPv2-C Cause (default view)
+//
+// Identifier: application/vnd.gtpv2c.cause+json; view=default
+type Gtpv2cCause struct {
+	// Detail of return code from PGW
+	Detail string `form:"detail" json:"detail" xml:"detail"`
+	// Type of return code from PGW
+	Type string `form:"type" json:"type" xml:"type"`
+}
+
+// Validate validates the Gtpv2cCause media type instance.
+func (mt *Gtpv2cCause) Validate() (err error) {
+	if mt.Type == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "type"))
+	}
+	if mt.Detail == "" {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "detail"))
+	}
+	return
+}
+
+// DecodeGtpv2cCause decodes the Gtpv2cCause instance encoded in resp body.
+func (c *Client) DecodeGtpv2cCause(resp *http.Response) (*Gtpv2cCause, error) {
+	var decoded Gtpv2cCause
 	err := c.Decoder.Decode(&decoded, resp.Body, resp.Header.Get("Content-Type"))
 	return &decoded, err
 }

@@ -6,7 +6,6 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
-// --regen=true
 // --version=v1.3.0
 
 package app
@@ -262,6 +261,85 @@ func (ctx *CreateGtpsessionContext) NotFound(r error) error {
 
 // InternalServerError sends a HTTP response with status code 500.
 func (ctx *CreateGtpsessionContext) InternalServerError(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 500, r)
+}
+
+// DeleteByIMSIandEBIGtpsessionContext provides the gtpsession deleteByIMSIandEBI action context.
+type DeleteByIMSIandEBIGtpsessionContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	Ebi     int
+	Imsi    string
+	SgwAddr string
+}
+
+// NewDeleteByIMSIandEBIGtpsessionContext parses the incoming request URL and body, performs validations and creates the
+// context used by the gtpsession controller deleteByIMSIandEBI action.
+func NewDeleteByIMSIandEBIGtpsessionContext(ctx context.Context, r *http.Request, service *goa.Service) (*DeleteByIMSIandEBIGtpsessionContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := DeleteByIMSIandEBIGtpsessionContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramEbi := req.Params["ebi"]
+	if len(paramEbi) == 0 {
+		rctx.Ebi = 5
+	} else {
+		rawEbi := paramEbi[0]
+		if ebi, err2 := strconv.Atoi(rawEbi); err2 == nil {
+			rctx.Ebi = ebi
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("ebi", rawEbi, "integer"))
+		}
+		if rctx.Ebi < 5 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`ebi`, rctx.Ebi, 5, true))
+		}
+		if rctx.Ebi > 15 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`ebi`, rctx.Ebi, 15, false))
+		}
+	}
+	paramImsi := req.Params["imsi"]
+	if len(paramImsi) > 0 {
+		rawImsi := paramImsi[0]
+		rctx.Imsi = rawImsi
+		if ok := goa.ValidatePattern(`^[0-9]{14,15}$`, rctx.Imsi); !ok {
+			err = goa.MergeErrors(err, goa.InvalidPatternError(`imsi`, rctx.Imsi, `^[0-9]{14,15}$`))
+		}
+	}
+	paramSgwAddr := req.Params["sgwAddr"]
+	if len(paramSgwAddr) > 0 {
+		rawSgwAddr := paramSgwAddr[0]
+		rctx.SgwAddr = rawSgwAddr
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, rctx.SgwAddr); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`sgwAddr`, rctx.SgwAddr, goa.FormatIPv4, err2))
+		}
+	}
+	return &rctx, err
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *DeleteByIMSIandEBIGtpsessionContext) OK(r *Gtpv2cCause) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.gtpv2c.cause+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *DeleteByIMSIandEBIGtpsessionContext) NotFound(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 404, r)
+}
+
+// InternalServerError sends a HTTP response with status code 500.
+func (ctx *DeleteByIMSIandEBIGtpsessionContext) InternalServerError(r error) error {
 	if ctx.ResponseData.Header().Get("Content-Type") == "" {
 		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
 	}

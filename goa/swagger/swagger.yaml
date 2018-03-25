@@ -147,6 +147,25 @@ definitions:
     - msisdn
     title: 'Mediatype identifier: application/vnd.gtpsession+json; view=default'
     type: object
+  Gtpv2cCause:
+    description: GTPv2-C Cause (default view)
+    example:
+      detail: Request accepted
+      type: OK
+    properties:
+      detail:
+        description: Detail of return code from PGW
+        example: Request accepted
+        type: string
+      type:
+        description: Type of return code from PGW
+        example: OK
+        type: string
+    required:
+    - type
+    - detail
+    title: 'Mediatype identifier: application/vnd.gtpv2c.cause+json; view=default'
+    type: object
   RecvStatForHuman:
     example:
       bitrate: Inventore quis doloremque repudiandae quidem assumenda.
@@ -669,6 +688,50 @@ paths:
       tags:
       - gtpsession
   /sgw/{sgwAddr}/gtpsessions/imsi/{imsi}/ebi/{ebi}:
+    delete:
+      description: Delete the gtp session by IMSI and EBI
+      operationId: gtpsession#deleteByIMSIandEBI
+      parameters:
+      - default: 5
+        description: EPS Bearer ID
+        in: path
+        maximum: 15
+        minimum: 5
+        name: ebi
+        required: true
+        type: integer
+      - in: path
+        name: imsi
+        pattern: ^[0-9]{14,15}$
+        required: true
+        type: string
+      - description: SGW GTPv2-C loopback address
+        format: ipv4
+        in: path
+        name: sgwAddr
+        required: true
+        type: string
+      produces:
+      - application/vnd.goa.error
+      - application/vnd.gtpv2c.cause+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Gtpv2cCause'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/error'
+      schemes:
+      - http
+      summary: deleteByIMSIandEBI gtpsession
+      tags:
+      - gtpsession
     get:
       description: Show the gtp session by IMSI and EBI
       operationId: gtpsession#showByIMSIandEBI

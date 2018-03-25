@@ -98,3 +98,24 @@ func TestCauseDetail(t *testing.T) {
 		})
 	}
 }
+
+func TestCauseType_String(t *testing.T) {
+	tests := []struct {
+		name string
+		t    CauseType
+		want string
+	}{
+		{t: CauseTypeRequestInitial, want: "Request Initial"},
+		{t: CauseTypeAcceptance, want: "Acceptance"},
+		{t: CauseTypeRetryableRejection, want: "Retryable Rejection"},
+		{t: CauseTypeRejection, want: "Rejection"},
+		{t: CauseTypeOther, want: "Other"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.t.String(); got != tt.want {
+				t.Errorf("CauseType.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

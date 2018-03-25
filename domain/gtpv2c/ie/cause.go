@@ -263,3 +263,18 @@ func CauseDetail(c CauseValue) (CauseType, string) {
 	}
 	return t, "Unknown cause"
 }
+
+func (t CauseType) String() string {
+	switch t {
+	case CauseTypeRequestInitial:
+		return "Request Initial"
+	case CauseTypeAcceptance:
+		return "Acceptance"
+	case CauseTypeRetryableRejection:
+		return "Retryable Rejection"
+	case CauseTypeRejection:
+		return "Rejection"
+	default:
+		return "Other"
+	}
+}

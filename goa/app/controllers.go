@@ -6,7 +6,6 @@
 // $ goagen
 // --design=github.com/craftone/gojiko/goa/design
 // --out=$(GOPATH)/src/github.com/craftone/gojiko/goa
-// --regen=true
 // --version=v1.3.0
 
 package app
@@ -36,6 +35,7 @@ func initService(service *goa.Service) {
 type GtpsessionController interface {
 	goa.Muxer
 	Create(*CreateGtpsessionContext) error
+	DeleteByIMSIandEBI(*DeleteByIMSIandEBIGtpsessionContext) error
 	ShowByID(*ShowByIDGtpsessionContext) error
 	ShowByIMSIandEBI(*ShowByIMSIandEBIGtpsessionContext) error
 }
@@ -65,6 +65,21 @@ func MountGtpsessionController(service *goa.Service, ctrl GtpsessionController) 
 	}
 	service.Mux.Handle("POST", "/sgw/:sgwAddr/gtpsessions", ctrl.MuxHandler("create", h, unmarshalCreateGtpsessionPayload))
 	service.LogInfo("mount", "ctrl", "Gtpsession", "action", "Create", "route", "POST /sgw/:sgwAddr/gtpsessions")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewDeleteByIMSIandEBIGtpsessionContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		return ctrl.DeleteByIMSIandEBI(rctx)
+	}
+	service.Mux.Handle("DELETE", "/sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi", ctrl.MuxHandler("deleteByIMSIandEBI", h, nil))
+	service.LogInfo("mount", "ctrl", "Gtpsession", "action", "DeleteByIMSIandEBI", "route", "DELETE /sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi")
 
 	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 		// Check if there was an error loading the request

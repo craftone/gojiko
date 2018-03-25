@@ -46,6 +46,17 @@ var _ = Resource("gtpsession", func() {
 		Response(OK)
 		Response(NotFound, ErrorMedia)
 	})
+
+	Action("deleteByIMSIandEBI", func() {
+		Description("Delete the gtp session by IMSI and EBI")
+		Routing(DELETE("/imsi/:imsi/ebi/:ebi"))
+		Params(func() {
+			imsiEbiMember()
+		})
+		Response(OK, GtpV2CCauseMedia)
+		Response(NotFound, ErrorMedia)
+		Response(InternalServerError, ErrorMedia)
+	})
 })
 
 var GtpSessionFTEIDs = Type("gtpSessionFTEIDs", func() {
@@ -83,5 +94,22 @@ var GtpSessionMedia = MediaType("application/vnd.gtpsession+json", func() {
 		Attribute("ebi")
 		Attribute("fteid")
 		Attribute("paa")
+	})
+})
+
+var GtpV2CCauseMedia = MediaType("application/vnd.gtpv2c.cause+json", func() {
+	Description("GTPv2-C Cause")
+	Attributes(func() {
+		Attribute("type", String, "Type of return code from PGW", func() {
+			Example("OK")
+		})
+		Attribute("detail", String, "Detail of return code from PGW", func() {
+			Example("Request accepted")
+		})
+		Required("type", "detail")
+	})
+	View("default", func() {
+		Attribute("type")
+		Attribute("detail")
 	})
 })

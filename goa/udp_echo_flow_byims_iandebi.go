@@ -2,11 +2,10 @@ package main
 
 import (
 	"errors"
-	"net"
-
 	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/goa/app"
 	"github.com/goadesign/goa"
+	"net"
 )
 
 // UDPEchoFlowByIMSIandEBIController implements the udpEchoFlowByIMSIandEBI resource.

@@ -45,6 +45,34 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 	// GtpsessionController_Create: end_implement
 }
 
+// DeleteByIMSIandEBI runs the deleteByIMSIandEBI action.
+func (c *GtpsessionController) DeleteByIMSIandEBI(ctx *app.DeleteByIMSIandEBIGtpsessionContext) error {
+	// GtpsessionController_DeleteByIMSIandEBI: start_implement
+
+	sgwCtrl, err := querySgw(ctx.SgwAddr)
+	if err != nil {
+		return ctx.NotFound(err)
+	}
+
+	_, err = querySessionByIMSIandEBI(ctx.SgwAddr, ctx.Imsi, ctx.Ebi)
+	if err != nil {
+		return ctx.NotFound(err)
+	}
+
+	gsRes, err := sgwCtrl.DeleteSession(ctx.Imsi, byte(ctx.Ebi))
+	if err != nil {
+		return ctx.InternalServerError(err)
+	}
+
+	res := &app.Gtpv2cCause{
+		Type:   gsRes.Code.String(),
+		Detail: gsRes.Msg,
+	}
+	return ctx.OK(res)
+
+	// GtpsessionController_DeleteByIMSIandEBI: end_implement
+}
+
 // ShowByID runs the showByID action.
 func (c *GtpsessionController) ShowByID(ctx *app.ShowByIDGtpsessionContext) error {
 	// GtpsessionController_ShowByID: start_implement
