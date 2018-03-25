@@ -24,7 +24,7 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 
 	sgwCtrl, err := querySgw(ctx.SgwAddr)
 	if err != nil {
-		return ctx.NotFound(err)
+		return ctx.NotFound(goa.ErrNotFound(err))
 	}
 
 	payload := ctx.Payload
@@ -51,17 +51,22 @@ func (c *GtpsessionController) DeleteByIMSIandEBI(ctx *app.DeleteByIMSIandEBIGtp
 
 	sgwCtrl, err := querySgw(ctx.SgwAddr)
 	if err != nil {
-		return ctx.NotFound(err)
+		return ctx.NotFound(goa.ErrNotFound(err))
 	}
 
 	_, err = querySessionByIMSIandEBI(ctx.SgwAddr, ctx.Imsi, ctx.Ebi)
 	if err != nil {
-		return ctx.NotFound(err)
+		return ctx.NotFound(goa.ErrNotFound(err))
 	}
 
 	gsRes, err := sgwCtrl.DeleteSession(ctx.Imsi, byte(ctx.Ebi))
 	if err != nil {
-		return ctx.InternalServerError(err)
+		switch err.(type) {
+		case *domain.InvalidGtpSessionStateError:
+			return ctx.Conflict(goa.NewErrorClass("conflict", 409)(err))
+		default:
+			return ctx.InternalServerError(goa.ErrInternal(err))
+		}
 	}
 
 	res := &app.Gtpv2cCause{
@@ -79,7 +84,7 @@ func (c *GtpsessionController) ShowByID(ctx *app.ShowByIDGtpsessionContext) erro
 
 	sgwCtrl, err := querySgw(ctx.SgwAddr)
 	if err != nil {
-		return ctx.NotFound(err)
+		return ctx.NotFound(goa.ErrNotFound(err))
 	}
 	sess := sgwCtrl.FindBySessionID(domain.SessionID(ctx.Sid))
 	if sess == nil {
@@ -97,7 +102,7 @@ func (c *GtpsessionController) ShowByIMSIandEBI(ctx *app.ShowByIMSIandEBIGtpsess
 
 	sess, err := querySessionByIMSIandEBI(ctx.SgwAddr, ctx.Imsi, ctx.Ebi)
 	if err != nil {
-		return ctx.NotFound(err)
+		return ctx.NotFound(goa.ErrNotFound(err))
 	}
 	return ctx.OK(newGtpsessionMedia(sess))
 

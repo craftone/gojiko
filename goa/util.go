@@ -10,7 +10,6 @@ import (
 	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/domain/gtp"
 	"github.com/craftone/gojiko/goa/app"
-	"github.com/goadesign/goa"
 )
 
 func newFteid(ip net.IP, teid gtp.Teid) *app.Fteid {
@@ -22,7 +21,7 @@ func querySgw(sgwAddr string) (*domain.SgwCtrl, error) {
 	theSgwCtrlRepo := domain.TheSgwCtrlRepo()
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(sgwCtrlAddr)
 	if sgwCtrl == nil {
-		return nil, goa.ErrBadRequest(fmt.Errorf("There is no SGW that's IP address is %s", sgwCtrlAddr.String()))
+		return nil, fmt.Errorf("There is no SGW that's IP address is %s", sgwCtrlAddr.String())
 	}
 	return sgwCtrl, nil
 }
@@ -34,7 +33,7 @@ func querySessionByIMSIandEBI(sgwAddr, imsi string, ebi int) (*domain.GtpSession
 	}
 	sess := sgwCtrl.FindByImsiEbi(imsi, byte(ebi))
 	if sess == nil {
-		return nil, goa.ErrNotFound(fmt.Errorf("There is no session that's IMSI is %s and EBI is %d", imsi, ebi))
+		return nil, fmt.Errorf("There is no session that's IMSI is %s and EBI is %d", imsi, ebi)
 	}
 	return sess, nil
 }

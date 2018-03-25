@@ -171,10 +171,26 @@ func (s *SgwCtrl) CreateSession(
 	return res, session, nil
 }
 
+type InvalidGtpSessionStateError struct {
+	expected GtpSessionStatus
+	current  GtpSessionStatus
+}
+
+func (e *InvalidGtpSessionStateError) Error() string {
+	return fmt.Sprintf("The session's status is not %s, it is %s", e.expected.String(), e.current.String())
+}
+
+func NewInvalidGtpSessionStateError(expected, current GtpSessionStatus) *InvalidGtpSessionStateError {
+	return &InvalidGtpSessionStateError{expected, current}
+}
+
 func (s *SgwCtrl) DeleteSession(imsi string, ebi byte) (GsRes, error) {
 	session := s.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
 	if session == nil {
 		return GsRes{}, fmt.Errorf("There is no session that's imsi is %s and ebi is %d", imsi, ebi)
+	}
+	if session.Status() != GssConnected {
+		return GsRes{}, NewInvalidGtpSessionStateError(GssConnected, session.Status())
 	}
 
 	// Send DSreq and receive DSres

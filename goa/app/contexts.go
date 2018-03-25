@@ -338,6 +338,14 @@ func (ctx *DeleteByIMSIandEBIGtpsessionContext) NotFound(r error) error {
 	return ctx.ResponseData.Service.Send(ctx.Context, 404, r)
 }
 
+// Conflict sends a HTTP response with status code 409.
+func (ctx *DeleteByIMSIandEBIGtpsessionContext) Conflict(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 409, r)
+}
+
 // InternalServerError sends a HTTP response with status code 500.
 func (ctx *DeleteByIMSIandEBIGtpsessionContext) InternalServerError(r error) error {
 	if ctx.ResponseData.Header().Get("Content-Type") == "" {

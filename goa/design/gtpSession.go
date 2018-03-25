@@ -55,6 +55,7 @@ var _ = Resource("gtpsession", func() {
 		})
 		Response(OK, GtpV2CCauseMedia)
 		Response(NotFound, ErrorMedia)
+		Response(Conflict, ErrorMedia)
 		Response(InternalServerError, ErrorMedia)
 	})
 })

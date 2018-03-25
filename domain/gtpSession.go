@@ -41,6 +41,10 @@ var gssString = map[GtpSessionStatus]string{
 	GssDSResReceived: "DSResReceived",
 }
 
+func (s GtpSessionStatus) String() string {
+	return gssString[s]
+}
+
 type GtpSession struct {
 	id         SessionID
 	status     GtpSessionStatus
@@ -85,10 +89,11 @@ func (s *GtpSession) changeState(curState, nextState GtpSessionStatus) error {
 	defer s.mtx4status.Unlock()
 	if s.status != curState {
 		return fmt.Errorf("Cannot change state from %s to %s : current State is %s",
-			gssString[curState], gssString[nextState], gssString[s.status])
+			curState.String(), nextState.String(), s.status.String())
 	}
 	s.status = nextState
-	log.WithField("SessionID", s.id).Debugf("Change GTP session state : %s -> %s", gssString[curState], gssString[nextState])
+	log.WithField("SessionID", s.id).Debugf("Change GTP session state : %s -> %s",
+		curState.String(), nextState.String())
 	return nil
 }
 

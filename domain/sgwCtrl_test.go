@@ -695,3 +695,37 @@ func TestSgwCtrl_DeleteSession_Timeout(t *testing.T) {
 	// ensure release GtpSession map's record
 	assert.Nil(t, sgwCtrl.FindByImsiEbi(imsi, ebi))
 }
+
+func TestSgwCtrl_DeleteSession_Invalid_Status(t *testing.T) {
+	// change Gtpv2cTimeout temporarily
+	defaultGtpv2cTimeout := config.Gtpv2cTimeout()
+	config.SetGtpv2cTimeout(1)
+	defer config.SetGtpv2cTimeout(defaultGtpv2cTimeout)
+
+	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
+	resCh := make(chan GsRes)
+	imsi := "440100000000008"
+	ebi := byte(5)
+	go func() {
+		res, _, err := sgwCtrl.CreateSession(
+			imsi, "819012345678", "0123456789012345",
+			"440", "10", "example.com", ebi,
+		)
+		assert.NoError(t, err)
+		// No Create Sessin Response and the session should be timed out.
+		assert.Equal(t, res, GsRes{Code: GsResTimeout, Msg: "Create Session Response timed out and retry out"})
+		resCh <- res
+	}()
+
+	// wait till the session is created that's status will be Newed
+	ensureTheSession(sgwCtrl, imsi, ebi)
+
+	// Send Delete Session Request
+	_, err := sgwCtrl.DeleteSession(imsi, ebi)
+	assert.IsType(t, NewInvalidGtpSessionStateError(GssConnected, GssCSReqSend), err)
+
+	<-resCh
+
+	// ensure release GtpSession map's record
+	assert.Nil(t, sgwCtrl.FindByImsiEbi(imsi, ebi))
+}
