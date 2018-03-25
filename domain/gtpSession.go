@@ -177,7 +177,7 @@ func (s *GtpSession) procCreateSession(cmd createSessionReq, myLog *logrus.Entry
 	myLog = myLog.WithField("SessionID", s.id)
 	myLog = myLog.WithField("routine", "procCreateSession")
 
-	// Change state from IDLE to SENDING
+	// Change state from NEWED to SENDING
 	err := s.changeState(GssNewed, GssCSReqSending)
 	if err != nil {
 		gscResChan <- GsRes{err: err}
@@ -272,7 +272,12 @@ loop:
 
 	case <-timeoutChan:
 		myLog.Info("Wait for Create Session Response is timed out")
-		s.changeState(GssCSReqSend, GssCSReqSending)
+		err = s.changeState(GssCSReqSend, GssCSReqSending)
+		if err != nil {
+			myLog.Debugf("Current state is not CSReqSend ( is %s), so it seemed to received packet", s.Status().String())
+			timeoutChan = time.After(time.Second)
+			goto loop
+		}
 		retryCount++
 		if retryCount <= config.Gtpv2cRetry() {
 			log.Debugf("Create Session Response timed out and retry : %s time", humanize.Ordinal(retryCount))
@@ -336,7 +341,12 @@ loop:
 
 	case <-timeoutChan:
 		log.Info("Wait for Delete Session Response is timed out")
-		s.changeState(GssDSReqSend, GssDSReqSending)
+		err = s.changeState(GssDSReqSend, GssDSReqSending)
+		if err != nil {
+			log.Debugf("Current state is not DSReqSend ( is %s), so it seemed to received packet", s.Status().String())
+			timeoutChan = time.After(time.Second)
+			goto loop
+		}
 		retryCount++
 		if retryCount <= config.Gtpv2cRetry() {
 			log.Debugf("Delete Session Response timed out and retry : %s time", humanize.Ordinal(retryCount))
