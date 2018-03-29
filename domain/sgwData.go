@@ -45,7 +45,7 @@ func (sgwData *SgwData) sgwDataReceiverRoutine() {
 			myLog.Error(err)
 			continue
 		}
-		myLog.Debugf("Received packet from %s : %v", raddr.String(), buf[:n])
+		myLog.Debugf("Received a %d bytes packet from %s", n, raddr.String())
 
 		if n < 8 {
 			myLog.Errorf("Too short packet : %v", buf[:n])
