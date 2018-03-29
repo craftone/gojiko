@@ -15,7 +15,6 @@ type FlowStats struct {
 
 func NewFlowStats(ctx context.Context) *FlowStats {
 	fs := &FlowStats{newAbsStats(ctx, config.StatsFlowBufferLength())}
-	fs.SendTimeMsg(StartTime, time.Now())
 	return fs
 }
 

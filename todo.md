@@ -86,10 +86,15 @@
 - ~~sessionのステータス遷移をちゃんとして受け付けられるときだけ受け付けるようにする。channelが詰まったりするのを防ぐため。~~ @ 2018/03/21
 - ~~CreateSessionをリファクタリング。コマンドchanでやる必要がない。~~ @ 2018/03/21
 - ~~SgwCtrl.DeleteSession() を実装~~ @ 2018/03/25
+- ~~UDPflow終了時にend_timeが入らなくなっているのを修正する。~~ @ 2018/03/29
 
+- CreateSessionResponseでMandarotyの扱いが誤っているので修正する。
+- UDPResponderのログが出まくるので-v以外は1行だけ出すように修正する。ヘッダ行も出力する。
+- POST gtpsessionで、応答コードを返却する。
+- POST gtpsessionのエラー応答が全部500なのが良くないので修正する。
 - GTPv1U ECHOパケットに応答する。
 - UDP Responderで、ログにbitrateを出すようにする
-- Unmarshal で Optional な値を扱えるようにする
+- GTPv2メッセージの Unmarshal で Optional な値を扱えるようにする
   + Optional な値はポインタで扱うようにする。
 
 - Error Indicatorに対応

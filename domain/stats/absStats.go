@@ -19,6 +19,12 @@ func newAbsStats(ctx context.Context, chanLen int) *absStats {
 		uint64book:        make(map[Key]uint64),
 		timeBook:          make(map[Key]time.Time),
 	}
+
+	// set start time
+	as.mtx.Lock()
+	as.timeBook[StartTime] = time.Now()
+	as.mtx.Unlock()
+
 	go as.msgReceiver(ctx)
 	return as
 }
@@ -31,6 +37,7 @@ func (as *absStats) ToMsgReceiverChan() chan Msg {
 func (as *absStats) msgReceiver(ctx context.Context) {
 	log := log.WithField("routine", "absStats.msgReceiver")
 	log.Debug("Start MsgReceiver goroutine")
+
 loop:
 	select {
 	case recMsg := <-as.toMsgReceiverChan:
@@ -50,6 +57,12 @@ loop:
 	case <-ctx.Done():
 		// log.Debug("This goroutine is canceled")
 	}
+
+	// set end time
+	as.mtx.Lock()
+	as.timeBook[EndTime] = time.Now()
+	as.mtx.Unlock()
+
 	log.Debug("End MsgReceiver goroutine")
 }
 

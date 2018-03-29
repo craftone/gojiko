@@ -8,9 +8,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Check normal lifecycle. New -> sendUint64 -> close.
+// And ckeck startTime and endTime will set correctly.
 func Test_FlowStats(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	fs := NewFlowStats(ctx)
+
+	// at first, StartTime is set and EntTime is not set.
+	assert.NotEqual(t, time.Time{}, fs.ReadTime(StartTime))
+	assert.Equal(t, time.Time{}, fs.ReadTime(EndTime))
+
+	// send uint64 message test
 	fs.SendUint64Msg(SendPackets, 1)
 	fs.SendUint64Msg(SendBytes, 1460)
 
@@ -29,8 +37,14 @@ func Test_FlowStats(t *testing.T) {
 
 	// cancel test
 	cancel()
+	time.Sleep(time.Microsecond)
+
+	// After cancel, StartTime is set and EntTime is not set.
+	assert.NotEqual(t, time.Time{}, fs.ReadTime(StartTime))
+	assert.NotEqual(t, time.Time{}, fs.ReadTime(EndTime))
 }
 
+// Check TimeMsg is treated correctly
 func Test_TimeMsg(t *testing.T) {
 	ctx, _ := context.WithCancel(context.Background())
 	fs := NewFlowStats(ctx)
@@ -98,6 +112,8 @@ func Test_AllItems(t *testing.T) {
 	assert.Equal(t, "10.0 kpkts", recvPktsInvalid)
 }
 
+// Check calculate Bitrate correctly when the flowStat
+// is not finished (so EndTime is not set).
 func Test_NoEndTime(t *testing.T) {
 	ctx, _ := context.WithCancel(context.Background())
 	fs := NewFlowStats(ctx)
