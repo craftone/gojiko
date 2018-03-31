@@ -65,40 +65,6 @@ func TestUnmarshal_cause(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestCauseDetail(t *testing.T) {
-	type args struct {
-		c CauseValue
-	}
-	tests := []struct {
-		name  string
-		args  args
-		want  CauseType
-		want1 string
-	}{
-		{"", args{CauseValue(0)}, CauseTypeOther, "Unknown cause"},
-		{"", args{CauseValue(1)}, CauseTypeRequestInitial, "Unknown cause"},
-		{"", args{CauseValue(2)}, CauseTypeRequestInitial, "Local Detach"},
-		{"", args{CauseValue(15)}, CauseTypeRequestInitial, "Unknown cause"},
-		{"", args{CauseValue(16)}, CauseTypeAcceptance, "Request accepted"},
-		{"", args{CauseValue(63)}, CauseTypeAcceptance, "Unknown cause"},
-		{"", args{CauseValue(64)}, CauseTypeRejection, "Context Not Found"},
-		{"", args{CauseValue(239)}, CauseTypeRejection, "Unknown cause"},
-		{"", args{CauseValue(240)}, CauseTypeRequestInitial, "Unknown cause"},
-		{"", args{CauseValue(255)}, CauseTypeRequestInitial, "Unknown cause"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := CauseDetail(tt.args.c)
-			if got != tt.want {
-				t.Errorf("CauseDetail() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("CauseDetail() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
-}
-
 func TestCauseType_String(t *testing.T) {
 	tests := []struct {
 		name string
@@ -115,6 +81,59 @@ func TestCauseType_String(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.t.String(); got != tt.want {
 				t.Errorf("CauseType.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCauseValue_Type(t *testing.T) {
+	tests := []struct {
+		name string
+		c    CauseValue
+		want CauseType
+	}{
+		{"", CauseValue(0), CauseTypeOther},
+		{"", CauseValue(1), CauseTypeRequestInitial},
+		{"", CauseValue(2), CauseTypeRequestInitial},
+		{"", CauseValue(15), CauseTypeRequestInitial},
+		{"", CauseValue(16), CauseTypeAcceptance},
+		{"", CauseValue(63), CauseTypeAcceptance},
+		{"", CauseValue(64), CauseTypeRejection},
+		{"", CauseValue(73), CauseTypeRetryableRejection},
+		{"", CauseValue(239), CauseTypeRejection},
+		{"", CauseValue(240), CauseTypeRequestInitial},
+		{"", CauseValue(255), CauseTypeRequestInitial},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.c.Type(); got != tt.want {
+				t.Errorf("CauseValue.Type() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCauseValue_Detail(t *testing.T) {
+	tests := []struct {
+		name string
+		c    CauseValue
+		want string
+	}{
+		{"", CauseValue(0), "Unknown cause"},
+		{"", CauseValue(1), "Unknown cause"},
+		{"", CauseValue(2), "Local Detach"},
+		{"", CauseValue(15), "Unknown cause"},
+		{"", CauseValue(16), "Request accepted"},
+		{"", CauseValue(63), "Unknown cause"},
+		{"", CauseValue(64), "Context Not Found"},
+		{"", CauseValue(239), "Unknown cause"},
+		{"", CauseValue(240), "Unknown cause"},
+		{"", CauseValue(255), "Unknown cause"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.c.Detail(); got != tt.want {
+				t.Errorf("CauseValue.Detail() = %v, want %v", got, tt.want)
 			}
 		})
 	}

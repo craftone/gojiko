@@ -234,34 +234,33 @@ var causeToStrMap = map[CauseValue]string{
 	CauseAPNRestrictionTypeIncompatibleWithCurrentlyActivePDNConnection: "APN Restriction type Incompatible with currently active PDN connection",
 }
 
-func CauseDetail(c CauseValue) (CauseType, string) {
-	var t CauseType
-
+func (c CauseValue) Type() CauseType {
 	switch {
 	case byte(c) == 0:
-		t = CauseTypeOther
+		return CauseTypeOther
 	case byte(c) <= 15:
-		t = CauseTypeRequestInitial
+		return CauseTypeRequestInitial
 	case byte(c) <= 63:
-		t = CauseTypeAcceptance
+		return CauseTypeAcceptance
 	case c == CauseNoResourcesAvailable ||
 		c == CauseAllDynamicAddressesAreOccupied ||
 		c == CauseNoMemoryAvailable ||
 		c == CauseMissingOrUnknownAPN ||
 		c == CauseAPNAccessDeniedNoSubscription ||
 		c == CauseRequestRejectedReasonNotSpecified:
-		t = CauseTypeRetryableRejection
+		return CauseTypeRetryableRejection
 	case byte(c) <= 239:
-		t = CauseTypeRejection
+		return CauseTypeRejection
 	default:
-		t = CauseTypeRequestInitial
+		return CauseTypeRequestInitial
 	}
+}
 
-	str, ok := causeToStrMap[c]
-	if ok {
-		return t, str
+func (c CauseValue) Detail() string {
+	if str, ok := causeToStrMap[c]; ok {
+		return str
 	}
-	return t, "Unknown cause"
+	return "Unknown cause"
 }
 
 func (t CauseType) String() string {

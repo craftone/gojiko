@@ -2,6 +2,7 @@ package gtpv2c
 
 import (
 	"errors"
+	"fmt"
 	"net"
 
 	"github.com/craftone/gojiko/domain/gtp"
@@ -50,9 +51,17 @@ func NewCreateSessionResponse(seqNum uint32, csResArg CreateSessionResponseArg) 
 
 func checkCreateSessionResponseArg(csReqArg CreateSessionResponseArg) error {
 	errMsgs := make([]string, 0)
+	// ensure exist mandatory IEs
 	if csReqArg.Cause == nil {
 		errMsgs = append(errMsgs, "Cause")
 	}
+	if csReqArg.BearerContextCeated == nil {
+		errMsgs = append(errMsgs, "Bearer Context Created")
+	}
+	if len(errMsgs) > 0 {
+		return fmt.Errorf("Mandatory IEs are not specified : %v", errMsgs)
+	}
+
 	if csReqArg.PgwCtrlFteid == nil {
 		errMsgs = append(errMsgs, "PgwCtrlFteid")
 	}
@@ -64,9 +73,6 @@ func checkCreateSessionResponseArg(csReqArg CreateSessionResponseArg) error {
 	}
 	if csReqArg.Pco == nil {
 		errMsgs = append(errMsgs, "PCO")
-	}
-	if csReqArg.BearerContextCeated == nil {
-		errMsgs = append(errMsgs, "Bearer Context Created")
 	}
 
 	if len(errMsgs) == 0 {

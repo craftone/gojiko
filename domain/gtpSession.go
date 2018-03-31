@@ -250,8 +250,8 @@ loop:
 			myLog.Debug("The response's sequense number is invalid")
 			goto loop
 		}
-		causeType, causeMsg := ie.CauseDetail(csRes.Cause().Value())
-		switch causeType {
+		causeValue := csRes.Cause().Value()
+		switch causeValue.Type() {
 		case ie.CauseTypeAcceptance:
 			// Set PGW's F-TEIDs into the session
 			s.pgwCtrlFTEID = csRes.PgwCtrlFteid()
@@ -263,11 +263,11 @@ loop:
 				gscResChan <- GsRes{err: err}
 				return
 			}
-			gscResChan <- GsRes{Code: GsResOK, Msg: causeMsg}
+			gscResChan <- GsRes{Code: GsResOK, Msg: causeValue.Detail()}
 		case ie.CauseTypeRetryableRejection:
-			gscResChan <- GsRes{Code: GsResRetryableNG, Msg: causeMsg}
+			gscResChan <- GsRes{Code: GsResRetryableNG, Msg: causeValue.Detail()}
 		default:
-			gscResChan <- GsRes{Code: GsResNG, Msg: causeMsg}
+			gscResChan <- GsRes{Code: GsResNG, Msg: causeValue.Detail()}
 		}
 
 	case <-timeoutChan:
@@ -329,14 +329,14 @@ loop:
 			log.Debug("The response's sequense number is invalid")
 			goto loop
 		}
-		causeType, causeMsg := ie.CauseDetail(dsRes.Cause().Value())
-		switch causeType {
+		causeValue := dsRes.Cause().Value()
+		switch causeValue.Type() {
 		case ie.CauseTypeAcceptance:
-			gscResChan <- GsRes{Code: GsResOK, Msg: causeMsg}
+			gscResChan <- GsRes{Code: GsResOK, Msg: causeValue.Detail()}
 		case ie.CauseTypeRetryableRejection:
-			gscResChan <- GsRes{Code: GsResRetryableNG, Msg: causeMsg}
+			gscResChan <- GsRes{Code: GsResRetryableNG, Msg: causeValue.Detail()}
 		default:
-			gscResChan <- GsRes{Code: GsResNG, Msg: causeMsg}
+			gscResChan <- GsRes{Code: GsResNG, Msg: causeValue.Detail()}
 		}
 
 	case <-timeoutChan:
