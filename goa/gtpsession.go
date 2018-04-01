@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/craftone/gojiko/domain"
+	"github.com/craftone/gojiko/domain/apns"
 	"github.com/craftone/gojiko/goa/app"
 	"github.com/goadesign/goa"
 )
@@ -33,15 +34,26 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 		payload.Imsi, payload.Msisdn, payload.Mei, payload.Mcc, payload.Mnc,
 		payload.Apn, byte(payload.Ebi))
 	if err != nil {
-		return ctx.InternalServerError(goa.ErrInternal(err))
+		switch err.(type) {
+		case *domain.DuplicateSessionError:
+			return ctx.Conflict(goa.NewErrorClass("conflict", 409)(err))
+		case *apns.NoSuchAPNError:
+			return ctx.BadRequest(goa.ErrBadRequest(err))
+		default:
+			return ctx.InternalServerError(goa.ErrInternal(err))
+		}
 	}
 
 	switch csRes.Code {
 	case domain.GsResOK:
-		res := newGtpsessionMedia(sess)
-		return ctx.OK(res)
+		return ctx.OK(&app.Gtpv2cCsres{
+			Cause:       newCauseMedia(csRes),
+			SessionInfo: newGtpsessionMedia(sess),
+		})
+	case domain.GsResRetryableNG:
+		return ctx.ServiceUnavailable(newCauseMedia(csRes))
 	case domain.GsResTimeout:
-		return ctx.RequestTimeout(goa.NewErrorClass("request_timeout", 408)(errors.New(csRes.Msg)))
+		return ctx.GatewayTimeout(goa.NewErrorClass("gateway_timeout", 504)(errors.New(csRes.Msg)))
 	}
 	return ctx.InternalServerError(goa.ErrInternal(csRes.Msg))
 
@@ -72,11 +84,7 @@ func (c *GtpsessionController) DeleteByIMSIandEBI(ctx *app.DeleteByIMSIandEBIGtp
 		}
 	}
 
-	res := &app.Gtpv2cCause{
-		Type:   gsRes.Code.String(),
-		Detail: gsRes.Msg,
-	}
-	return ctx.OK(res)
+	return ctx.OK(newCauseMedia(gsRes))
 
 	// GtpsessionController_DeleteByIMSIandEBI: end_implement
 }

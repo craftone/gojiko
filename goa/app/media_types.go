@@ -104,6 +104,8 @@ type Gtpv2cCause struct {
 	Detail string `form:"detail" json:"detail" xml:"detail"`
 	// Type of return code from PGW
 	Type string `form:"type" json:"type" xml:"type"`
+	// GTPv2-C response Cause Value
+	Value int `form:"value" json:"value" xml:"value"`
 }
 
 // Validate validates the Gtpv2cCause media type instance.
@@ -111,8 +113,38 @@ func (mt *Gtpv2cCause) Validate() (err error) {
 	if mt.Type == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "type"))
 	}
+
 	if mt.Detail == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "detail"))
+	}
+	return
+}
+
+// GTPv2-C Crease Session Response (default view)
+//
+// Identifier: application/vnd.gtpv2c.csres+json; view=default
+type Gtpv2cCsres struct {
+	Cause       *Gtpv2cCause `form:"cause" json:"cause" xml:"cause"`
+	SessionInfo *Gtpsession  `form:"sessionInfo" json:"sessionInfo" xml:"sessionInfo"`
+}
+
+// Validate validates the Gtpv2cCsres media type instance.
+func (mt *Gtpv2cCsres) Validate() (err error) {
+	if mt.Cause == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "cause"))
+	}
+	if mt.SessionInfo == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "sessionInfo"))
+	}
+	if mt.Cause != nil {
+		if err2 := mt.Cause.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	if mt.SessionInfo != nil {
+		if err2 := mt.SessionInfo.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
 	}
 	return
 }

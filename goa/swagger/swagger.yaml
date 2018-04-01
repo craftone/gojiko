@@ -152,6 +152,7 @@ definitions:
     example:
       detail: Request accepted
       type: OK
+      value: 16
     properties:
       detail:
         description: Detail of return code from PGW
@@ -161,10 +162,56 @@ definitions:
         description: Type of return code from PGW
         example: OK
         type: string
+      value:
+        description: GTPv2-C response Cause Value
+        example: 16
+        format: int64
+        type: integer
     required:
     - type
+    - value
     - detail
     title: 'Mediatype identifier: application/vnd.gtpv2c.cause+json; view=default'
+    type: object
+  Gtpv2cCsres:
+    description: GTPv2-C Crease Session Response (default view)
+    example:
+      cause:
+        detail: Request accepted
+        type: OK
+        value: 16
+      sessionInfo:
+        apn: example.com
+        ebi: 5
+        fteid:
+          pgwCtrlFTEID:
+            ipv4: 127.0.0.1
+            teid: "0x12345678"
+          pgwDataFTEID:
+            ipv4: 127.0.0.1
+            teid: "0x12345678"
+          sgwCtrlFTEID:
+            ipv4: 127.0.0.1
+            teid: "0x12345678"
+          sgwDataFTEID:
+            ipv4: 127.0.0.1
+            teid: "0x12345678"
+        imsi: "440100123456780"
+        mcc: "440"
+        mei: "1212345612345612"
+        mnc: "10"
+        msisdn: "8101012345678"
+        paa: 93.108.70.217
+        sid: 1
+    properties:
+      cause:
+        $ref: '#/definitions/Gtpv2cCause'
+      sessionInfo:
+        $ref: '#/definitions/Gtpsession'
+    required:
+    - cause
+    - sessionInfo
+    title: 'Mediatype identifier: application/vnd.gtpv2c.csres+json; view=default'
     type: object
   RecvStatForHuman:
     example:
@@ -630,12 +677,13 @@ paths:
           $ref: '#/definitions/CreateGtpsessionPayload'
       produces:
       - application/vnd.goa.error
-      - application/vnd.gtpsession+json
+      - application/vnd.gtpv2c.cause+json
+      - application/vnd.gtpv2c.csres+json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Gtpsession'
+            $ref: '#/definitions/Gtpv2cCsres'
         "400":
           description: Bad Request
           schema:
@@ -644,12 +692,20 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/error'
-        "408":
-          description: Request Timeout
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/error'
         "500":
           description: Internal Server Error
+          schema:
+            $ref: '#/definitions/error'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/Gtpv2cCause'
+        "504":
+          description: Gateway Timeout
           schema:
             $ref: '#/definitions/error'
       schemes:

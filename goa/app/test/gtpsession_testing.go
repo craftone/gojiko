@@ -104,6 +104,166 @@ func CreateGtpsessionBadRequest(t goatest.TInterface, ctx context.Context, servi
 	return rw, mt
 }
 
+// CreateGtpsessionConflict runs the method Create of the given controller with the given parameters and payload.
+// It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
+// If ctx is nil then context.Background() is used.
+// If service is nil then a default service is created.
+func CreateGtpsessionConflict(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, sgwAddr string, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, error) {
+	// Setup service
+	var (
+		logBuf bytes.Buffer
+		resp   interface{}
+
+		respSetter goatest.ResponseSetterFunc = func(r interface{}) { resp = r }
+	)
+	if service == nil {
+		service = goatest.Service(&logBuf, respSetter)
+	} else {
+		logger := log.New(&logBuf, "", log.Ltime)
+		service.WithLogger(goa.NewLogger(logger))
+		newEncoder := func(io.Writer) goa.Encoder { return respSetter }
+		service.Encoder = goa.NewHTTPEncoder() // Make sure the code ends up using this decoder
+		service.Encoder.Register(newEncoder, "*/*")
+	}
+
+	// Validate payload
+	err := payload.Validate()
+	if err != nil {
+		e, ok := err.(goa.ServiceError)
+		if !ok {
+			panic(err) // bug
+		}
+		return nil, e
+	}
+
+	// Setup request context
+	rw := httptest.NewRecorder()
+	u := &url.URL{
+		Path: fmt.Sprintf("/sgw/%v/gtpsessions", sgwAddr),
+	}
+	req, _err := http.NewRequest("POST", u.String(), nil)
+	if _err != nil {
+		panic("invalid test " + _err.Error()) // bug
+	}
+	prms := url.Values{}
+	prms["sgwAddr"] = []string{fmt.Sprintf("%v", sgwAddr)}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "GtpsessionTest"), rw, req, prms)
+	createCtx, __err := app.NewCreateGtpsessionContext(goaCtx, req, service)
+	if __err != nil {
+		_e, _ok := __err.(goa.ServiceError)
+		if !_ok {
+			panic("invalid test data " + __err.Error()) // bug
+		}
+		return nil, _e
+	}
+	createCtx.Payload = payload
+
+	// Perform action
+	__err = ctrl.Create(createCtx)
+
+	// Validate response
+	if __err != nil {
+		t.Fatalf("controller returned %+v, logs:\n%s", __err, logBuf.String())
+	}
+	if rw.Code != 409 {
+		t.Errorf("invalid response status code: got %+v, expected 409", rw.Code)
+	}
+	var mt error
+	if resp != nil {
+		var __ok bool
+		mt, __ok = resp.(error)
+		if !__ok {
+			t.Fatalf("invalid response media: got variable of type %T, value %+v, expected instance of error", resp, resp)
+		}
+	}
+
+	// Return results
+	return rw, mt
+}
+
+// CreateGtpsessionGatewayTimeout runs the method Create of the given controller with the given parameters and payload.
+// It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
+// If ctx is nil then context.Background() is used.
+// If service is nil then a default service is created.
+func CreateGtpsessionGatewayTimeout(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, sgwAddr string, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, error) {
+	// Setup service
+	var (
+		logBuf bytes.Buffer
+		resp   interface{}
+
+		respSetter goatest.ResponseSetterFunc = func(r interface{}) { resp = r }
+	)
+	if service == nil {
+		service = goatest.Service(&logBuf, respSetter)
+	} else {
+		logger := log.New(&logBuf, "", log.Ltime)
+		service.WithLogger(goa.NewLogger(logger))
+		newEncoder := func(io.Writer) goa.Encoder { return respSetter }
+		service.Encoder = goa.NewHTTPEncoder() // Make sure the code ends up using this decoder
+		service.Encoder.Register(newEncoder, "*/*")
+	}
+
+	// Validate payload
+	err := payload.Validate()
+	if err != nil {
+		e, ok := err.(goa.ServiceError)
+		if !ok {
+			panic(err) // bug
+		}
+		return nil, e
+	}
+
+	// Setup request context
+	rw := httptest.NewRecorder()
+	u := &url.URL{
+		Path: fmt.Sprintf("/sgw/%v/gtpsessions", sgwAddr),
+	}
+	req, _err := http.NewRequest("POST", u.String(), nil)
+	if _err != nil {
+		panic("invalid test " + _err.Error()) // bug
+	}
+	prms := url.Values{}
+	prms["sgwAddr"] = []string{fmt.Sprintf("%v", sgwAddr)}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	goaCtx := goa.NewContext(goa.WithAction(ctx, "GtpsessionTest"), rw, req, prms)
+	createCtx, __err := app.NewCreateGtpsessionContext(goaCtx, req, service)
+	if __err != nil {
+		_e, _ok := __err.(goa.ServiceError)
+		if !_ok {
+			panic("invalid test data " + __err.Error()) // bug
+		}
+		return nil, _e
+	}
+	createCtx.Payload = payload
+
+	// Perform action
+	__err = ctrl.Create(createCtx)
+
+	// Validate response
+	if __err != nil {
+		t.Fatalf("controller returned %+v, logs:\n%s", __err, logBuf.String())
+	}
+	if rw.Code != 504 {
+		t.Errorf("invalid response status code: got %+v, expected 504", rw.Code)
+	}
+	var mt error
+	if resp != nil {
+		var __ok bool
+		mt, __ok = resp.(error)
+		if !__ok {
+			t.Fatalf("invalid response media: got variable of type %T, value %+v, expected instance of error", resp, resp)
+		}
+	}
+
+	// Return results
+	return rw, mt
+}
+
 // CreateGtpsessionInternalServerError runs the method Create of the given controller with the given parameters and payload.
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
@@ -268,7 +428,7 @@ func CreateGtpsessionNotFound(t goatest.TInterface, ctx context.Context, service
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func CreateGtpsessionOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, sgwAddr string, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, *app.Gtpsession) {
+func CreateGtpsessionOK(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, sgwAddr string, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, *app.Gtpv2cCsres) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -333,12 +493,12 @@ func CreateGtpsessionOK(t goatest.TInterface, ctx context.Context, service *goa.
 	if rw.Code != 200 {
 		t.Errorf("invalid response status code: got %+v, expected 200", rw.Code)
 	}
-	var mt *app.Gtpsession
+	var mt *app.Gtpv2cCsres
 	if resp != nil {
 		var __ok bool
-		mt, __ok = resp.(*app.Gtpsession)
+		mt, __ok = resp.(*app.Gtpv2cCsres)
 		if !__ok {
-			t.Fatalf("invalid response media: got variable of type %T, value %+v, expected instance of app.Gtpsession", resp, resp)
+			t.Fatalf("invalid response media: got variable of type %T, value %+v, expected instance of app.Gtpv2cCsres", resp, resp)
 		}
 		__err = mt.Validate()
 		if __err != nil {
@@ -350,11 +510,11 @@ func CreateGtpsessionOK(t goatest.TInterface, ctx context.Context, service *goa.
 	return rw, mt
 }
 
-// CreateGtpsessionRequestTimeout runs the method Create of the given controller with the given parameters and payload.
+// CreateGtpsessionServiceUnavailable runs the method Create of the given controller with the given parameters and payload.
 // It returns the response writer so it's possible to inspect the response headers and the media type struct written to the response.
 // If ctx is nil then context.Background() is used.
 // If service is nil then a default service is created.
-func CreateGtpsessionRequestTimeout(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, sgwAddr string, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, error) {
+func CreateGtpsessionServiceUnavailable(t goatest.TInterface, ctx context.Context, service *goa.Service, ctrl app.GtpsessionController, sgwAddr string, payload *app.CreateGtpsessionPayload) (http.ResponseWriter, *app.Gtpv2cCause) {
 	// Setup service
 	var (
 		logBuf bytes.Buffer
@@ -379,7 +539,8 @@ func CreateGtpsessionRequestTimeout(t goatest.TInterface, ctx context.Context, s
 		if !ok {
 			panic(err) // bug
 		}
-		return nil, e
+		t.Errorf("unexpected payload validation error: %+v", e)
+		return nil, nil
 	}
 
 	// Setup request context
@@ -403,7 +564,8 @@ func CreateGtpsessionRequestTimeout(t goatest.TInterface, ctx context.Context, s
 		if !_ok {
 			panic("invalid test data " + __err.Error()) // bug
 		}
-		return nil, _e
+		t.Errorf("unexpected parameter validation error: %+v", _e)
+		return nil, nil
 	}
 	createCtx.Payload = payload
 
@@ -414,15 +576,19 @@ func CreateGtpsessionRequestTimeout(t goatest.TInterface, ctx context.Context, s
 	if __err != nil {
 		t.Fatalf("controller returned %+v, logs:\n%s", __err, logBuf.String())
 	}
-	if rw.Code != 408 {
-		t.Errorf("invalid response status code: got %+v, expected 408", rw.Code)
+	if rw.Code != 503 {
+		t.Errorf("invalid response status code: got %+v, expected 503", rw.Code)
 	}
-	var mt error
+	var mt *app.Gtpv2cCause
 	if resp != nil {
 		var __ok bool
-		mt, __ok = resp.(error)
+		mt, __ok = resp.(*app.Gtpv2cCause)
 		if !__ok {
-			t.Fatalf("invalid response media: got variable of type %T, value %+v, expected instance of error", resp, resp)
+			t.Fatalf("invalid response media: got variable of type %T, value %+v, expected instance of app.Gtpv2cCause", resp, resp)
+		}
+		__err = mt.Validate()
+		if __err != nil {
+			t.Errorf("invalid response media type: %s", __err)
 		}
 	}
 

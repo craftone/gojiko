@@ -109,19 +109,19 @@ func (r *GtpSessionRepo) newSession(
 	r.mtx4Map.Lock()
 	defer r.mtx4Map.Unlock()
 	if _, ok := r.sessionsByID[session.id]; ok {
-		return 0, fmt.Errorf("There is already the session that have the ID : %d", session.id)
+		return 0, NewDuplicateSessionError("There is already the session that have the ID : %d", session.id)
 	}
 	ctrlTeid := session.sgwCtrlFTEID.Teid()
 	if _, ok := r.sessionsByCtrlTeid[ctrlTeid]; ok {
-		return 0, fmt.Errorf("There is already the session that have the SGW-CTRL-TEID : %d", ctrlTeid)
+		return 0, NewDuplicateSessionError("There is already the session that have the SGW-CTRL-TEID : %d", ctrlTeid)
 	}
 	dataTeid := session.sgwDataFTEID.Teid()
 	if _, ok := r.sessionsByDataTeid[dataTeid]; ok {
-		return 0, fmt.Errorf("There is already the session that have the SGW-DATA-TEID : %d", dataTeid)
+		return 0, NewDuplicateSessionError("There is already the session that have the SGW-DATA-TEID : %d", dataTeid)
 	}
 	imsiEbi := imsi.Value() + "_" + strconv.Itoa(int(ebi.Value()))
 	if _, ok := r.sessionsByImsiEbi[imsiEbi]; ok {
-		return 0, fmt.Errorf("There is already the session that have the IMSI : %s and EBI : %d", imsi.Value(), ebi.Value())
+		return 0, NewDuplicateSessionError("There is already the session that have the IMSI : %s and EBI : %d", imsi.Value(), ebi.Value())
 	}
 
 	r.sessionsByID[session.id] = session

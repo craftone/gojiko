@@ -236,9 +236,9 @@ func (payload *CreateGtpsessionPayload) Validate() (err error) {
 }
 
 // OK sends a HTTP response with status code 200.
-func (ctx *CreateGtpsessionContext) OK(r *Gtpsession) error {
+func (ctx *CreateGtpsessionContext) OK(r *Gtpv2cCsres) error {
 	if ctx.ResponseData.Header().Get("Content-Type") == "" {
-		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.gtpsession+json")
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.gtpv2c.csres+json")
 	}
 	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
 }
@@ -259,12 +259,12 @@ func (ctx *CreateGtpsessionContext) NotFound(r error) error {
 	return ctx.ResponseData.Service.Send(ctx.Context, 404, r)
 }
 
-// RequestTimeout sends a HTTP response with status code 408.
-func (ctx *CreateGtpsessionContext) RequestTimeout(r error) error {
+// Conflict sends a HTTP response with status code 409.
+func (ctx *CreateGtpsessionContext) Conflict(r error) error {
 	if ctx.ResponseData.Header().Get("Content-Type") == "" {
 		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
 	}
-	return ctx.ResponseData.Service.Send(ctx.Context, 408, r)
+	return ctx.ResponseData.Service.Send(ctx.Context, 409, r)
 }
 
 // InternalServerError sends a HTTP response with status code 500.
@@ -273,6 +273,22 @@ func (ctx *CreateGtpsessionContext) InternalServerError(r error) error {
 		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
 	}
 	return ctx.ResponseData.Service.Send(ctx.Context, 500, r)
+}
+
+// ServiceUnavailable sends a HTTP response with status code 503.
+func (ctx *CreateGtpsessionContext) ServiceUnavailable(r *Gtpv2cCause) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.gtpv2c.cause+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 503, r)
+}
+
+// GatewayTimeout sends a HTTP response with status code 504.
+func (ctx *CreateGtpsessionContext) GatewayTimeout(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 504, r)
 }
 
 // DeleteByIMSIandEBIGtpsessionContext provides the gtpsession deleteByIMSIandEBI action context.

@@ -21,11 +21,13 @@ var _ = Resource("gtpsession", func() {
 			imsiEbiMember()
 			Required("apn", "mcc", "mnc", "msisdn", "mei", "imsi", "ebi")
 		})
-		Response(OK)
-		Response(NotFound, ErrorMedia)
+		Response(OK, GtpV2CResponseMedia)
 		Response(BadRequest, ErrorMedia)
+		Response(NotFound, ErrorMedia)
+		Response(Conflict, ErrorMedia)
 		Response(InternalServerError, ErrorMedia)
-		Response(RequestTimeout, ErrorMedia)
+		Response(ServiceUnavailable, GtpV2CCauseMedia)
+		Response(GatewayTimeout, ErrorMedia)
 	})
 
 	Action("showByID", func() {
@@ -105,13 +107,31 @@ var GtpV2CCauseMedia = MediaType("application/vnd.gtpv2c.cause+json", func() {
 		Attribute("type", String, "Type of return code from PGW", func() {
 			Example("OK")
 		})
+		Attribute("value", Integer, "GTPv2-C response Cause Value", func() {
+			Example(16)
+		})
 		Attribute("detail", String, "Detail of return code from PGW", func() {
 			Example("Request accepted")
 		})
-		Required("type", "detail")
+		Required("type", "value", "detail")
 	})
 	View("default", func() {
 		Attribute("type")
+		Attribute("value")
 		Attribute("detail")
 	})
+})
+
+var GtpV2CResponseMedia = MediaType("application/vnd.gtpv2c.csres+json", func() {
+	Description("GTPv2-C Crease Session Response")
+	Attributes(func() {
+		Attribute("cause", GtpV2CCauseMedia)
+		Attribute("sessionInfo", GtpSessionMedia)
+		Required("cause", "sessionInfo")
+	})
+	View("default", func() {
+		Attribute("cause")
+		Attribute("sessionInfo")
+	})
+
 })

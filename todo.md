@@ -90,10 +90,10 @@
 - ~~CreateSessionResponseでMandarotyの扱いが誤っているので修正する。~~ @ 2018/04/01
 - ~~UDPResponderのログが出まくるので-v以外は1行だけ出すように修正する。ヘッダ行も出力する。~~ @ 2018/04/01
 - ~~UDP Responderで、ログにbitrateを出すようにする ~~ @ 2018/04/01
+- ~~POST gtpsessionで、応答コードを返却する。~~ @ 2018/04/02
+- ~~POST gtpsessionのエラー応答が全部500なのが良くないので修正する。~~ @ 2018/04/02
 
 - GTPv1U ECHOパケットに応答する。
-- POST gtpsessionで、応答コードを返却する。
-- POST gtpsessionのエラー応答が全部500なのが良くないので修正する。
 
 - Error Indicatorに対応
 - contextを使ってキャンセル→goroutine停止を確実に実施する

@@ -122,3 +122,11 @@ func newStatsMedia(sts *stats.FlowStats) *app.SendRecvStatistics {
 	}
 	return statsMedia
 }
+
+func newCauseMedia(gsRes domain.GsRes) *app.Gtpv2cCause {
+	return &app.Gtpv2cCause{
+		Type:   gsRes.Code.String(),
+		Value:  int(gsRes.Value),
+		Detail: gsRes.Msg,
+	}
+}

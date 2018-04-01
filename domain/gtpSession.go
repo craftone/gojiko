@@ -251,7 +251,8 @@ loop:
 			goto loop
 		}
 		causeValue := csRes.Cause().Value()
-		switch causeValue.Type() {
+		gsRes := GsRes{Value: causeValue, Msg: causeValue.Detail()}
+		switch gsRes.Value.Type() {
 		case ie.CauseTypeAcceptance:
 			// Set PGW's F-TEIDs into the session
 			s.pgwCtrlFTEID = csRes.PgwCtrlFteid()
@@ -263,12 +264,13 @@ loop:
 				gscResChan <- GsRes{err: err}
 				return
 			}
-			gscResChan <- GsRes{Code: GsResOK, Msg: causeValue.Detail()}
+			gsRes.Code = GsResOK
 		case ie.CauseTypeRetryableRejection:
-			gscResChan <- GsRes{Code: GsResRetryableNG, Msg: causeValue.Detail()}
+			gsRes.Code = GsResRetryableNG
 		default:
-			gscResChan <- GsRes{Code: GsResNG, Msg: causeValue.Detail()}
+			gsRes.Code = GsResNG
 		}
+		gscResChan <- gsRes
 
 	case <-timeoutChan:
 		myLog.Info("Waiting for Create Session Response is timed out")
@@ -330,14 +332,16 @@ loop:
 			goto loop
 		}
 		causeValue := dsRes.Cause().Value()
-		switch causeValue.Type() {
+		gsRes := GsRes{Value: causeValue, Msg: causeValue.Detail()}
+		switch gsRes.Value.Type() {
 		case ie.CauseTypeAcceptance:
-			gscResChan <- GsRes{Code: GsResOK, Msg: causeValue.Detail()}
+			gsRes.Code = GsResOK
 		case ie.CauseTypeRetryableRejection:
-			gscResChan <- GsRes{Code: GsResRetryableNG, Msg: causeValue.Detail()}
+			gsRes.Code = GsResRetryableNG
 		default:
-			gscResChan <- GsRes{Code: GsResNG, Msg: causeValue.Detail()}
+			gsRes.Code = GsResNG
 		}
+		gscResChan <- gsRes
 
 	case <-timeoutChan:
 		log.Info("Waiting for Delete Session Response is timed out")

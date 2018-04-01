@@ -1,5 +1,9 @@
 package domain
 
+import (
+	"github.com/craftone/gojiko/domain/gtpv2c/ie"
+)
+
 type GsResCode int
 
 const (
@@ -12,9 +16,10 @@ const (
 // GsRes respresents the command message that
 // replying from the session routine.
 type GsRes struct {
-	Code GsResCode
-	Msg  string
-	err  error
+	Code  GsResCode
+	Value ie.CauseValue
+	Msg   string
+	err   error
 }
 
 func (c GsResCode) String() string {

@@ -45,7 +45,7 @@ func (a *Repo) Find(networkID, mcc, mnc string) (*Apn, error) {
 	if ok {
 		return apn, nil
 	}
-	return nil, fmt.Errorf("There is no such APN : networkID=%s MCC=%s MNC=%s", networkID, mcc, mnc)
+	return nil, NewNoSuchAPNError("There is no such APN : networkID=%s MCC=%s MNC=%s", networkID, mcc, mnc)
 }
 
 func (a *Repo) Delete(name string) error {
