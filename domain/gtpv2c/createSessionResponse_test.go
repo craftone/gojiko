@@ -112,3 +112,78 @@ func TestUnmarshal_CreateSessionResponse(t *testing.T) {
 	assert.Equal(t, tail, []byte{})
 	assert.Nil(t, err)
 }
+
+func TestCreateSessionResponse_CauseTypeRejection_Marshal(t *testing.T) {
+	causeIE, err := ie.NewCause(0, ie.CauseUserAuthenticationFailed, false, false, false, nil)
+	assert.NoError(t, err)
+	ebiIE, err := ie.NewEbi(0, 5)
+	assert.NoError(t, err)
+	bearerContextCIE, err := ie.NewBearerContextCreatedWithinCSRes(
+		ie.BearerContextCreatedWithinCSResArg{
+			Cause: causeIE,
+			Ebi:   ebiIE,
+		})
+	assert.NoError(t, err)
+
+	csResArg := CreateSessionResponseArg{
+		SgwCtrlTeid:         gtp.Teid(0x12345678),
+		Cause:               causeIE,
+		BearerContextCeated: bearerContextCIE,
+	}
+
+	csRes, err := NewCreateSessionResponse(0x1234, csResArg)
+	csResBin := csRes.Marshal()
+	assert.Equal(t, []byte{
+		0x48,  // First octet
+		0x21,  // CSRes(33)
+		0, 29, // Length
+		0x12, 0x34, 0x56, 0x78, // TEID
+		0x00, 0x12, 0x34, // Seq Num
+		0,                 // Spare
+		2, 0, 2, 0, 92, 0, // Cause
+		0x5d, 0, 11, 0, // Bearer Context to be created
+		0x49, 0, 1, 0, 5, // EBI
+		2, 0, 2, 0, 92, 0, // Cause
+	}, csResBin)
+}
+
+func TestCreateSessionResponse_CauseTypeRejection_Unmarshal(t *testing.T) {
+	causeIE, err := ie.NewCause(0, ie.CauseUserAuthenticationFailed, false, false, false, nil)
+	assert.NoError(t, err)
+	ebiIE, err := ie.NewEbi(0, 5)
+	assert.NoError(t, err)
+	bearerContextCIE, err := ie.NewBearerContextCreatedWithinCSRes(
+		ie.BearerContextCreatedWithinCSResArg{
+			Cause: causeIE,
+			Ebi:   ebiIE,
+		})
+	assert.NoError(t, err)
+
+	csResArg := CreateSessionResponseArg{
+		SgwCtrlTeid:         gtp.Teid(0x12345678),
+		Cause:               causeIE,
+		BearerContextCeated: bearerContextCIE,
+	}
+	csResArg.Recovery, err = ie.NewRecovery(0, 128)
+	assert.NoError(t, err)
+
+	csRes, err := NewCreateSessionResponse(0x1234, csResArg)
+	csResBin := csRes.Marshal()
+	msg, tail, err := Unmarshal(csResBin)
+
+	csRes = msg.(*CreateSessionResponse)
+	assert.Equal(t, uint32(0x1234), csRes.SeqNum())
+	assert.Equal(t, gtp.Teid(0x12345678), csRes.Teid())
+	assert.Equal(t, ie.CauseUserAuthenticationFailed, csRes.Cause().Value())
+	assert.Equal(t, ie.CauseUserAuthenticationFailed, csRes.BearerContextCeated().Cause().Value())
+	assert.Nil(t, csRes.PgwCtrlFteid())
+	assert.Nil(t, csRes.BearerContextCeated().PgwDataFteid())
+	assert.Nil(t, csRes.Paa())
+	assert.Nil(t, csRes.Pco())
+	assert.Equal(t, byte(5), csRes.BearerContextCeated().Ebi().Value())
+	assert.Equal(t, byte(128), csRes.Recovery().Value())
+
+	assert.Equal(t, tail, []byte{})
+	assert.Nil(t, err)
+
+}

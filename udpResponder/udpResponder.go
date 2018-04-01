@@ -12,6 +12,7 @@ import (
 
 var Port uint64
 var DebugMode bool
+var VerboseMode bool
 var QueueSize uint64
 var ReportInterval uint64
 
@@ -35,8 +36,14 @@ func main() {
 			Destination: &Port,
 		},
 		cli.BoolFlag{
-			Name:  "debug, d",
-			Usage: "show debug log",
+			Name:        "debug, d",
+			Usage:       "show debug log",
+			Destination: &DebugMode,
+		},
+		cli.BoolFlag{
+			Name:        "verbose, v",
+			Usage:       "show verbose (per UDP session) stats report",
+			Destination: &VerboseMode,
 		},
 		cli.Uint64Flag{
 			Name:        "queue, q",
@@ -63,9 +70,6 @@ func main() {
 func udpResponder(c *cli.Context) error {
 	if Port > 65535 {
 		return cli.NewExitError("Port number should be less than 65536.", 1)
-	}
-	if c.Bool("debug") {
-		DebugMode = true
 	}
 
 	udpAddr := &net.UDPAddr{
@@ -97,7 +101,13 @@ func udpResponder(c *cli.Context) error {
 		if err != nil {
 			return cli.NewExitError(err, 3)
 		}
-		writeRecv(addr.String(), 1, uint64(n+28))
+
+		// update stats
+		totalSendRecvStats.writeRecv(1, uint64(n+28))
+		if VerboseMode {
+			theAddrSendRecvStats.writeRecv(addr.String(), 1, uint64(n+28))
+		}
+
 		if n < 10 {
 			log.Printf("Received a invalid packet from %s : %#v", addr.String(), buf[:n])
 			continue
@@ -134,18 +144,32 @@ func sender(udpConn *net.UDPConn, toSender chan RecvPacket) {
 			log.Printf("Send a packet raddr: %s, len: %d, seqNum: %d",
 				recv.raddr.String(), recv.sendPacketSize, recv.seqNum)
 		}
-		writeSend(recv.raddr.String(), 1, uint64(recv.sendPacketSize))
+
+		// update stats
+		totalSendRecvStats.writeSend(1, uint64(recv.sendPacketSize))
+		if VerboseMode {
+			theAddrSendRecvStats.writeSend(recv.raddr.String(), 1, uint64(recv.sendPacketSize))
+		}
 	}
 }
 
 func statReporter(interval uint64) {
 	t := time.NewTicker(time.Duration(interval) * time.Second)
+	lastSnapshot := sendRecvStatsSnapshot{timestamp: time.Now()}
 	for {
 		select {
 		case <-t.C:
-			reports := theAddrSendRecvStats.Strings()
-			for _, report := range reports {
-				log.Print(report)
+			// log.Printf("statistics report in %d sec interval", ReportInterval)
+			curSnapshot := newSendRecvStatsSnapshot(totalSendRecvStats)
+			log.Print(curSnapshot.SubRecvReport(lastSnapshot))
+			log.Print(curSnapshot.SubSendReport(lastSnapshot))
+			lastSnapshot = curSnapshot
+
+			if VerboseMode {
+				reports := theAddrSendRecvStats.Strings()
+				for _, report := range reports {
+					log.Print(report)
+				}
 			}
 		}
 	}

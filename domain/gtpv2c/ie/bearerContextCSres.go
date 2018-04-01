@@ -37,10 +37,12 @@ func NewBearerContextCreatedWithinCSRes(bcCwCSResArg BearerContextCreatedWithinC
 	}
 	bcArg.cause.instance = 0
 
-	if bcArg.pgwDataFteid == nil {
-		return nil, fmt.Errorf("S5/S8-U PGW F-TEID is a mondatory IE in this condition")
+	if bcArg.cause.Value().Type() == CauseTypeAcceptance {
+		if bcArg.pgwDataFteid == nil {
+			return nil, fmt.Errorf("S5/S8-U PGW F-TEID is a mondatory IE in this condition")
+		}
+		bcArg.pgwDataFteid.instance = 2
 	}
-	bcArg.pgwDataFteid.instance = 2
 
 	bc, err := NewBearerContext(instance, bcArg)
 	if err != nil {

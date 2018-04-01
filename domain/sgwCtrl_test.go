@@ -135,18 +135,18 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 	pgwAddr := net.UDPAddr{IP: pgwIP, Port: GtpControlPort}
 
 	// make pseudo response binary that cause is CauseNoResourcesAvailable
-	paaIP := net.IPv4(9, 10, 11, 12)
-	pgwCtrlTEID := gtp.Teid(0x10000001)
-	pgwDataTEID := gtp.Teid(0x70000001)
-	csResArg, _ := gtpv2c.MakeCSResArg(
-		session.sgwCtrlFTEID.Teid(),  // SgwCtrlTEID
-		ie.CauseNoResourcesAvailable, // Cause
-		pgwIP, pgwCtrlTEID, // PGW Ctrl FTEID
-		pgwIP, pgwDataTEID, // PGW Data FTEID
-		paaIP,                // PDN Allocated IP address
-		net.IPv4(8, 8, 8, 8), // PriDNS
-		net.IPv4(8, 8, 4, 4), // SecDNS
-		5)                    // EBI
+	causeIE, _ := ie.NewCause(0, ie.CauseNoResourcesAvailable, false, false, false, nil)
+	ebiIE, _ := ie.NewEbi(0, 5)
+	bearerContextCIE, _ := ie.NewBearerContextCreatedWithinCSRes(
+		ie.BearerContextCreatedWithinCSResArg{
+			Cause: causeIE,
+			Ebi:   ebiIE,
+		})
+	csResArg := gtpv2c.CreateSessionResponseArg{
+		SgwCtrlTeid:         gtp.Teid(0x12345678),
+		Cause:               causeIE,
+		BearerContextCeated: bearerContextCIE,
+	}
 	csRes, _ := gtpv2c.NewCreateSessionResponse(0x1234, csResArg)
 	csResBin := csRes.Marshal()
 
@@ -158,53 +158,6 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 	session = sgwCtrl.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
 	assert.Nil(t, session)
 	assert.NoError(t, res.err)
-}
-
-func TestSgwCtrl_CreateSession_NG(t *testing.T) {
-	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
-	resCh := make(chan GsRes)
-	imsi := "440100000000002"
-	ebi := byte(5)
-
-	go func() {
-		res, _, err := sgwCtrl.CreateSession(
-			imsi, "819012345671", "0123456789012345",
-			"440", "10", "example.com", ebi,
-		)
-		assert.NoError(t, err)
-		resCh <- res
-	}()
-
-	// wait till the session is created
-	session := ensureTheSession(sgwCtrl, imsi, ebi)
-
-	pgwAddr := net.UDPAddr{IP: pgwIP, Port: GtpControlPort}
-
-	// make pseudo response binary that cause is CauseNoResourcesAvailable
-	paaIP := net.IPv4(9, 10, 11, 12)
-	pgwCtrlTEID := gtp.Teid(0x10000002)
-	pgwDataTEID := gtp.Teid(0x70000002)
-	csResArg, _ := gtpv2c.MakeCSResArg(
-		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
-		ie.CauseIMSINotKnown,        // Cause
-		pgwIP, pgwCtrlTEID,          // PGW Ctrl FTEID
-		pgwIP, pgwDataTEID, // PGW Data FTEID
-		paaIP,                // PDN Allocated IP address
-		net.IPv4(8, 8, 8, 8), // PriDNS
-		net.IPv4(8, 8, 4, 4), // SecDNS
-		5)                    // EBI
-	csRes, _ := gtpv2c.NewCreateSessionResponse(0x1234, csResArg)
-	csResBin := csRes.Marshal()
-
-	// send Retryable NG packet
-	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
-
-	res := <-resCh
-
-	session = sgwCtrl.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
-	assert.Nil(t, session)
-	assert.NoError(t, res.err)
-	assert.Equal(t, GsResNG, res.Code)
 }
 
 func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {

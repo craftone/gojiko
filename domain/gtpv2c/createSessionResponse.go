@@ -51,7 +51,8 @@ func NewCreateSessionResponse(seqNum uint32, csResArg CreateSessionResponseArg) 
 
 func checkCreateSessionResponseArg(csReqArg CreateSessionResponseArg) error {
 	errMsgs := make([]string, 0)
-	// ensure exist mandatory IEs
+
+	// Confirm mandatory IEs are exists
 	if csReqArg.Cause == nil {
 		errMsgs = append(errMsgs, "Cause")
 	}
@@ -59,20 +60,23 @@ func checkCreateSessionResponseArg(csReqArg CreateSessionResponseArg) error {
 		errMsgs = append(errMsgs, "Bearer Context Created")
 	}
 	if len(errMsgs) > 0 {
-		return fmt.Errorf("Mandatory IEs are not specified : %v", errMsgs)
+		return fmt.Errorf("Some mandatory IEs are missing : %v", errMsgs)
 	}
 
-	if csReqArg.PgwCtrlFteid == nil {
-		errMsgs = append(errMsgs, "PgwCtrlFteid")
-	}
-	if csReqArg.Paa == nil {
-		errMsgs = append(errMsgs, "Paa")
-	}
-	if csReqArg.ApnRestriction == nil {
-		errMsgs = append(errMsgs, "ApnRestriction")
-	}
-	if csReqArg.Pco == nil {
-		errMsgs = append(errMsgs, "PCO")
+	// Confirm conditional IEs are exists in CSres Acceptance condition
+	if csReqArg.Cause.Value().Type() == ie.CauseTypeAcceptance {
+		if csReqArg.PgwCtrlFteid == nil {
+			errMsgs = append(errMsgs, "PgwCtrlFteid")
+		}
+		if csReqArg.Paa == nil {
+			errMsgs = append(errMsgs, "Paa")
+		}
+		if csReqArg.ApnRestriction == nil {
+			errMsgs = append(errMsgs, "ApnRestriction")
+		}
+		if csReqArg.Pco == nil {
+			errMsgs = append(errMsgs, "PCO")
+		}
 	}
 
 	if len(errMsgs) == 0 {
