@@ -90,9 +90,9 @@
 - ~~CreateSessionResponseでMandarotyの扱いが誤っているので修正する。~~ @ 2018/04/01
 - ~~UDPResponderのログが出まくるので-v以外は1行だけ出すように修正する。ヘッダ行も出力する。~~ @ 2018/04/01
 
+- GTPv1U ECHOパケットに応答する。
 - POST gtpsessionで、応答コードを返却する。
 - POST gtpsessionのエラー応答が全部500なのが良くないので修正する。
-- GTPv1U ECHOパケットに応答する。
 - UDP Responderで、ログにbitrateを出すようにする
 
 - Error Indicatorに対応
