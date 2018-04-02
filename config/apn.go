@@ -41,17 +41,26 @@ func loadApnConf() {
 }
 
 func newApn(apnMap map[string]interface{}) (Apn, error) {
-	name, err := getStringFromIfMap(apnMap, "APN", "host")
+	name, err := getStringFromIfMap(apnMap, "APN", "host", "")
 	if err != nil {
 		return Apn{}, err
 	}
-	mcc, err := getStringFromIfMap(apnMap, "APN", "mcc")
+	if name == "" {
+		return Apn{}, fmt.Errorf("No name in APN config")
+	}
+	mcc, err := getStringFromIfMap(apnMap, "APN", "mcc", "")
 	if err != nil {
 		return Apn{}, err
 	}
-	mnc, err := getStringFromIfMap(apnMap, "APN", "mnc")
-	if err != nil {
+	if mcc == "" {
+		return Apn{}, fmt.Errorf("No mcc in APN config")
+	}
+	mnc, err := getStringFromIfMap(apnMap, "APN", "mnc", "")
+	if err != nil || mnc == "" {
 		return Apn{}, err
+	}
+	if mnc == "" {
+		return Apn{}, fmt.Errorf("No mnc in APN config")
 	}
 	ips, err := getIPsFromApnMap(apnMap, "ips")
 	if err != nil {

@@ -10,8 +10,9 @@ timeout = 1000 # msec
 retry   =    2 # times
 
 [[SGW]]
-name = "sgw1"
-ip   = "127.0.0.1"
+name     = "sgw1"
+ip       = "127.0.0.1"
+recovery = 1
 
 [[APN]]
 host = "apn-example.com"

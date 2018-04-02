@@ -90,14 +90,26 @@ func setMTU(val uint16) error {
 	return nil
 }
 
-func getStringFromIfMap(ifMap map[string]interface{}, genre, key string) (string, error) {
+func getStringFromIfMap(ifMap map[string]interface{}, genre, key, defVal string) (string, error) {
 	strInt, exists := ifMap[key]
 	if !exists {
-		return "", fmt.Errorf("Invalid %s config : No %s", genre, key)
+		return defVal, nil
 	}
 	str, ok := strInt.(string)
 	if !ok {
 		return "", fmt.Errorf("Invalid %s config : The %s is not a string : %#v", genre, key, strInt)
 	}
 	return str, nil
+}
+
+func getInt64FromIfMap(ifMap map[string]interface{}, genre, key string, defVal int64) (int64, error) {
+	itf, exists := ifMap[key]
+	if !exists {
+		return defVal, nil
+	}
+	num, ok := itf.(int64)
+	if !ok {
+		return 0, fmt.Errorf("Invalid %s config : The %s is not a number : %#v", genre, key, itf)
+	}
+	return num, nil
 }

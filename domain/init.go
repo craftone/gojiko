@@ -27,7 +27,7 @@ func Init() error {
 	theSgwCtrlRepo = newSgwCtrlRepo()
 	for _, sgw := range config.GetSGWs() {
 		sgwCtrlAddr := net.UDPAddr{IP: sgw.IP, Port: GtpControlPort}
-		sgwCtrl, err := newSgwCtrl(sgwCtrlAddr, GtpUserPort, 0)
+		sgwCtrl, err := newSgwCtrl(sgwCtrlAddr, GtpUserPort, sgw.Recovery)
 		if err != nil {
 			return err
 		}
