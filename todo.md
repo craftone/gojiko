@@ -93,8 +93,8 @@
 - ~~POST gtpsessionで、応答コードを返却する。~~ @ 2018/04/02
 - ~~POST gtpsessionのエラー応答が全部500なのが良くないので修正する。~~ @ 2018/04/02
 - ~~recoveryをSGWのconfigに設定可能とする。~~ @ 2018/04/02
+- ~~GTPv1U ECHOパケットに応答する。~~ @ 2018/04/17
 
-- GTPv1U ECHOパケットに応答する。
 - チャンネル長をconfigurableにする。
 - ログファイル出力対応する。
 - Error Indicatorに対応

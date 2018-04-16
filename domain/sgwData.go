@@ -26,6 +26,7 @@ func newSgwData(addr net.UDPAddr, recovery byte, sgwCtrl *SgwCtrl) (*SgwData, er
 
 	sgwData := &SgwData{absSPgw}
 	go sgwData.sgwDataReceiverRoutine()
+	go sgwData.echoReceiver()
 
 	return sgwData, nil
 }
@@ -56,7 +57,7 @@ func (sgwData *SgwData) sgwDataReceiverRoutine() {
 		switch msgType {
 		case gtpv1u.EchoRequestNum:
 			myLog.Error("Not yet implemented!")
-			// sgwCtrl.toEchoReceiver <- UDPpacket{*raddr, buf[:n]}
+			sgwData.toEchoReceiver <- UDPpacket{*raddr, buf[:n]}
 		case gtpv1u.EchoResponseNum:
 			myLog.Error("Not yet implemented!")
 			// Not yet be implemented
@@ -73,5 +74,39 @@ func (sgwData *SgwData) sgwDataReceiverRoutine() {
 		default:
 			myLog.Debugf("Unkown Message Type : %d", msgType)
 		}
+	}
+}
+
+// echoReceiver is for GoRoutine
+func (sd *SgwData) echoReceiver() {
+	myLog := log.WithFields(logrus.Fields{
+		"laddr":   sd.addr.String(),
+		"routine": "SgwDataEchoReceiver",
+	})
+	myLog.Info("Start a SPgw ECHO Receiver goroutine")
+
+	for pkt := range sd.toEchoReceiver {
+		// Checking valid GTPv1-U is ommited since it is not important.
+		myLog.Debugf("Received ECHO Request from %#v", pkt.raddr)
+
+		seqNum := binary.BigEndian.Uint16(pkt.body[8:10])
+		// make ECHO Response
+		body := []byte{
+			byte(1<<5 + 1<<4 + 1<<1), // Version:1, PT:1, Sequence:1
+			byte(gtpv1u.EchoResponseNum),
+			0, 6, // Length
+			0, 0, 0, 0, // TEID is always 0
+			byte(seqNum >> 8), byte(seqNum), // Sequence Number
+			0,           // N-PDU Number
+			0,           // Next Extention Header Type
+			14,          // RecoveryNum
+			sd.recovery, // Recovery Value
+		}
+
+		res := UDPpacket{
+			raddr: pkt.raddr,
+			body:  body,
+		}
+		sd.toSender <- res
 	}
 }

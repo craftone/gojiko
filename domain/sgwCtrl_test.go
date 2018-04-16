@@ -18,6 +18,26 @@ type csResStr struct {
 	err error
 }
 
+func TestSgwCtrl_CreateSession_ECHO(t *testing.T) {
+	// send ECHO Request to SGW Ctrl
+	conn, err := net.DialUDP("udp", nil, &defaultSgwCtrlAddr)
+	assert.NoError(t, err)
+	seqNum := uint32(1)
+	echoReq, err := gtpv2c.NewEchoRequest(seqNum, 2)
+	assert.NoError(t, err)
+	echoReqBin := echoReq.Marshal()
+	conn.Write(echoReqBin)
+	// receive ECHO Response
+	recvBuf := make([]byte, 1024)
+	n, err := conn.Read(recvBuf)
+	assert.NoError(t, err)
+	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
+	expectedEchoRes, err := gtpv2c.NewEchoResponse(seqNum, sgwCtrl.recovery)
+	assert.NoError(t, err)
+	// assertion
+	assert.Equal(t, expectedEchoRes.Marshal(), recvBuf[:n])
+}
+
 func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
 	resCh := make(chan GsRes)

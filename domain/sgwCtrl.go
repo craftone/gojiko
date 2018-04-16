@@ -40,6 +40,7 @@ func newSgwCtrl(addr net.UDPAddr, dataPort int, recovery byte) (*SgwCtrl, error)
 	}
 
 	go sgwCtrl.sgwCtrlReceiverRoutine()
+	go sgwCtrl.echoReceiver()
 
 	return sgwCtrl, nil
 }
@@ -239,5 +240,36 @@ func (sgwCtrl *SgwCtrl) sgwCtrlReceiverRoutine() {
 		default:
 			myLog.Debugf("Unkown Message Type : %d", msgType)
 		}
+	}
+}
+
+// echoReceiver is for GoRoutine
+func (sc *SgwCtrl) echoReceiver() {
+	myLog := log.WithFields(logrus.Fields{
+		"laddr":   sc.addr.String(),
+		"routine": "SPgwEchoReceiver",
+	})
+	myLog.Info("Start a SgwCtrl ECHO Receiver goroutine")
+
+	for pkt := range sc.toEchoReceiver {
+		// ensure valid GTPv2-C ECHO Request
+		req, _, err := gtpv2c.Unmarshal(pkt.body)
+		if err != nil {
+			myLog.Debugf("Received an invalid ECHO-C Request from %s", pkt.raddr.String())
+			continue
+		}
+
+		myLog.Debugf("Received ECHO Request : %#v", req)
+
+		// make ECHO Response
+		echoRes, err := gtpv2c.NewEchoResponse(req.SeqNum(), sc.recovery)
+		if err != nil {
+			myLog.Panicf("Making ECHO Response Failure : %v", err)
+		}
+		res := UDPpacket{
+			raddr: pkt.raddr,
+			body:  echoRes.Marshal(),
+		}
+		sc.toSender <- res
 	}
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/craftone/gojiko/domain/gtp"
-	"github.com/craftone/gojiko/domain/gtpv2c"
 )
 
 type UDPpacket struct {
@@ -37,6 +36,7 @@ type SPgwIf interface {
 	nextSeqNum() uint32
 	UDPAddr() net.UDPAddr
 	Pair() SPgwIf
+	Recovery() byte
 	ToSender() chan UDPpacket
 	findOrCreateOpSPgw(addr net.UDPAddr) (*opSPgw, error)
 }
@@ -52,12 +52,11 @@ func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) 
 		recovery:       recovery,
 		teidVal:        gtp.Teid(1),
 		pair:           pair,
-		toSender:       make(chan UDPpacket, 100),
+		toSender:       make(chan UDPpacket, 1000),
 		toEchoReceiver: make(chan UDPpacket, 10),
 		opSpgwMap:      make(map[string]*opSPgw),
 	}
 	go spgw.absSPgwSenderRoutine()
-	go spgw.echoReceiver()
 	return spgw, nil
 }
 
@@ -79,37 +78,6 @@ func (sp *absSPgw) absSPgwSenderRoutine() {
 		}
 	}
 	log.Info("End a SPgw Sender goroutine")
-}
-
-// echoReceiver is for GoRoutine
-func (sp *absSPgw) echoReceiver() {
-	myLog := log.WithFields(logrus.Fields{
-		"laddr":   sp.addr.String(),
-		"routine": "SPgwEchoReceiver",
-	})
-	myLog.Info("Start a SPgw ECHO Receiver goroutine")
-
-	for pkt := range sp.toEchoReceiver {
-		// ensure valid GTPv2 ECHO Request
-		req, _, err := gtpv2c.Unmarshal(pkt.body)
-		if err != nil {
-			myLog.Debugf("Received an invalid ECHO-C Request from %s", pkt.raddr.String())
-			continue
-		}
-
-		myLog.Debugf("Received ECHO Request : %#v", req)
-
-		// make ECHO Response
-		echoRes, err := gtpv2c.NewEchoResponse(req.SeqNum(), sp.recovery)
-		if err != nil {
-			myLog.Panicf("Making ECHO Response Failure : %v", err)
-		}
-		res := UDPpacket{
-			raddr: pkt.raddr,
-			body:  echoRes.Marshal(),
-		}
-		sp.toSender <- res
-	}
 }
 
 func (sp *absSPgw) nextTeid() gtp.Teid {
@@ -161,4 +129,8 @@ func (sp *absSPgw) findOrCreateOpSPgw(addr net.UDPAddr) (*opSPgw, error) {
 
 func (sp *absSPgw) ToSender() chan UDPpacket {
 	return sp.toSender
+}
+
+func (sp *absSPgw) Recovery() byte {
+	return sp.recovery
 }
