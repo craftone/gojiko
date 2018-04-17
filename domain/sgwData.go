@@ -56,7 +56,6 @@ func (sgwData *SgwData) sgwDataReceiverRoutine() {
 
 		switch msgType {
 		case gtpv1u.EchoRequestNum:
-			myLog.Error("Not yet implemented!")
 			sgwData.toEchoReceiver <- UDPpacket{*raddr, buf[:n]}
 		case gtpv1u.EchoResponseNum:
 			myLog.Error("Not yet implemented!")
