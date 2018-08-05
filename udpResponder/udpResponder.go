@@ -161,8 +161,8 @@ func statReporter(interval uint64) {
 		case <-t.C:
 			// log.Printf("statistics report in %d sec interval", ReportInterval)
 			curSnapshot := newSendRecvStatsSnapshot(totalSendRecvStats)
-			log.Print(curSnapshot.SubRecvReport(lastSnapshot))
-			log.Print(curSnapshot.SubSendReport(lastSnapshot))
+			log.Print(curSnapshot.reportBytesPkts(lastSnapshot))
+			log.Print(curSnapshot.reportBpsPps(lastSnapshot))
 			lastSnapshot = curSnapshot
 
 			if VerboseMode {
