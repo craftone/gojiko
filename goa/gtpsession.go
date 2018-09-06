@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"net"
 
 	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/domain/apns"
@@ -30,9 +31,14 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 	}
 
 	payload := ctx.Payload
+	var sgwDataAddr *net.IP
+	if payload.ExternalSgwDataAddr != nil {
+		ip := net.ParseIP(*payload.ExternalSgwDataAddr)
+		sgwDataAddr = &ip
+	}
 	csRes, sess, err := sgwCtrl.CreateSession(
 		payload.Imsi, payload.Msisdn, payload.Mei, payload.Mcc, payload.Mnc,
-		payload.Apn, byte(payload.Ebi))
+		payload.Apn, byte(payload.Ebi), sgwDataAddr)
 	if err != nil {
 		switch err.(type) {
 		case *domain.DuplicateSessionError:

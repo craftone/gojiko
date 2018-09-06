@@ -117,6 +117,7 @@ Payload example:
 {
    "apn": "example.com",
    "ebi": 5,
+   "externalSgwDataAddr": "127.0.0.1",
    "imsi": "440100123456780",
    "mcc": "440",
    "mei": "1212345612345612",

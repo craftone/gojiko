@@ -48,6 +48,7 @@ func newSgwCtrl(addr net.UDPAddr, dataPort int, recovery byte) (*SgwCtrl, error)
 func (s *SgwCtrl) CreateSession(
 	imsi, msisdn, mei, mcc, mnc, apnNI string,
 	ebi byte,
+	externalSgwDataIP *net.IP, // only when using external sgw-data
 ) (GsRes, *GtpSession, error) {
 	// Query APN's IP address
 	apn, err := apns.TheRepo().Find(apnNI, mcc, mnc)
@@ -63,14 +64,22 @@ func (s *SgwCtrl) CreateSession(
 		return GsRes{}, nil, err
 	}
 
-	// Make SGW Ctrl F-TEID and SGW Data F-TEID
+	// Make SGW Ctrl F-TEID
 	sgwCtrlFTEID, err := ie.NewFteid(0, s.addr.IP, nil, ie.S5S8SgwGtpCIf, s.nextTeid())
 	if err != nil {
 		return GsRes{}, nil, err
 	}
 
+	// Make SGW Data F-TEID
 	sgwData := s.pair
-	sgwDataFTEID, err := ie.NewFteid(0, sgwData.UDPAddr().IP, nil, ie.S5S8SgwGtpUIf, sgwData.nextTeid())
+	var sgwDataIP net.IP
+	if externalSgwDataIP == nil {
+		sgwDataIP = sgwData.UDPAddr().IP
+	} else {
+		// when using external sgw-data
+		sgwDataIP = *externalSgwDataIP
+	}
+	sgwDataFTEID, err := ie.NewFteid(0, sgwDataIP, nil, ie.S5S8SgwGtpUIf, sgwData.nextTeid())
 	if err != nil {
 		return GsRes{}, nil, err
 	}
@@ -231,7 +240,7 @@ func (sgwCtrl *SgwCtrl) sgwCtrlReceiverRoutine() {
 			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
 			sess := sgwCtrl.FindByCtrlTeid(teid)
 			if sess == nil {
-				myLog.Debug("No session that have the teid : %04x", teid)
+				myLog.Debugf("No session that have the teid : %04x", teid)
 				continue
 			}
 			received := make([]byte, n)

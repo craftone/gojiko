@@ -64,7 +64,7 @@ func (sgwData *SgwData) sgwDataReceiverRoutine() {
 			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
 			sess := sgwData.Pair().(*SgwCtrl).FindByDataTeid(teid)
 			if sess == nil {
-				myLog.Debug("No session that have the data teid : %04x", teid)
+				myLog.Debugf("No session that have the data teid : %04x", teid)
 				continue
 			}
 			received := make([]byte, n)

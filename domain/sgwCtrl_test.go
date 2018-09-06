@@ -46,7 +46,7 @@ func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345678", "0123456789012345",
-			"440", "10", "example.com", ebi,
+			"440", "10", "example.com", ebi, nil,
 		)
 		assert.NoError(t, err)
 		resCh <- res
@@ -67,7 +67,7 @@ func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 	csResArg, _ := gtpv2c.MakeCSResArg(
 		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,     // Cause
-		pgwIP, pgwCtrlTEID, // PGW Ctrl FTEID
+		pgwIP, pgwCtrlTEID,          // PGW Ctrl FTEID
 		pgwIP, pgwDataTEID, // PGW Data FTEID
 		paaIP,                // PDN Allocated IP address
 		net.IPv4(8, 8, 8, 8), // PriDNS
@@ -82,6 +82,81 @@ func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 	// send from invalid port
 	invalidPort := net.UDPAddr{IP: pgwAddr.IP, Port: 1}
 	session.fromSgwCtrlReceiverChan <- UDPpacket{invalidPort, csResBin}
+
+	// send valid packet
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
+
+	res := <-resCh
+	assert.NoError(t, res.err)
+	assert.Equal(t, GsResOK, res.Code)
+
+	assert.True(t, session.paa.IPv4().Equal(paaIP))
+	assert.Equal(t, pgwCtrlTEID, session.pgwCtrlFTEID.Teid())
+	assert.Equal(t, pgwDataTEID, session.pgwDataFTEID.Teid())
+
+	// Send Delete Session Request
+	go func() {
+		res, err := sgwCtrl.DeleteSession(imsi, ebi)
+		assert.NoError(t, err)
+		resCh <- res
+	}()
+
+	// wait for send DeleteSessionRequest
+	for session.Status() != GssDSReqSend {
+		time.Sleep(time.Millisecond)
+	}
+
+	// make pseudo response binary that cause is CauseRequestAccepted
+	dsRes, err := gtpv2c.NewDeleteSessionResponse(
+		session.sgwCtrlFTEID.Teid(),
+		0x1235, ie.CauseRequestAccepted)
+	assert.NoError(t, err)
+	dsResBin := dsRes.Marshal()
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, dsResBin}
+
+	res = <-resCh
+	assert.NoError(t, res.err)
+	assert.Equal(t, GsResOK, res.Code)
+
+	// ensure release GtpSession map's record
+	assert.Nil(t, sgwCtrl.FindByImsiEbi(imsi, ebi))
+}
+
+func TestSgwCtrl_CreateSession_with_ExternalSgwData_OK_DeleteSession_OK(t *testing.T) {
+	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
+	resCh := make(chan GsRes)
+	imsi := "440100000000009"
+	ebi := byte(5)
+	go func() {
+		externalSgwDataIP := net.IPv4(2, 3, 4, 5)
+		res, _, err := sgwCtrl.CreateSession(
+			imsi, "819012345678", "0123456789012345",
+			"440", "10", "example.com", ebi, &externalSgwDataIP,
+		)
+		assert.NoError(t, err)
+		resCh <- res
+	}()
+
+	// wait till the session is created
+	session := ensureTheSession(sgwCtrl, imsi, ebi)
+
+	pgwAddr := net.UDPAddr{IP: pgwIP, Port: GtpControlPort}
+
+	// make pseudo response binary that cause is CauseRequestAccepted
+	paaIP := net.IPv4(9, 10, 11, 12)
+	pgwCtrlTEID := gtp.Teid(0x10000000)
+	pgwDataTEID := gtp.Teid(0x70000000)
+	csResArg, _ := gtpv2c.MakeCSResArg(
+		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
+		ie.CauseRequestAccepted,     // Cause
+		pgwIP, pgwCtrlTEID,          // PGW Ctrl FTEID
+		pgwIP, pgwDataTEID, // PGW Data FTEID
+		paaIP,                // PDN Allocated IP address
+		net.IPv4(8, 8, 8, 8), // PriDNS
+		net.IPv4(8, 8, 4, 4), // SecDNS
+		5)                    // EBI
+	csRes, _ := gtpv2c.NewCreateSessionResponse(0x1234, csResArg)
+	csResBin := csRes.Marshal()
 
 	// send valid packet
 	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
@@ -143,7 +218,7 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345671", "0123456789012345",
-			"440", "10", "example.com", ebi,
+			"440", "10", "example.com", ebi, nil,
 		)
 		assert.NoError(t, err)
 		resCh <- res
@@ -191,7 +266,7 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 	ebi := byte(5)
 	res, _, _ := sgwCtrl.CreateSession(
 		imsi, "819012345679", "0123456789012345",
-		"440", "10", "example.com", ebi,
+		"440", "10", "example.com", ebi, nil,
 	)
 
 	// No Create Sessin Response and the session should be timed out.
@@ -230,7 +305,7 @@ func TestSgwCtrl_CreateSessionAndDeleteBearer(t *testing.T) {
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345679", "0123456789012345",
-			"440", "10", "example.com", ebi,
+			"440", "10", "example.com", ebi, nil,
 		)
 		resCh <- csResStr{res, err}
 	}()
@@ -247,7 +322,7 @@ func TestSgwCtrl_CreateSessionAndDeleteBearer(t *testing.T) {
 	csResArg, _ := gtpv2c.MakeCSResArg(
 		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,     // Cause
-		pgwIP, pgwCtrlTEID, // PGW Ctrl FTEID
+		pgwIP, pgwCtrlTEID,          // PGW Ctrl FTEID
 		pgwIP, pgwDataTEID, // PGW Data FTEID
 		paaIP,                // PDN Allocated IP address
 		net.IPv4(8, 8, 8, 8), // PriDNS
@@ -302,7 +377,7 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345674", "0123456789012345",
-			"440", "10", "example.com", ebi,
+			"440", "10", "example.com", ebi, nil,
 		)
 		resCh <- csResStr{res, err}
 	}()
@@ -319,7 +394,7 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	csResArg, _ := gtpv2c.MakeCSResArg(
 		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,     // Cause
-		pgwIP, pgwCtrlTEID, // PGW Ctrl FTEID
+		pgwIP, pgwCtrlTEID,          // PGW Ctrl FTEID
 		pgwIP, pgwDataTEID, // PGW Data FTEID
 		paaIP,                // PDN Allocated IP address
 		net.IPv4(8, 8, 8, 8), // PriDNS
@@ -449,14 +524,14 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	go func() {
 		res1, _, err := sgwCtrl.CreateSession(
 			imsi1, msisdn1, "0123456789012345",
-			"440", "10", "example.com", ebi,
+			"440", "10", "example.com", ebi, nil,
 		)
 		resCh1 <- csResStr{res1, err}
 	}()
 	go func() {
 		res2, _, err := sgwCtrl.CreateSession(
 			imsi2, msisdn2, "0123456789012345",
-			"440", "10", "example.com", ebi,
+			"440", "10", "example.com", ebi, nil,
 		)
 		resCh2 <- csResStr{res2, err}
 	}()
@@ -477,7 +552,7 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	csResArg1, _ := gtpv2c.MakeCSResArg(
 		session1.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,      // Cause
-		pgwIP, pgwCtrlTEID1, // PGW Ctrl FTEID
+		pgwIP, pgwCtrlTEID1,          // PGW Ctrl FTEID
 		pgwIP, pgwDataTEID1, // PGW Data FTEID
 		paaIP1,               // PDN Allocated IP address
 		net.IPv4(8, 8, 8, 8), // PriDNS
@@ -488,7 +563,7 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	csResArg2, _ := gtpv2c.MakeCSResArg(
 		session2.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,      // Cause
-		pgwIP, pgwCtrlTEID2, // PGW Ctrl FTEID
+		pgwIP, pgwCtrlTEID2,          // PGW Ctrl FTEID
 		pgwIP, pgwDataTEID2, // PGW Data FTEID
 		paaIP2,               // PDN Allocated IP address
 		net.IPv4(8, 8, 8, 8), // PriDNS
@@ -617,7 +692,7 @@ func TestSgwCtrl_DeleteSession_Timeout(t *testing.T) {
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345678", "0123456789012345",
-			"440", "10", "example.com", ebi,
+			"440", "10", "example.com", ebi, nil,
 		)
 		assert.NoError(t, err)
 		resCh <- res
@@ -635,7 +710,7 @@ func TestSgwCtrl_DeleteSession_Timeout(t *testing.T) {
 	csResArg, _ := gtpv2c.MakeCSResArg(
 		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,     // Cause
-		pgwIP, pgwCtrlTEID, // PGW Ctrl FTEID
+		pgwIP, pgwCtrlTEID,          // PGW Ctrl FTEID
 		pgwIP, pgwDataTEID, // PGW Data FTEID
 		paaIP,                // PDN Allocated IP address
 		net.IPv4(8, 8, 8, 8), // PriDNS
@@ -682,7 +757,7 @@ func TestSgwCtrl_DeleteSession_Invalid_Status(t *testing.T) {
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345678", "0123456789012345",
-			"440", "10", "example.com", ebi,
+			"440", "10", "example.com", ebi, nil,
 		)
 		assert.NoError(t, err)
 		// No Create Sessin Response and the session should be timed out.

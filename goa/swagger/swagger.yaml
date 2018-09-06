@@ -8,6 +8,7 @@ definitions:
     example:
       apn: example.com
       ebi: 5
+      externalSgwDataAddr: 127.0.0.1
       imsi: "440100123456780"
       mcc: "440"
       mei: "1212345612345612"
@@ -26,6 +27,11 @@ definitions:
         maximum: 15
         minimum: 5
         type: integer
+      externalSgwDataAddr:
+        description: External SGW-DATA IP Address
+        example: 127.0.0.1
+        format: ipv4
+        type: string
       imsi:
         example: "440100123456780"
         pattern: ^[0-9]{14,15}$
@@ -653,9 +659,7 @@ definitions:
     type: object
 host: localhost:8080
 info:
-  description: |-
-    Gojiko は日本のL2接続MVNOでの利用に適した簡素な疑似SGWシミュレータです。
-    Jmeter等で操作可能なため、試験自動化に適しています。
+  description: Gojiko は日本のL2接続MVNOでの利用に適した簡素な疑似SGWシミュレータです。
   title: Gojiko API
   version: ""
 paths:

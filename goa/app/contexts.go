@@ -12,9 +12,10 @@ package app
 
 import (
 	"context"
-	"github.com/goadesign/goa"
 	"net/http"
 	"strconv"
+
+	"github.com/goadesign/goa"
 )
 
 // CreateGtpsessionContext provides the gtpsession create action context.
@@ -51,8 +52,10 @@ type createGtpsessionPayload struct {
 	// Access Point Name
 	Apn *string `form:"apn,omitempty" json:"apn,omitempty" xml:"apn,omitempty"`
 	// EPS Bearer ID
-	Ebi  *int    `form:"ebi,omitempty" json:"ebi,omitempty" xml:"ebi,omitempty"`
-	Imsi *string `form:"imsi,omitempty" json:"imsi,omitempty" xml:"imsi,omitempty"`
+	Ebi *int `form:"ebi,omitempty" json:"ebi,omitempty" xml:"ebi,omitempty"`
+	// External SGW-DATA IP Address
+	ExternalSgwDataAddr *string `form:"externalSgwDataAddr,omitempty" json:"externalSgwDataAddr,omitempty" xml:"externalSgwDataAddr,omitempty"`
+	Imsi                *string `form:"imsi,omitempty" json:"imsi,omitempty" xml:"imsi,omitempty"`
 	// Mobile Country Code
 	Mcc *string `form:"mcc,omitempty" json:"mcc,omitempty" xml:"mcc,omitempty"`
 	// Mobile Equipment Identifier
@@ -116,6 +119,11 @@ func (payload *createGtpsessionPayload) Validate() (err error) {
 			err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.ebi`, *payload.Ebi, 15, false))
 		}
 	}
+	if payload.ExternalSgwDataAddr != nil {
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, *payload.ExternalSgwDataAddr); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`raw.externalSgwDataAddr`, *payload.ExternalSgwDataAddr, goa.FormatIPv4, err2))
+		}
+	}
 	if payload.Imsi != nil {
 		if ok := goa.ValidatePattern(`^[0-9]{14,15}$`, *payload.Imsi); !ok {
 			err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.imsi`, *payload.Imsi, `^[0-9]{14,15}$`))
@@ -153,6 +161,9 @@ func (payload *createGtpsessionPayload) Publicize() *CreateGtpsessionPayload {
 	if payload.Ebi != nil {
 		pub.Ebi = *payload.Ebi
 	}
+	if payload.ExternalSgwDataAddr != nil {
+		pub.ExternalSgwDataAddr = payload.ExternalSgwDataAddr
+	}
 	if payload.Imsi != nil {
 		pub.Imsi = *payload.Imsi
 	}
@@ -176,8 +187,10 @@ type CreateGtpsessionPayload struct {
 	// Access Point Name
 	Apn string `form:"apn" json:"apn" xml:"apn"`
 	// EPS Bearer ID
-	Ebi  int    `form:"ebi" json:"ebi" xml:"ebi"`
-	Imsi string `form:"imsi" json:"imsi" xml:"imsi"`
+	Ebi int `form:"ebi" json:"ebi" xml:"ebi"`
+	// External SGW-DATA IP Address
+	ExternalSgwDataAddr *string `form:"externalSgwDataAddr,omitempty" json:"externalSgwDataAddr,omitempty" xml:"externalSgwDataAddr,omitempty"`
+	Imsi                string  `form:"imsi" json:"imsi" xml:"imsi"`
 	// Mobile Country Code
 	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
 	// Mobile Equipment Identifier
@@ -216,6 +229,11 @@ func (payload *CreateGtpsessionPayload) Validate() (err error) {
 	}
 	if payload.Ebi > 15 {
 		err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.ebi`, payload.Ebi, 15, false))
+	}
+	if payload.ExternalSgwDataAddr != nil {
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, *payload.ExternalSgwDataAddr); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`raw.externalSgwDataAddr`, *payload.ExternalSgwDataAddr, goa.FormatIPv4, err2))
+		}
 	}
 	if ok := goa.ValidatePattern(`^[0-9]{14,15}$`, payload.Imsi); !ok {
 		err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.imsi`, payload.Imsi, `^[0-9]{14,15}$`))

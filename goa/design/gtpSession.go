@@ -19,6 +19,10 @@ var _ = Resource("gtpsession", func() {
 			apnMccMncMember()
 			msisdnMeiMember()
 			imsiEbiMember()
+			Member("externalSgwDataAddr", String, "External SGW-DATA IP Address", func() {
+				Format("ipv4")
+				Example("127.0.0.1")
+			})
 			Required("apn", "mcc", "mnc", "msisdn", "mei", "imsi", "ebi")
 		})
 		Response(OK, GtpV2CResponseMedia)

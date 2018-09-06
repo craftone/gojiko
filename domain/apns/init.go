@@ -26,7 +26,7 @@ func Init() error {
 		}
 		err = theRepo.Post(apn)
 		if err != nil {
-			log.Panic("APN Post error : %v", err)
+			log.Panicf("APN Post error : %v", err)
 		}
 	}
 

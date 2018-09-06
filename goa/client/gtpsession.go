@@ -24,8 +24,10 @@ type CreateGtpsessionPayload struct {
 	// Access Point Name
 	Apn string `form:"apn" json:"apn" xml:"apn"`
 	// EPS Bearer ID
-	Ebi  int    `form:"ebi" json:"ebi" xml:"ebi"`
-	Imsi string `form:"imsi" json:"imsi" xml:"imsi"`
+	Ebi int `form:"ebi" json:"ebi" xml:"ebi"`
+	// External SGW-DATA IP Address
+	ExternalSgwDataAddr *string `form:"externalSgwDataAddr,omitempty" json:"externalSgwDataAddr,omitempty" xml:"externalSgwDataAddr,omitempty"`
+	Imsi                string  `form:"imsi" json:"imsi" xml:"imsi"`
 	// Mobile Country Code
 	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
 	// Mobile Equipment Identifier
