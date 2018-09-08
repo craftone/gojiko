@@ -8,12 +8,13 @@ definitions:
     example:
       apn: example.com
       ebi: 5
-      externalSgwDataAddr: 127.0.0.1
       imsi: "440100123456780"
       mcc: "440"
       mei: "1212345612345612"
       mnc: "10"
       msisdn: "8101012345678"
+      pseudoSgwDataAddr: 127.0.0.1
+      pseudoSgwDataTEID: 1
     properties:
       apn:
         description: Access Point Name
@@ -27,11 +28,6 @@ definitions:
         maximum: 15
         minimum: 5
         type: integer
-      externalSgwDataAddr:
-        description: External SGW-DATA IP Address
-        example: 127.0.0.1
-        format: ipv4
-        type: string
       imsi:
         example: "440100123456780"
         pattern: ^[0-9]{14,15}$
@@ -57,6 +53,21 @@ definitions:
         example: "8101012345678"
         pattern: ^[0-9]{12,15}$
         type: string
+      pseudoSgwDataAddr:
+        description: Specify when using external pseudo SGW-DATA
+        example: 127.0.0.1
+        format: ipv4
+        type: string
+      pseudoSgwDataTEID:
+        default: 0
+        description: |-
+          Specify when using external pseudo SGW-DATA which tunnel's TEID has already determined.
+          When 0 is specified, TEID will be generated automatically.
+          If pseudoSgwDataAddr is not specified, this attribute is ignored.
+        example: 1
+        maximum: 4.2949673e+09
+        minimum: 0
+        type: integer
     required:
     - apn
     - mcc

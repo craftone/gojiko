@@ -24,10 +24,8 @@ type CreateGtpsessionPayload struct {
 	// Access Point Name
 	Apn string `form:"apn" json:"apn" xml:"apn"`
 	// EPS Bearer ID
-	Ebi int `form:"ebi" json:"ebi" xml:"ebi"`
-	// External SGW-DATA IP Address
-	ExternalSgwDataAddr *string `form:"externalSgwDataAddr,omitempty" json:"externalSgwDataAddr,omitempty" xml:"externalSgwDataAddr,omitempty"`
-	Imsi                string  `form:"imsi" json:"imsi" xml:"imsi"`
+	Ebi  int    `form:"ebi" json:"ebi" xml:"ebi"`
+	Imsi string `form:"imsi" json:"imsi" xml:"imsi"`
 	// Mobile Country Code
 	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
 	// Mobile Equipment Identifier
@@ -35,6 +33,12 @@ type CreateGtpsessionPayload struct {
 	// Mobile Network Code
 	Mnc    string `form:"mnc" json:"mnc" xml:"mnc"`
 	Msisdn string `form:"msisdn" json:"msisdn" xml:"msisdn"`
+	// Specify when using external pseudo SGW-DATA
+	PseudoSgwDataAddr *string `form:"pseudoSgwDataAddr,omitempty" json:"pseudoSgwDataAddr,omitempty" xml:"pseudoSgwDataAddr,omitempty"`
+	// Specify when using external pseudo SGW-DATA which tunnel's TEID has already determined.
+	// When 0 is specified, TEID will be generated automatically.
+	// If pseudoSgwDataAddr is not specified, this attribute is ignored.
+	PseudoSgwDataTEID int `form:"pseudoSgwDataTEID" json:"pseudoSgwDataTEID" xml:"pseudoSgwDataTEID"`
 }
 
 // CreateGtpsessionPath computes a request path to the create action of gtpsession.

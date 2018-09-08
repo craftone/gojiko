@@ -19,10 +19,22 @@ var _ = Resource("gtpsession", func() {
 			apnMccMncMember()
 			msisdnMeiMember()
 			imsiEbiMember()
-			Member("externalSgwDataAddr", String, "External SGW-DATA IP Address", func() {
-				Format("ipv4")
-				Example("127.0.0.1")
-			})
+			Member("pseudoSgwDataAddr", String,
+				"Specify when using external pseudo SGW-DATA",
+				func() {
+					Format("ipv4")
+					Example("127.0.0.1")
+				})
+			Member("pseudoSgwDataTEID", Integer,
+				`Specify when using external pseudo SGW-DATA which tunnel's TEID has already determined.
+If 0 is specified, TEID is generated automatically.
+If pseudoSgwDataAddr is not specified, this attribute is ignored.`,
+				func() {
+					Minimum(0)
+					Maximum(0xFFFFFFFF)
+					Default(0)
+					Example(1)
+				})
 			Required("apn", "mcc", "mnc", "msisdn", "mei", "imsi", "ebi")
 		})
 		Response(OK, GtpV2CResponseMedia)

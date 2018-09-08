@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/craftone/gojiko/domain/gtp"
+
 	"github.com/craftone/gojiko/domain"
 	"github.com/craftone/gojiko/domain/apns"
 	"github.com/craftone/gojiko/goa/app"
@@ -32,13 +34,14 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 
 	payload := ctx.Payload
 	var sgwDataAddr *net.IP
-	if payload.ExternalSgwDataAddr != nil {
-		ip := net.ParseIP(*payload.ExternalSgwDataAddr)
+	if payload.PseudoSgwDataAddr != nil {
+		ip := net.ParseIP(*payload.PseudoSgwDataAddr)
 		sgwDataAddr = &ip
 	}
 	csRes, sess, err := sgwCtrl.CreateSession(
 		payload.Imsi, payload.Msisdn, payload.Mei, payload.Mcc, payload.Mnc,
-		payload.Apn, byte(payload.Ebi), sgwDataAddr)
+		payload.Apn, byte(payload.Ebi),
+		sgwDataAddr, gtp.Teid(payload.PseudoSgwDataTEID))
 	if err != nil {
 		switch err.(type) {
 		case *domain.DuplicateSessionError:

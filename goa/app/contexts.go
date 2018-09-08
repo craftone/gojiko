@@ -12,10 +12,9 @@ package app
 
 import (
 	"context"
+	"github.com/goadesign/goa"
 	"net/http"
 	"strconv"
-
-	"github.com/goadesign/goa"
 )
 
 // CreateGtpsessionContext provides the gtpsession create action context.
@@ -52,10 +51,8 @@ type createGtpsessionPayload struct {
 	// Access Point Name
 	Apn *string `form:"apn,omitempty" json:"apn,omitempty" xml:"apn,omitempty"`
 	// EPS Bearer ID
-	Ebi *int `form:"ebi,omitempty" json:"ebi,omitempty" xml:"ebi,omitempty"`
-	// External SGW-DATA IP Address
-	ExternalSgwDataAddr *string `form:"externalSgwDataAddr,omitempty" json:"externalSgwDataAddr,omitempty" xml:"externalSgwDataAddr,omitempty"`
-	Imsi                *string `form:"imsi,omitempty" json:"imsi,omitempty" xml:"imsi,omitempty"`
+	Ebi  *int    `form:"ebi,omitempty" json:"ebi,omitempty" xml:"ebi,omitempty"`
+	Imsi *string `form:"imsi,omitempty" json:"imsi,omitempty" xml:"imsi,omitempty"`
 	// Mobile Country Code
 	Mcc *string `form:"mcc,omitempty" json:"mcc,omitempty" xml:"mcc,omitempty"`
 	// Mobile Equipment Identifier
@@ -63,6 +60,12 @@ type createGtpsessionPayload struct {
 	// Mobile Network Code
 	Mnc    *string `form:"mnc,omitempty" json:"mnc,omitempty" xml:"mnc,omitempty"`
 	Msisdn *string `form:"msisdn,omitempty" json:"msisdn,omitempty" xml:"msisdn,omitempty"`
+	// Specify when using external pseudo SGW-DATA
+	PseudoSgwDataAddr *string `form:"pseudoSgwDataAddr,omitempty" json:"pseudoSgwDataAddr,omitempty" xml:"pseudoSgwDataAddr,omitempty"`
+	// Specify when using external pseudo SGW-DATA which tunnel's TEID has already determined.
+	// When 0 is specified, TEID will be generated automatically.
+	// If pseudoSgwDataAddr is not specified, this attribute is ignored.
+	PseudoSgwDataTEID *int `form:"pseudoSgwDataTEID,omitempty" json:"pseudoSgwDataTEID,omitempty" xml:"pseudoSgwDataTEID,omitempty"`
 }
 
 // Finalize sets the default values defined in the design.
@@ -78,6 +81,10 @@ func (payload *createGtpsessionPayload) Finalize() {
 	var defaultMnc = "10"
 	if payload.Mnc == nil {
 		payload.Mnc = &defaultMnc
+	}
+	var defaultPseudoSgwDataTEID = 0
+	if payload.PseudoSgwDataTEID == nil {
+		payload.PseudoSgwDataTEID = &defaultPseudoSgwDataTEID
 	}
 }
 
@@ -119,11 +126,6 @@ func (payload *createGtpsessionPayload) Validate() (err error) {
 			err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.ebi`, *payload.Ebi, 15, false))
 		}
 	}
-	if payload.ExternalSgwDataAddr != nil {
-		if err2 := goa.ValidateFormat(goa.FormatIPv4, *payload.ExternalSgwDataAddr); err2 != nil {
-			err = goa.MergeErrors(err, goa.InvalidFormatError(`raw.externalSgwDataAddr`, *payload.ExternalSgwDataAddr, goa.FormatIPv4, err2))
-		}
-	}
 	if payload.Imsi != nil {
 		if ok := goa.ValidatePattern(`^[0-9]{14,15}$`, *payload.Imsi); !ok {
 			err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.imsi`, *payload.Imsi, `^[0-9]{14,15}$`))
@@ -149,6 +151,21 @@ func (payload *createGtpsessionPayload) Validate() (err error) {
 			err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.msisdn`, *payload.Msisdn, `^[0-9]{12,15}$`))
 		}
 	}
+	if payload.PseudoSgwDataAddr != nil {
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, *payload.PseudoSgwDataAddr); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`raw.pseudoSgwDataAddr`, *payload.PseudoSgwDataAddr, goa.FormatIPv4, err2))
+		}
+	}
+	if payload.PseudoSgwDataTEID != nil {
+		if *payload.PseudoSgwDataTEID < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.pseudoSgwDataTEID`, *payload.PseudoSgwDataTEID, 0, true))
+		}
+	}
+	if payload.PseudoSgwDataTEID != nil {
+		if *payload.PseudoSgwDataTEID > 4294967295 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.pseudoSgwDataTEID`, *payload.PseudoSgwDataTEID, 4294967295, false))
+		}
+	}
 	return
 }
 
@@ -160,9 +177,6 @@ func (payload *createGtpsessionPayload) Publicize() *CreateGtpsessionPayload {
 	}
 	if payload.Ebi != nil {
 		pub.Ebi = *payload.Ebi
-	}
-	if payload.ExternalSgwDataAddr != nil {
-		pub.ExternalSgwDataAddr = payload.ExternalSgwDataAddr
 	}
 	if payload.Imsi != nil {
 		pub.Imsi = *payload.Imsi
@@ -179,6 +193,12 @@ func (payload *createGtpsessionPayload) Publicize() *CreateGtpsessionPayload {
 	if payload.Msisdn != nil {
 		pub.Msisdn = *payload.Msisdn
 	}
+	if payload.PseudoSgwDataAddr != nil {
+		pub.PseudoSgwDataAddr = payload.PseudoSgwDataAddr
+	}
+	if payload.PseudoSgwDataTEID != nil {
+		pub.PseudoSgwDataTEID = *payload.PseudoSgwDataTEID
+	}
 	return &pub
 }
 
@@ -187,10 +207,8 @@ type CreateGtpsessionPayload struct {
 	// Access Point Name
 	Apn string `form:"apn" json:"apn" xml:"apn"`
 	// EPS Bearer ID
-	Ebi int `form:"ebi" json:"ebi" xml:"ebi"`
-	// External SGW-DATA IP Address
-	ExternalSgwDataAddr *string `form:"externalSgwDataAddr,omitempty" json:"externalSgwDataAddr,omitempty" xml:"externalSgwDataAddr,omitempty"`
-	Imsi                string  `form:"imsi" json:"imsi" xml:"imsi"`
+	Ebi  int    `form:"ebi" json:"ebi" xml:"ebi"`
+	Imsi string `form:"imsi" json:"imsi" xml:"imsi"`
 	// Mobile Country Code
 	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
 	// Mobile Equipment Identifier
@@ -198,6 +216,12 @@ type CreateGtpsessionPayload struct {
 	// Mobile Network Code
 	Mnc    string `form:"mnc" json:"mnc" xml:"mnc"`
 	Msisdn string `form:"msisdn" json:"msisdn" xml:"msisdn"`
+	// Specify when using external pseudo SGW-DATA
+	PseudoSgwDataAddr *string `form:"pseudoSgwDataAddr,omitempty" json:"pseudoSgwDataAddr,omitempty" xml:"pseudoSgwDataAddr,omitempty"`
+	// Specify when using external pseudo SGW-DATA which tunnel's TEID has already determined.
+	// When 0 is specified, TEID will be generated automatically.
+	// If pseudoSgwDataAddr is not specified, this attribute is ignored.
+	PseudoSgwDataTEID int `form:"pseudoSgwDataTEID" json:"pseudoSgwDataTEID" xml:"pseudoSgwDataTEID"`
 }
 
 // Validate runs the validation rules defined in the design.
@@ -230,11 +254,6 @@ func (payload *CreateGtpsessionPayload) Validate() (err error) {
 	if payload.Ebi > 15 {
 		err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.ebi`, payload.Ebi, 15, false))
 	}
-	if payload.ExternalSgwDataAddr != nil {
-		if err2 := goa.ValidateFormat(goa.FormatIPv4, *payload.ExternalSgwDataAddr); err2 != nil {
-			err = goa.MergeErrors(err, goa.InvalidFormatError(`raw.externalSgwDataAddr`, *payload.ExternalSgwDataAddr, goa.FormatIPv4, err2))
-		}
-	}
 	if ok := goa.ValidatePattern(`^[0-9]{14,15}$`, payload.Imsi); !ok {
 		err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.imsi`, payload.Imsi, `^[0-9]{14,15}$`))
 	}
@@ -249,6 +268,17 @@ func (payload *CreateGtpsessionPayload) Validate() (err error) {
 	}
 	if ok := goa.ValidatePattern(`^[0-9]{12,15}$`, payload.Msisdn); !ok {
 		err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.msisdn`, payload.Msisdn, `^[0-9]{12,15}$`))
+	}
+	if payload.PseudoSgwDataAddr != nil {
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, *payload.PseudoSgwDataAddr); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`raw.pseudoSgwDataAddr`, *payload.PseudoSgwDataAddr, goa.FormatIPv4, err2))
+		}
+	}
+	if payload.PseudoSgwDataTEID < 0 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.pseudoSgwDataTEID`, payload.PseudoSgwDataTEID, 0, true))
+	}
+	if payload.PseudoSgwDataTEID > 4294967295 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.pseudoSgwDataTEID`, payload.PseudoSgwDataTEID, 4294967295, false))
 	}
 	return
 }

@@ -45,10 +45,22 @@ func newSgwCtrl(addr net.UDPAddr, dataPort int, recovery byte) (*SgwCtrl, error)
 	return sgwCtrl, nil
 }
 
+/*CreateSession creates a new GTP session.
+This method creates CreateSessionRequest Message,
+sends the message to PGW , waits for CreateSessionResponse
+and then returns the result (GsRes).
+
+When pseudoSgwDataIP is nil, SGW-DATA F-TEID's IP Address in
+a CreateSessionRequest Message this method will create
+is same as SGW-CTRL's IP Address.
+
+When pseudoSgwDataTEID is 0, SGW-DATA's TEID is generated
+automatically.
+*/
 func (s *SgwCtrl) CreateSession(
-	imsi, msisdn, mei, mcc, mnc, apnNI string,
-	ebi byte,
-	externalSgwDataIP *net.IP, // only when using external sgw-data
+	imsi, msisdn, mei, mcc, mnc, apnNI string, ebi byte,
+	pseudoSgwDataIP *net.IP,
+	pseudoSgwDataTEID gtp.Teid,
 ) (GsRes, *GtpSession, error) {
 	// Query APN's IP address
 	apn, err := apns.TheRepo().Find(apnNI, mcc, mnc)
@@ -72,14 +84,18 @@ func (s *SgwCtrl) CreateSession(
 
 	// Make SGW Data F-TEID
 	sgwData := s.pair
+	sgwDataTeid := sgwData.nextTeid()
 	var sgwDataIP net.IP
-	if externalSgwDataIP == nil {
+	if pseudoSgwDataIP == nil {
 		sgwDataIP = sgwData.UDPAddr().IP
 	} else {
-		// when using external sgw-data
-		sgwDataIP = *externalSgwDataIP
+		// when using external pseudo sgw-data
+		sgwDataIP = *pseudoSgwDataIP
+		if pseudoSgwDataTEID != 0 {
+			sgwDataTeid = pseudoSgwDataTEID
+		}
 	}
-	sgwDataFTEID, err := ie.NewFteid(0, sgwDataIP, nil, ie.S5S8SgwGtpUIf, sgwData.nextTeid())
+	sgwDataFTEID, err := ie.NewFteid(0, sgwDataIP, nil, ie.S5S8SgwGtpUIf, sgwDataTeid)
 	if err != nil {
 		return GsRes{}, nil, err
 	}
