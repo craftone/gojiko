@@ -74,9 +74,6 @@ func checkCreateSessionResponseArg(csReqArg CreateSessionResponseArg) error {
 		if csReqArg.ApnRestriction == nil {
 			errMsgs = append(errMsgs, "ApnRestriction")
 		}
-		if csReqArg.Pco == nil {
-			errMsgs = append(errMsgs, "PCO")
-		}
 	}
 
 	if len(errMsgs) == 0 {
