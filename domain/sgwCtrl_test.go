@@ -55,10 +55,11 @@ func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 	// wait till the session is created
 	session := ensureTheSession(sgwCtrl, imsi, ebi)
 
-	pgwAddr := net.UDPAddr{IP: pgwIP, Port: GtpControlPort}
+	pgwCtrlAddr := net.UDPAddr{IP: pgwIP, Port: GtpControlPort}
+	pgwDataAddr := net.UDPAddr{IP: pgwDataIP, Port: GtpUserPort}
 
 	// send invalid binary
-	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwCtrlAddr, []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
 
 	// make pseudo response binary that cause is CauseRequestAccepted
 	paaIP := net.IPv4(9, 10, 11, 12)
@@ -68,7 +69,7 @@ func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 		session.sgwCtrlFTEID.Teid(), // SgwCtrlTEID
 		ie.CauseRequestAccepted,     // Cause
 		pgwIP, pgwCtrlTEID,          // PGW Ctrl FTEID
-		pgwIP, pgwDataTEID, // PGW Data FTEID
+		pgwDataIP, pgwDataTEID, // PGW Data FTEID
 		paaIP,                // PDN Allocated IP address
 		net.IPv4(8, 8, 8, 8), // PriDNS
 		net.IPv4(8, 8, 4, 4), // SecDNS
@@ -80,17 +81,18 @@ func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 	session.fromSgwCtrlReceiverChan <- UDPpacket{defaultSgwCtrlAddr, csResBin}
 
 	// send from invalid port
-	invalidPort := net.UDPAddr{IP: pgwAddr.IP, Port: 1}
+	invalidPort := net.UDPAddr{IP: pgwCtrlAddr.IP, Port: 1}
 	session.fromSgwCtrlReceiverChan <- UDPpacket{invalidPort, csResBin}
 
 	// send valid packet
-	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, csResBin}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwCtrlAddr, csResBin}
 
 	res := <-resCh
 	assert.NoError(t, res.err)
 	assert.Equal(t, GsResOK, res.Code)
 
 	assert.True(t, session.paa.IPv4().Equal(paaIP))
+	assert.Equal(t, pgwDataAddr, session.pgwDataAddr)
 	assert.Equal(t, pgwCtrlTEID, session.pgwCtrlFTEID.Teid())
 	assert.Equal(t, pgwDataTEID, session.pgwDataFTEID.Teid())
 
@@ -112,7 +114,7 @@ func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 		0x1235, ie.CauseRequestAccepted)
 	assert.NoError(t, err)
 	dsResBin := dsRes.Marshal()
-	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwAddr, dsResBin}
+	session.fromSgwCtrlReceiverChan <- UDPpacket{pgwCtrlAddr, dsResBin}
 
 	res = <-resCh
 	assert.NoError(t, res.err)

@@ -257,6 +257,8 @@ loop:
 			// Set PGW's F-TEIDs into the session
 			s.pgwCtrlFTEID = csRes.PgwCtrlFteid()
 			s.pgwDataFTEID = csRes.BearerContextCeated().PgwDataFteid()
+			// Set PGW's Data Addr into the session
+			s.pgwDataAddr.IP = s.pgwDataFTEID.Ipv4()
 			// Set PDN Address Allocation into the session
 			s.paa = csRes.Paa()
 

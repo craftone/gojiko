@@ -83,6 +83,7 @@ func (r *GtpSessionRepo) newSession(
 		sgwCtrlAddr: sgwCtrl.UDPAddr(),
 		sgwDataAddr: sgwCtrl.Pair().UDPAddr(),
 		pgwCtrlAddr: net.UDPAddr{IP: pgwCtrlIPv4, Port: GtpControlPort},
+		// pgwDataAddr will be updated after receive CreateSessionResponse
 		pgwDataAddr: net.UDPAddr{IP: pgwCtrlIPv4, Port: GtpUserPort},
 
 		imsi:           imsi,
