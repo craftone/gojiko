@@ -20,7 +20,7 @@ func TestNewPcoMsToNetwork_marshal(t *testing.T) {
 		0x10,     // Length : 16
 		0x01,     // Code : Configure-Request
 		0x00,     // Identifier : 0
-		0x00, 12, // Length : 12
+		0x00, 16, // Length : 16
 		0x81, 6, 00, 00, 00, 00, // Option 129 Primary DNS
 		0x83, 6, 00, 00, 00, 00, // Option 131 Secondary DNS
 		00, 0x0D, 00, // DNS Server IPv4 Address Request 000DH

@@ -25,7 +25,7 @@ func TestNewPcoNetworkToMs_marshal(t *testing.T) {
 		0x10,     // Length : 16
 		0x03,     // Code : Configure-Nack
 		0x00,     // Identifier : 0
-		0x00, 12, // Length : 12
+		0x00, 16, // Length : 16
 		0x81, 6, 1, 2, 3, 4, // Option 129 Primary DNS
 		0x83, 6, 5, 6, 7, 8, // Option 131 Secondary DNS
 		00, 0x0D, 4, 1, 2, 3, 4, // DNS Server IPv4 Address Request 000DH

@@ -46,7 +46,7 @@ func TestPcoMsToNetwork_Marshal(t *testing.T) {
 		0x10,     // Length : 16
 		1,        // Code : Configure-Request
 		0,        // Identifier : 0
-		00, 0x0c, // Length: 12
+		00, 0x10, // Length: 16
 		0x81,       // Option : 129 Primary DNS
 		6,          // Length : 6
 		0, 0, 0, 0, // 0.0.0.0
@@ -125,7 +125,7 @@ func TestPcoNetworkToMs_Marshal(t *testing.T) {
 		0x10,     // Length : 16
 		1,        // Code : Configure-Request
 		0,        // Identifier : 0
-		00, 0x0c, // Length: 12
+		00, 0x10, // Length: 16
 		0x81,       // Option : 129 Primary DNS
 		6,          // Length : 6
 		1, 2, 3, 4, // 1.2.3.4

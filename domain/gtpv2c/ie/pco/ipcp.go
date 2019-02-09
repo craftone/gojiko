@@ -54,7 +54,7 @@ func (i *Ipcp) marshal() []byte {
 	body[1] = byte(i.identifier)
 
 	// length
-	binary.BigEndian.PutUint16(body[2:4], 12)
+	binary.BigEndian.PutUint16(body[2:4], 16)
 
 	// Primary DNS Server
 	body[4] = byte(primaryDNSServerAddress)
@@ -76,7 +76,7 @@ func unmarshalIpcp(buf []byte) (*Ipcp, error) {
 	code := ipcpCode(buf[0])
 	identifier := buf[1]
 	length := binary.BigEndian.Uint16(buf[2:4])
-	if len(buf)-4 != int(length) {
+	if len(buf) != int(length) {
 		return nil, fmt.Errorf("Invalid length IPCP binary : %v", buf)
 	}
 
