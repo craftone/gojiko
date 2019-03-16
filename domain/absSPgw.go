@@ -16,7 +16,7 @@ type UDPpacket struct {
 
 type absSPgw struct {
 	// Listen and Source UDP Address/Port
-	addr       net.UDPAddr
+	laddr      net.UDPAddr
 	conn       *net.UDPConn
 	recovery   byte
 	teidVal    gtp.Teid
@@ -41,13 +41,13 @@ type SPgwIf interface {
 	findOrCreateOpSPgw(addr net.UDPAddr) (*opSPgw, error)
 }
 
-func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) {
-	conn, err := net.ListenUDP("udp", &addr)
+func newAbsSPgw(laddr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) {
+	conn, err := net.ListenUDP("udp", &laddr)
 	if err != nil {
 		return nil, err
 	}
 	spgw := &absSPgw{
-		addr:           addr,
+		laddr:          laddr,
 		conn:           conn,
 		recovery:       recovery,
 		teidVal:        gtp.Teid(1),
@@ -63,7 +63,7 @@ func newAbsSPgw(addr net.UDPAddr, recovery byte, pair SPgwIf) (*absSPgw, error) 
 // absSPgwSenderRoutine is for GoRoutine
 func (sp *absSPgw) absSPgwSenderRoutine() {
 	log := log.WithFields(logrus.Fields{
-		"laddr":   sp.addr.String(),
+		"laddr":   sp.laddr.String(),
 		"routine": "SPgwSender",
 	})
 	log.Info("Start a SPgw Sender goroutine")
@@ -100,7 +100,7 @@ func (sp *absSPgw) nextSeqNum() uint32 {
 }
 
 func (sp *absSPgw) UDPAddr() net.UDPAddr {
-	return sp.addr
+	return sp.laddr
 }
 
 func (sp *absSPgw) Pair() SPgwIf {

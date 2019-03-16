@@ -34,7 +34,7 @@ func newSgwData(addr net.UDPAddr, recovery byte, sgwCtrl *SgwCtrl) (*SgwData, er
 // sgwDataReceiverRoutine is for GoRoutine
 func (sgwData *SgwData) sgwDataReceiverRoutine() {
 	myLog := log.WithFields(logrus.Fields{
-		"laddr":   sgwData.addr.String(),
+		"laddr":   sgwData.laddr.String(),
 		"routine": "SgwDataReceiver",
 	})
 	myLog.Info("Start a SGW Data Receiver goroutine")
@@ -79,7 +79,7 @@ func (sgwData *SgwData) sgwDataReceiverRoutine() {
 // echoReceiver is for GoRoutine
 func (sd *SgwData) echoReceiver() {
 	myLog := log.WithFields(logrus.Fields{
-		"laddr":   sd.addr.String(),
+		"laddr":   sd.laddr.String(),
 		"routine": "SgwDataEchoReceiver",
 	})
 	myLog.Info("Start a SPgw ECHO Receiver goroutine")

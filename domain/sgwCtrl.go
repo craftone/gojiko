@@ -79,7 +79,7 @@ func (s *SgwCtrl) CreateSession(
 	}
 
 	// Make SGW Ctrl F-TEID
-	sgwCtrlFTEID, err := ie.NewFteid(0, s.addr.IP, nil, ie.S5S8SgwGtpCIf, s.nextTeid())
+	sgwCtrlFTEID, err := ie.NewFteid(0, s.laddr.IP, nil, ie.S5S8SgwGtpCIf, s.nextTeid())
 	if err != nil {
 		return GsRes{}, nil, err
 	}
@@ -227,7 +227,7 @@ func (s *SgwCtrl) DeleteSession(imsi string, ebi byte) (GsRes, error) {
 // sgwCtrlReceiverRoutine is for GoRoutine
 func (s *SgwCtrl) sgwCtrlReceiverRoutine() {
 	myLog := log.WithFields(logrus.Fields{
-		"laddr":   s.addr.String(),
+		"laddr":   s.laddr.String(),
 		"routine": "SgwCtrlReceiver",
 	})
 	myLog.Info("Start a SGW Ctrl Receiver goroutine")
@@ -275,7 +275,7 @@ func (s *SgwCtrl) sgwCtrlReceiverRoutine() {
 // echoReceiver is for GoRoutine
 func (s *SgwCtrl) echoReceiver() {
 	myLog := log.WithFields(logrus.Fields{
-		"laddr":   s.addr.String(),
+		"laddr":   s.laddr.String(),
 		"routine": "SPgwEchoReceiver",
 	})
 	myLog.Info("Start a SgwCtrl ECHO Receiver goroutine")
