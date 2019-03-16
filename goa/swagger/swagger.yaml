@@ -8,6 +8,10 @@ definitions:
     example:
       apn: example.com
       ebi: 5
+      ecgi:
+        eci: 1
+        mcc: "440"
+        mnc: "10"
       imsi: "440100123456780"
       mcc: "440"
       mei: "1212345612345612"
@@ -15,6 +19,11 @@ definitions:
       msisdn: "8101012345678"
       pseudoSgwDataAddr: 127.0.0.1
       pseudoSgwDataTEID: 1
+      ratTypeValue: 6
+      tai:
+        mcc: "440"
+        mnc: "10"
+        tac: 1
     properties:
       apn:
         description: Access Point Name
@@ -28,6 +37,8 @@ definitions:
         maximum: 15
         minimum: 5
         type: integer
+      ecgi:
+        $ref: '#/definitions/ecgi'
       imsi:
         example: "440100123456780"
         pattern: ^[0-9]{14,15}$
@@ -62,12 +73,21 @@ definitions:
         default: 0
         description: |-
           Specify when using external pseudo SGW-DATA which tunnel's TEID has already determined.
-          When 0 is specified, TEID will be generated automatically.
+          If 0 is specified, TEID is generated automatically.
           If pseudoSgwDataAddr is not specified, this attribute is ignored.
         example: 1
         maximum: 4.2949673e+09
         minimum: 0
         type: integer
+      ratTypeValue:
+        default: 6
+        description: 'Default is 6 : E-UTRAN (WB-E-UTRAN)'
+        example: 6
+        maximum: 255
+        minimum: 0
+        type: integer
+      tai:
+        $ref: '#/definitions/tai'
     required:
     - apn
     - mcc
@@ -83,6 +103,10 @@ definitions:
     example:
       apn: example.com
       ebi: 5
+      ecgi:
+        eci: 1
+        mcc: "440"
+        mnc: "10"
       fteid:
         pgwCtrlFTEID:
           ipv4: 127.0.0.1
@@ -102,7 +126,14 @@ definitions:
       mnc: "10"
       msisdn: "8101012345678"
       paa: 93.108.70.217
+      ratType:
+        ratType: EUTRAN (WB-E-UTRAN)
+        ratTypeValue: 6
       sid: 1
+      tai:
+        mcc: "440"
+        mnc: "10"
+        tac: 1
     properties:
       apn:
         description: Access Point Name
@@ -116,6 +147,8 @@ definitions:
         maximum: 15
         minimum: 5
         type: integer
+      ecgi:
+        $ref: '#/definitions/ecgi'
       fteid:
         $ref: '#/definitions/gtpSessionFTEIDs'
       imsi:
@@ -149,11 +182,15 @@ definitions:
         example: 93.108.70.217
         format: ipv4
         type: string
+      ratType:
+        $ref: '#/definitions/ratType'
       sid:
         description: Session ID in this SGW
         example: 1
         minimum: 0
         type: integer
+      tai:
+        $ref: '#/definitions/tai'
     required:
     - apn
     - sid
@@ -162,6 +199,9 @@ definitions:
     - mnc
     - mei
     - msisdn
+    - tai
+    - ecgi
+    - ratType
     title: 'Mediatype identifier: application/vnd.gtpsession+json; view=default'
     type: object
   Gtpv2cCause:
@@ -200,6 +240,10 @@ definitions:
       sessionInfo:
         apn: example.com
         ebi: 5
+        ecgi:
+          eci: 1
+          mcc: "440"
+          mnc: "10"
         fteid:
           pgwCtrlFTEID:
             ipv4: 127.0.0.1
@@ -219,7 +263,14 @@ definitions:
         mnc: "10"
         msisdn: "8101012345678"
         paa: 93.108.70.217
+        ratType:
+          ratType: EUTRAN (WB-E-UTRAN)
+          ratTypeValue: 6
         sid: 1
+        tai:
+          mcc: "440"
+          mnc: "10"
+          tac: 1
     properties:
       cause:
         $ref: '#/definitions/Gtpv2cCause'
@@ -588,6 +639,33 @@ definitions:
         $ref: '#/definitions/SendRecvStatistics'
     title: 'Mediatype identifier: application/vnd.udpechoflow+json; view=withStats'
     type: object
+  ecgi:
+    example:
+      eci: 1
+      mcc: "440"
+      mnc: "10"
+    properties:
+      eci:
+        default: 1
+        description: E-UTRAN Cell Identifier
+        example: 1
+        maximum: 2.6843546e+08
+        minimum: 0
+        type: integer
+      mcc:
+        default: "440"
+        description: Mobile Country Code
+        example: "440"
+        pattern: ^[0-9]{3}$
+        type: string
+      mnc:
+        default: "10"
+        description: Mobile Network Code
+        example: "10"
+        pattern: ^[0-9]{2,3}$
+        type: string
+    title: ecgi
+    type: object
   error:
     description: Error response media type (default view)
     example:
@@ -668,9 +746,55 @@ definitions:
         $ref: '#/definitions/fteid'
     title: gtpSessionFTEIDs
     type: object
+  ratType:
+    example:
+      ratType: EUTRAN (WB-E-UTRAN)
+      ratTypeValue: 6
+    properties:
+      ratType:
+        default: <unkown>
+        example: EUTRAN (WB-E-UTRAN)
+        type: string
+      ratTypeValue:
+        default: 6
+        description: 'Default is 6 : E-UTRAN (WB-E-UTRAN)'
+        example: 6
+        maximum: 255
+        minimum: 0
+        type: integer
+    title: ratType
+    type: object
+  tai:
+    example:
+      mcc: "440"
+      mnc: "10"
+      tac: 1
+    properties:
+      mcc:
+        default: "440"
+        description: Mobile Country Code
+        example: "440"
+        pattern: ^[0-9]{3}$
+        type: string
+      mnc:
+        default: "10"
+        description: Mobile Network Code
+        example: "10"
+        pattern: ^[0-9]{2,3}$
+        type: string
+      tac:
+        default: 1
+        description: Tracking Area Code
+        example: 1
+        maximum: 65535
+        minimum: 0
+        type: integer
+    title: tai
+    type: object
 host: localhost:8080
 info:
-  description: Gojiko は日本のL2接続MVNOでの利用に適した簡素な疑似SGWシミュレータです。
+  description: "Gojiko is a S5 simulator suitable for \n\tusing by Japanese MVNO connected
+    via L2 layer"
   title: Gojiko API
   version: ""
 paths:

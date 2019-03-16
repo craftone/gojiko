@@ -58,7 +58,9 @@ When pseudoSgwDataTEID is 0, SGW-DATA's TEID is generated
 automatically.
 */
 func (s *SgwCtrl) CreateSession(
-	imsi, msisdn, mei, mcc, mnc, apnNI string, ebi byte,
+	imsi, msisdn, mei, mcc, mnc, apnNI string,
+	ebi byte, ratType byte,
+	taiIE *ie.Tai, ecgiIE *ie.Ecgi,
 	pseudoSgwDataIP *net.IP,
 	pseudoSgwDataTEID gtp.Teid,
 ) (GsRes, *GtpSession, error) {
@@ -136,7 +138,7 @@ func (s *SgwCtrl) CreateSession(
 		return GsRes{}, nil, err
 	}
 
-	ratTypeIE, err := ie.NewRatType(0, 6)
+	ratTypeIE, err := ie.NewRatType(0, ie.RatTypeValue(ratType))
 	if err != nil {
 		return GsRes{}, nil, err
 	}
@@ -165,6 +167,8 @@ func (s *SgwCtrl) CreateSession(
 		apnIE,
 		ambrIE,
 		ratTypeIE,
+		taiIE,
+		ecgiIE,
 		servingNetworkID,
 		pdnType,
 	)
@@ -221,16 +225,16 @@ func (s *SgwCtrl) DeleteSession(imsi string, ebi byte) (GsRes, error) {
 }
 
 // sgwCtrlReceiverRoutine is for GoRoutine
-func (sgwCtrl *SgwCtrl) sgwCtrlReceiverRoutine() {
+func (s *SgwCtrl) sgwCtrlReceiverRoutine() {
 	myLog := log.WithFields(logrus.Fields{
-		"laddr":   sgwCtrl.addr.String(),
+		"laddr":   s.addr.String(),
 		"routine": "SgwCtrlReceiver",
 	})
 	myLog.Info("Start a SGW Ctrl Receiver goroutine")
 
 	buf := make([]byte, 2000)
 	for {
-		n, raddr, err := sgwCtrl.conn.ReadFromUDP(buf)
+		n, raddr, err := s.conn.ReadFromUDP(buf)
 		if err != nil {
 			myLog.Error(err)
 			continue
@@ -247,14 +251,14 @@ func (sgwCtrl *SgwCtrl) sgwCtrlReceiverRoutine() {
 		case gtpv2c.EchoRequestNum:
 			received := make([]byte, n)
 			copy(received, buf[:n])
-			sgwCtrl.toEchoReceiver <- UDPpacket{*raddr, received}
+			s.toEchoReceiver <- UDPpacket{*raddr, received}
 		case gtpv2c.EchoResponseNum:
 			myLog.Error("Not yet implemented!")
 		case gtpv2c.CreateSessionResponseNum,
 			gtpv2c.DeleteSessionResponseNum,
 			gtpv2c.DeleteBearerRequestNum:
 			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
-			sess := sgwCtrl.FindByCtrlTeid(teid)
+			sess := s.FindByCtrlTeid(teid)
 			if sess == nil {
 				myLog.Debugf("No session that have the teid : %04x", teid)
 				continue
@@ -269,14 +273,14 @@ func (sgwCtrl *SgwCtrl) sgwCtrlReceiverRoutine() {
 }
 
 // echoReceiver is for GoRoutine
-func (sc *SgwCtrl) echoReceiver() {
+func (s *SgwCtrl) echoReceiver() {
 	myLog := log.WithFields(logrus.Fields{
-		"laddr":   sc.addr.String(),
+		"laddr":   s.addr.String(),
 		"routine": "SPgwEchoReceiver",
 	})
 	myLog.Info("Start a SgwCtrl ECHO Receiver goroutine")
 
-	for pkt := range sc.toEchoReceiver {
+	for pkt := range s.toEchoReceiver {
 		// ensure valid GTPv2-C ECHO Request
 		req, _, err := gtpv2c.Unmarshal(pkt.body)
 		if err != nil {
@@ -287,7 +291,7 @@ func (sc *SgwCtrl) echoReceiver() {
 		myLog.Debugf("Received ECHO Request : %#v", req)
 
 		// make ECHO Response
-		echoRes, err := gtpv2c.NewEchoResponse(req.SeqNum(), sc.recovery)
+		echoRes, err := gtpv2c.NewEchoResponse(req.SeqNum(), s.recovery)
 		if err != nil {
 			myLog.Panicf("Making ECHO Response Failure : %v", err)
 		}
@@ -295,6 +299,6 @@ func (sc *SgwCtrl) echoReceiver() {
 			raddr: pkt.raddr,
 			body:  echoRes.Marshal(),
 		}
-		sc.toSender <- res
+		s.toSender <- res
 	}
 }

@@ -78,6 +78,8 @@ type GtpSession struct {
 	ratType        *ie.RatType
 	servingNetwork *ie.ServingNetwork
 	pdnType        *ie.PdnType
+	tai            *ie.Tai
+	ecgi           *ie.Ecgi
 
 	udpFlow     *UdpEchoFlow
 	lastUDPFlow *UdpEchoFlow
@@ -508,6 +510,10 @@ func (s *GtpSession) RatType() string {
 	return s.ratType.String()
 }
 
+func (s *GtpSession) RatTypeValue() ie.RatTypeValue {
+	return s.ratType.Value()
+}
+
 func (s *GtpSession) ServingNetwork() string {
 	return s.servingNetwork.String()
 }
@@ -522,4 +528,28 @@ func (s *GtpSession) Mnc() string {
 
 func (s *GtpSession) PdnType() string {
 	return s.pdnType.String()
+}
+
+func (s *GtpSession) TaiMcc() string {
+	return s.tai.Mcc()
+}
+
+func (s *GtpSession) TaiMnc() string {
+	return s.tai.Mnc()
+}
+
+func (s *GtpSession) TaiTac() uint16 {
+	return s.tai.Tac()
+}
+
+func (s *GtpSession) EcgiMcc() string {
+	return s.ecgi.Mcc()
+}
+
+func (s *GtpSession) EcgiMnc() string {
+	return s.ecgi.Mnc()
+}
+
+func (s *GtpSession) EcgiEci() uint32 {
+	return s.ecgi.Eci()
 }

@@ -55,6 +55,20 @@ func newGtpsessionMedia(sess *domain.GtpSession) *app.Gtpsession {
 		Mei:    sess.Mei(),
 		Mnc:    sess.Mnc(),
 		Msisdn: sess.Msisdn(),
+		Tai: &app.Tai{
+			Mcc: sess.TaiMcc(),
+			Mnc: sess.TaiMnc(),
+			Tac: int(sess.TaiTac()),
+		},
+		Ecgi: &app.Ecgi{
+			Mcc: sess.EcgiMcc(),
+			Mnc: sess.EcgiMnc(),
+			Eci: int(sess.EcgiEci()),
+		},
+		RatType: &app.RatType{
+			RatTypeValue: int(sess.RatTypeValue()),
+			RatType:      sess.RatType(),
+		},
 	}
 }
 

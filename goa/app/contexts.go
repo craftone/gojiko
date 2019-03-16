@@ -52,6 +52,7 @@ type createGtpsessionPayload struct {
 	Apn *string `form:"apn,omitempty" json:"apn,omitempty" xml:"apn,omitempty"`
 	// EPS Bearer ID
 	Ebi  *int    `form:"ebi,omitempty" json:"ebi,omitempty" xml:"ebi,omitempty"`
+	Ecgi *ecgi   `form:"ecgi,omitempty" json:"ecgi,omitempty" xml:"ecgi,omitempty"`
 	Imsi *string `form:"imsi,omitempty" json:"imsi,omitempty" xml:"imsi,omitempty"`
 	// Mobile Country Code
 	Mcc *string `form:"mcc,omitempty" json:"mcc,omitempty" xml:"mcc,omitempty"`
@@ -63,9 +64,12 @@ type createGtpsessionPayload struct {
 	// Specify when using external pseudo SGW-DATA
 	PseudoSgwDataAddr *string `form:"pseudoSgwDataAddr,omitempty" json:"pseudoSgwDataAddr,omitempty" xml:"pseudoSgwDataAddr,omitempty"`
 	// Specify when using external pseudo SGW-DATA which tunnel's TEID has already determined.
-	// When 0 is specified, TEID will be generated automatically.
+	// If 0 is specified, TEID is generated automatically.
 	// If pseudoSgwDataAddr is not specified, this attribute is ignored.
 	PseudoSgwDataTEID *int `form:"pseudoSgwDataTEID,omitempty" json:"pseudoSgwDataTEID,omitempty" xml:"pseudoSgwDataTEID,omitempty"`
+	// Default is 6 : E-UTRAN (WB-E-UTRAN)
+	RatTypeValue *int `form:"ratTypeValue,omitempty" json:"ratTypeValue,omitempty" xml:"ratTypeValue,omitempty"`
+	Tai          *tai `form:"tai,omitempty" json:"tai,omitempty" xml:"tai,omitempty"`
 }
 
 // Finalize sets the default values defined in the design.
@@ -73,6 +77,20 @@ func (payload *createGtpsessionPayload) Finalize() {
 	var defaultEbi = 5
 	if payload.Ebi == nil {
 		payload.Ebi = &defaultEbi
+	}
+	if payload.Ecgi != nil {
+		var defaultEci = 1
+		if payload.Ecgi.Eci == nil {
+			payload.Ecgi.Eci = &defaultEci
+		}
+		var defaultMcc = "440"
+		if payload.Ecgi.Mcc == nil {
+			payload.Ecgi.Mcc = &defaultMcc
+		}
+		var defaultMnc = "10"
+		if payload.Ecgi.Mnc == nil {
+			payload.Ecgi.Mnc = &defaultMnc
+		}
 	}
 	var defaultMcc = "440"
 	if payload.Mcc == nil {
@@ -85,6 +103,24 @@ func (payload *createGtpsessionPayload) Finalize() {
 	var defaultPseudoSgwDataTEID = 0
 	if payload.PseudoSgwDataTEID == nil {
 		payload.PseudoSgwDataTEID = &defaultPseudoSgwDataTEID
+	}
+	var defaultRatTypeValue = 6
+	if payload.RatTypeValue == nil {
+		payload.RatTypeValue = &defaultRatTypeValue
+	}
+	if payload.Tai != nil {
+		var defaultMcc = "440"
+		if payload.Tai.Mcc == nil {
+			payload.Tai.Mcc = &defaultMcc
+		}
+		var defaultMnc = "10"
+		if payload.Tai.Mnc == nil {
+			payload.Tai.Mnc = &defaultMnc
+		}
+		var defaultTac = 1
+		if payload.Tai.Tac == nil {
+			payload.Tai.Tac = &defaultTac
+		}
 	}
 }
 
@@ -124,6 +160,11 @@ func (payload *createGtpsessionPayload) Validate() (err error) {
 	if payload.Ebi != nil {
 		if *payload.Ebi > 15 {
 			err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.ebi`, *payload.Ebi, 15, false))
+		}
+	}
+	if payload.Ecgi != nil {
+		if err2 := payload.Ecgi.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
 		}
 	}
 	if payload.Imsi != nil {
@@ -166,6 +207,21 @@ func (payload *createGtpsessionPayload) Validate() (err error) {
 			err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.pseudoSgwDataTEID`, *payload.PseudoSgwDataTEID, 4294967295, false))
 		}
 	}
+	if payload.RatTypeValue != nil {
+		if *payload.RatTypeValue < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.ratTypeValue`, *payload.RatTypeValue, 0, true))
+		}
+	}
+	if payload.RatTypeValue != nil {
+		if *payload.RatTypeValue > 255 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.ratTypeValue`, *payload.RatTypeValue, 255, false))
+		}
+	}
+	if payload.Tai != nil {
+		if err2 := payload.Tai.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
 	return
 }
 
@@ -177,6 +233,9 @@ func (payload *createGtpsessionPayload) Publicize() *CreateGtpsessionPayload {
 	}
 	if payload.Ebi != nil {
 		pub.Ebi = *payload.Ebi
+	}
+	if payload.Ecgi != nil {
+		pub.Ecgi = payload.Ecgi.Publicize()
 	}
 	if payload.Imsi != nil {
 		pub.Imsi = *payload.Imsi
@@ -199,6 +258,12 @@ func (payload *createGtpsessionPayload) Publicize() *CreateGtpsessionPayload {
 	if payload.PseudoSgwDataTEID != nil {
 		pub.PseudoSgwDataTEID = *payload.PseudoSgwDataTEID
 	}
+	if payload.RatTypeValue != nil {
+		pub.RatTypeValue = *payload.RatTypeValue
+	}
+	if payload.Tai != nil {
+		pub.Tai = payload.Tai.Publicize()
+	}
 	return &pub
 }
 
@@ -208,6 +273,7 @@ type CreateGtpsessionPayload struct {
 	Apn string `form:"apn" json:"apn" xml:"apn"`
 	// EPS Bearer ID
 	Ebi  int    `form:"ebi" json:"ebi" xml:"ebi"`
+	Ecgi *Ecgi  `form:"ecgi,omitempty" json:"ecgi,omitempty" xml:"ecgi,omitempty"`
 	Imsi string `form:"imsi" json:"imsi" xml:"imsi"`
 	// Mobile Country Code
 	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
@@ -219,9 +285,12 @@ type CreateGtpsessionPayload struct {
 	// Specify when using external pseudo SGW-DATA
 	PseudoSgwDataAddr *string `form:"pseudoSgwDataAddr,omitempty" json:"pseudoSgwDataAddr,omitempty" xml:"pseudoSgwDataAddr,omitempty"`
 	// Specify when using external pseudo SGW-DATA which tunnel's TEID has already determined.
-	// When 0 is specified, TEID will be generated automatically.
+	// If 0 is specified, TEID is generated automatically.
 	// If pseudoSgwDataAddr is not specified, this attribute is ignored.
 	PseudoSgwDataTEID int `form:"pseudoSgwDataTEID" json:"pseudoSgwDataTEID" xml:"pseudoSgwDataTEID"`
+	// Default is 6 : E-UTRAN (WB-E-UTRAN)
+	RatTypeValue int  `form:"ratTypeValue" json:"ratTypeValue" xml:"ratTypeValue"`
+	Tai          *Tai `form:"tai,omitempty" json:"tai,omitempty" xml:"tai,omitempty"`
 }
 
 // Validate runs the validation rules defined in the design.
@@ -254,6 +323,11 @@ func (payload *CreateGtpsessionPayload) Validate() (err error) {
 	if payload.Ebi > 15 {
 		err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.ebi`, payload.Ebi, 15, false))
 	}
+	if payload.Ecgi != nil {
+		if err2 := payload.Ecgi.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
 	if ok := goa.ValidatePattern(`^[0-9]{14,15}$`, payload.Imsi); !ok {
 		err = goa.MergeErrors(err, goa.InvalidPatternError(`raw.imsi`, payload.Imsi, `^[0-9]{14,15}$`))
 	}
@@ -279,6 +353,17 @@ func (payload *CreateGtpsessionPayload) Validate() (err error) {
 	}
 	if payload.PseudoSgwDataTEID > 4294967295 {
 		err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.pseudoSgwDataTEID`, payload.PseudoSgwDataTEID, 4294967295, false))
+	}
+	if payload.RatTypeValue < 0 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.ratTypeValue`, payload.RatTypeValue, 0, true))
+	}
+	if payload.RatTypeValue > 255 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`raw.ratTypeValue`, payload.RatTypeValue, 255, false))
+	}
+	if payload.Tai != nil {
+		if err2 := payload.Tai.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
 	}
 	return
 }

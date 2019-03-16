@@ -5,11 +5,7 @@ import (
 	. "github.com/goadesign/goa/design/apidsl"
 )
 
-var apnMccMncMember = func() {
-	Member("apn", String, "Access Point Name", func() {
-		Format("hostname")
-		Example("example.com")
-	})
+var mccMncMember = func() {
 	Member("mcc", String, "Mobile Country Code", func() {
 		Pattern(`^[0-9]{3}$`)
 		Default("440")
@@ -20,6 +16,14 @@ var apnMccMncMember = func() {
 		Default("10")
 		Example("10")
 	})
+}
+
+var apnMccMncMember = func() {
+	Member("apn", String, "Access Point Name", func() {
+		Format("hostname")
+		Example("example.com")
+	})
+	mccMncMember()
 }
 
 var imsiEbiMember = func() {
@@ -64,5 +68,14 @@ var sgwAddrMember = func() {
 	Member("sgwAddr", String, "SGW GTPv2-C loopback address", func() {
 		Format("ipv4")
 		Example("127.0.0.1")
+	})
+}
+
+var ratTypeValueMember = func() {
+	Member("ratTypeValue", Integer, "Default is 6 : E-UTRAN (WB-E-UTRAN)", func() {
+		Minimum(0)
+		Maximum(255)
+		Default(6)
+		Example(6)
 	})
 }

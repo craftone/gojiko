@@ -1,4 +1,4 @@
-@startuml gojiko
+@startuml
 
 '''''''''''''''''''
 ' S/PGW part
@@ -17,9 +17,9 @@ class AbsSPgw {
   NextTeid() TEID
 }
 note left
-・複数のAPNで
-  同一IPアドレスが
-  使われない前提
+  It is assumed that 
+  each APN has different IP address
+  from each other.
 end note
 
 
@@ -35,7 +35,7 @@ class SgwCtrlRepo {
 }
 SgwCtrlRepo *--"*" SgwCtrl
 note left
-  デフォルトで127.0.0.1:2123 を持つ
+デフォルトで127.0.0.1:2123 を持つ
 end note
 
 class SgwCtrl {
@@ -150,7 +150,8 @@ class ApnRepo {
   Find(networkID, mcc, mnc)
 }
 note right
-  apnMap's key is APN's fullString
+  The key of apnMap is 
+  fullString of the APN
 end note
 
 class Apn {

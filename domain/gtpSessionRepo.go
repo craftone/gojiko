@@ -54,6 +54,8 @@ func (r *GtpSessionRepo) newSession(
 	apn *ie.Apn,
 	ambr *ie.Ambr,
 	ratType *ie.RatType,
+	tai *ie.Tai,
+	ecgi *ie.Ecgi,
 	servingNetwork *ie.ServingNetwork,
 	pdnType *ie.PdnType,
 ) (SessionID, error) {
@@ -96,6 +98,8 @@ func (r *GtpSessionRepo) newSession(
 		ratType:        ratType,
 		servingNetwork: servingNetwork,
 		pdnType:        pdnType,
+		tai:            tai,
+		ecgi:           ecgi,
 	}
 
 	log := log.WithFields(logrus.Fields{

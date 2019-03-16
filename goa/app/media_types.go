@@ -22,6 +22,7 @@ type Gtpsession struct {
 	Apn string `form:"apn" json:"apn" xml:"apn"`
 	// EPS Bearer ID
 	Ebi   int               `form:"ebi" json:"ebi" xml:"ebi"`
+	Ecgi  *Ecgi             `form:"ecgi" json:"ecgi" xml:"ecgi"`
 	Fteid *GtpSessionFTEIDs `form:"fteid,omitempty" json:"fteid,omitempty" xml:"fteid,omitempty"`
 	Imsi  string            `form:"imsi" json:"imsi" xml:"imsi"`
 	// Mobile Country Code
@@ -32,9 +33,11 @@ type Gtpsession struct {
 	Mnc    string `form:"mnc" json:"mnc" xml:"mnc"`
 	Msisdn string `form:"msisdn" json:"msisdn" xml:"msisdn"`
 	// PDN Address Allocation
-	Paa string `form:"paa" json:"paa" xml:"paa"`
+	Paa     string   `form:"paa" json:"paa" xml:"paa"`
+	RatType *RatType `form:"ratType" json:"ratType" xml:"ratType"`
 	// Session ID in this SGW
-	Sid int `form:"sid" json:"sid" xml:"sid"`
+	Sid int  `form:"sid" json:"sid" xml:"sid"`
+	Tai *Tai `form:"tai" json:"tai" xml:"tai"`
 }
 
 // Validate validates the Gtpsession media type instance.
@@ -58,6 +61,15 @@ func (mt *Gtpsession) Validate() (err error) {
 	if mt.Msisdn == "" {
 		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "msisdn"))
 	}
+	if mt.Tai == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "tai"))
+	}
+	if mt.Ecgi == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "ecgi"))
+	}
+	if mt.RatType == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`response`, "ratType"))
+	}
 	if err2 := goa.ValidateFormat(goa.FormatHostname, mt.Apn); err2 != nil {
 		err = goa.MergeErrors(err, goa.InvalidFormatError(`response.apn`, mt.Apn, goa.FormatHostname, err2))
 	}
@@ -66,6 +78,11 @@ func (mt *Gtpsession) Validate() (err error) {
 	}
 	if mt.Ebi > 15 {
 		err = goa.MergeErrors(err, goa.InvalidRangeError(`response.ebi`, mt.Ebi, 15, false))
+	}
+	if mt.Ecgi != nil {
+		if err2 := mt.Ecgi.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
 	}
 	if mt.Fteid != nil {
 		if err2 := mt.Fteid.Validate(); err2 != nil {
@@ -90,8 +107,18 @@ func (mt *Gtpsession) Validate() (err error) {
 	if err2 := goa.ValidateFormat(goa.FormatIPv4, mt.Paa); err2 != nil {
 		err = goa.MergeErrors(err, goa.InvalidFormatError(`response.paa`, mt.Paa, goa.FormatIPv4, err2))
 	}
+	if mt.RatType != nil {
+		if err2 := mt.RatType.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
 	if mt.Sid < 0 {
 		err = goa.MergeErrors(err, goa.InvalidRangeError(`response.sid`, mt.Sid, 0, true))
+	}
+	if mt.Tai != nil {
+		if err2 := mt.Tai.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
 	}
 	return
 }

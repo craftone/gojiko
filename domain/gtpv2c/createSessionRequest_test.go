@@ -4,6 +4,8 @@ import (
 	"net"
 	"testing"
 
+	"github.com/craftone/gojiko/domain/gtpv2c/ie"
+
 	"github.com/craftone/gojiko/domain/gtp"
 	"github.com/stretchr/testify/assert"
 )
@@ -95,7 +97,7 @@ func TestUnmarshal_CreateSessionRequest(t *testing.T) {
 	assert.Equal(t, "10", csReq.Uli().Ecgi().Mnc())
 	assert.Equal(t, "440", csReq.ServingNetwork().Mcc())
 	assert.Equal(t, "10", csReq.ServingNetwork().Mnc())
-	assert.Equal(t, byte(6), csReq.RatType().Value())
+	assert.Equal(t, ie.RatTypeValue(6), csReq.RatType().Value())
 	assert.Equal(t, net.IPv4(1, 2, 3, 4).To4(), csReq.SgwCtrlFteid().Ipv4())
 	assert.Equal(t, gtp.Teid(0x01234567), csReq.SgwCtrlFteid().Teid())
 	assert.Equal(t, "apn.jp", csReq.Apn().String())

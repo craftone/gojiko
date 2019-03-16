@@ -727,6 +727,99 @@ func (ut *UDPEchoFlowPayload) Validate() (err error) {
 	return
 }
 
+// ecgi user type.
+type ecgi struct {
+	// E-UTRAN Cell Identifier
+	Eci *int `form:"eci,omitempty" json:"eci,omitempty" xml:"eci,omitempty"`
+	// Mobile Country Code
+	Mcc *string `form:"mcc,omitempty" json:"mcc,omitempty" xml:"mcc,omitempty"`
+	// Mobile Network Code
+	Mnc *string `form:"mnc,omitempty" json:"mnc,omitempty" xml:"mnc,omitempty"`
+}
+
+// Finalize sets the default values for ecgi type instance.
+func (ut *ecgi) Finalize() {
+	var defaultEci = 1
+	if ut.Eci == nil {
+		ut.Eci = &defaultEci
+	}
+	var defaultMcc = "440"
+	if ut.Mcc == nil {
+		ut.Mcc = &defaultMcc
+	}
+	var defaultMnc = "10"
+	if ut.Mnc == nil {
+		ut.Mnc = &defaultMnc
+	}
+}
+
+// Validate validates the ecgi type instance.
+func (ut *ecgi) Validate() (err error) {
+	if ut.Eci != nil {
+		if *ut.Eci < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.eci`, *ut.Eci, 0, true))
+		}
+	}
+	if ut.Eci != nil {
+		if *ut.Eci > 268435455 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.eci`, *ut.Eci, 268435455, false))
+		}
+	}
+	if ut.Mcc != nil {
+		if ok := goa.ValidatePattern(`^[0-9]{3}$`, *ut.Mcc); !ok {
+			err = goa.MergeErrors(err, goa.InvalidPatternError(`request.mcc`, *ut.Mcc, `^[0-9]{3}$`))
+		}
+	}
+	if ut.Mnc != nil {
+		if ok := goa.ValidatePattern(`^[0-9]{2,3}$`, *ut.Mnc); !ok {
+			err = goa.MergeErrors(err, goa.InvalidPatternError(`request.mnc`, *ut.Mnc, `^[0-9]{2,3}$`))
+		}
+	}
+	return
+}
+
+// Publicize creates Ecgi from ecgi
+func (ut *ecgi) Publicize() *Ecgi {
+	var pub Ecgi
+	if ut.Eci != nil {
+		pub.Eci = *ut.Eci
+	}
+	if ut.Mcc != nil {
+		pub.Mcc = *ut.Mcc
+	}
+	if ut.Mnc != nil {
+		pub.Mnc = *ut.Mnc
+	}
+	return &pub
+}
+
+// Ecgi user type.
+type Ecgi struct {
+	// E-UTRAN Cell Identifier
+	Eci int `form:"eci" json:"eci" xml:"eci"`
+	// Mobile Country Code
+	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
+	// Mobile Network Code
+	Mnc string `form:"mnc" json:"mnc" xml:"mnc"`
+}
+
+// Validate validates the Ecgi type instance.
+func (ut *Ecgi) Validate() (err error) {
+	if ut.Eci < 0 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.eci`, ut.Eci, 0, true))
+	}
+	if ut.Eci > 268435455 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.eci`, ut.Eci, 268435455, false))
+	}
+	if ok := goa.ValidatePattern(`^[0-9]{3}$`, ut.Mcc); !ok {
+		err = goa.MergeErrors(err, goa.InvalidPatternError(`type.mcc`, ut.Mcc, `^[0-9]{3}$`))
+	}
+	if ok := goa.ValidatePattern(`^[0-9]{2,3}$`, ut.Mnc); !ok {
+		err = goa.MergeErrors(err, goa.InvalidPatternError(`type.mnc`, ut.Mnc, `^[0-9]{2,3}$`))
+	}
+	return
+}
+
 // fteid user type.
 type fteid struct {
 	Ipv4 *string `form:"ipv4,omitempty" json:"ipv4,omitempty" xml:"ipv4,omitempty"`
@@ -869,6 +962,163 @@ func (ut *GtpSessionFTEIDs) Validate() (err error) {
 		if err2 := ut.SgwDataFTEID.Validate(); err2 != nil {
 			err = goa.MergeErrors(err, err2)
 		}
+	}
+	return
+}
+
+// ratType user type.
+type ratType struct {
+	RatType *string `form:"ratType,omitempty" json:"ratType,omitempty" xml:"ratType,omitempty"`
+	// Default is 6 : E-UTRAN (WB-E-UTRAN)
+	RatTypeValue *int `form:"ratTypeValue,omitempty" json:"ratTypeValue,omitempty" xml:"ratTypeValue,omitempty"`
+}
+
+// Finalize sets the default values for ratType type instance.
+func (ut *ratType) Finalize() {
+	var defaultRatType = "<unkown>"
+	if ut.RatType == nil {
+		ut.RatType = &defaultRatType
+	}
+	var defaultRatTypeValue = 6
+	if ut.RatTypeValue == nil {
+		ut.RatTypeValue = &defaultRatTypeValue
+	}
+}
+
+// Validate validates the ratType type instance.
+func (ut *ratType) Validate() (err error) {
+	if ut.RatTypeValue != nil {
+		if *ut.RatTypeValue < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.ratTypeValue`, *ut.RatTypeValue, 0, true))
+		}
+	}
+	if ut.RatTypeValue != nil {
+		if *ut.RatTypeValue > 255 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.ratTypeValue`, *ut.RatTypeValue, 255, false))
+		}
+	}
+	return
+}
+
+// Publicize creates RatType from ratType
+func (ut *ratType) Publicize() *RatType {
+	var pub RatType
+	if ut.RatType != nil {
+		pub.RatType = *ut.RatType
+	}
+	if ut.RatTypeValue != nil {
+		pub.RatTypeValue = *ut.RatTypeValue
+	}
+	return &pub
+}
+
+// RatType user type.
+type RatType struct {
+	RatType string `form:"ratType" json:"ratType" xml:"ratType"`
+	// Default is 6 : E-UTRAN (WB-E-UTRAN)
+	RatTypeValue int `form:"ratTypeValue" json:"ratTypeValue" xml:"ratTypeValue"`
+}
+
+// Validate validates the RatType type instance.
+func (ut *RatType) Validate() (err error) {
+	if ut.RatTypeValue < 0 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.ratTypeValue`, ut.RatTypeValue, 0, true))
+	}
+	if ut.RatTypeValue > 255 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.ratTypeValue`, ut.RatTypeValue, 255, false))
+	}
+	return
+}
+
+// tai user type.
+type tai struct {
+	// Mobile Country Code
+	Mcc *string `form:"mcc,omitempty" json:"mcc,omitempty" xml:"mcc,omitempty"`
+	// Mobile Network Code
+	Mnc *string `form:"mnc,omitempty" json:"mnc,omitempty" xml:"mnc,omitempty"`
+	// Tracking Area Code
+	Tac *int `form:"tac,omitempty" json:"tac,omitempty" xml:"tac,omitempty"`
+}
+
+// Finalize sets the default values for tai type instance.
+func (ut *tai) Finalize() {
+	var defaultMcc = "440"
+	if ut.Mcc == nil {
+		ut.Mcc = &defaultMcc
+	}
+	var defaultMnc = "10"
+	if ut.Mnc == nil {
+		ut.Mnc = &defaultMnc
+	}
+	var defaultTac = 1
+	if ut.Tac == nil {
+		ut.Tac = &defaultTac
+	}
+}
+
+// Validate validates the tai type instance.
+func (ut *tai) Validate() (err error) {
+	if ut.Mcc != nil {
+		if ok := goa.ValidatePattern(`^[0-9]{3}$`, *ut.Mcc); !ok {
+			err = goa.MergeErrors(err, goa.InvalidPatternError(`request.mcc`, *ut.Mcc, `^[0-9]{3}$`))
+		}
+	}
+	if ut.Mnc != nil {
+		if ok := goa.ValidatePattern(`^[0-9]{2,3}$`, *ut.Mnc); !ok {
+			err = goa.MergeErrors(err, goa.InvalidPatternError(`request.mnc`, *ut.Mnc, `^[0-9]{2,3}$`))
+		}
+	}
+	if ut.Tac != nil {
+		if *ut.Tac < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.tac`, *ut.Tac, 0, true))
+		}
+	}
+	if ut.Tac != nil {
+		if *ut.Tac > 65535 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`request.tac`, *ut.Tac, 65535, false))
+		}
+	}
+	return
+}
+
+// Publicize creates Tai from tai
+func (ut *tai) Publicize() *Tai {
+	var pub Tai
+	if ut.Mcc != nil {
+		pub.Mcc = *ut.Mcc
+	}
+	if ut.Mnc != nil {
+		pub.Mnc = *ut.Mnc
+	}
+	if ut.Tac != nil {
+		pub.Tac = *ut.Tac
+	}
+	return &pub
+}
+
+// Tai user type.
+type Tai struct {
+	// Mobile Country Code
+	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
+	// Mobile Network Code
+	Mnc string `form:"mnc" json:"mnc" xml:"mnc"`
+	// Tracking Area Code
+	Tac int `form:"tac" json:"tac" xml:"tac"`
+}
+
+// Validate validates the Tai type instance.
+func (ut *Tai) Validate() (err error) {
+	if ok := goa.ValidatePattern(`^[0-9]{3}$`, ut.Mcc); !ok {
+		err = goa.MergeErrors(err, goa.InvalidPatternError(`type.mcc`, ut.Mcc, `^[0-9]{3}$`))
+	}
+	if ok := goa.ValidatePattern(`^[0-9]{2,3}$`, ut.Mnc); !ok {
+		err = goa.MergeErrors(err, goa.InvalidPatternError(`type.mnc`, ut.Mnc, `^[0-9]{2,3}$`))
+	}
+	if ut.Tac < 0 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.tac`, ut.Tac, 0, true))
+	}
+	if ut.Tac > 65535 {
+		err = goa.MergeErrors(err, goa.InvalidRangeError(`type.tac`, ut.Tac, 65535, false))
 	}
 	return
 }

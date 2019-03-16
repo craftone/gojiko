@@ -7,7 +7,8 @@ import (
 
 var _ = API("gojiko api", func() {
 	Title("Gojiko API")
-	Description(`Gojiko は日本のL2接続MVNOでの利用に適した簡素な疑似SGWシミュレータです。`)
+	Description(`Gojiko is a S5 simulator suitable for 
+	using by Japanese MVNO connected via L2 layer`)
 	Scheme("http")
 	Host("localhost:8080")
 })
@@ -22,4 +23,32 @@ var FTEID = Type("fteid", func() {
 		Example("127.0.0.1")
 	})
 	Required("teid", "ipv4")
+})
+
+var TAI = Type("tai", func() {
+	mccMncMember()
+	Member("tac", Integer, "Tracking Area Code", func() {
+		Default(1)
+		Minimum(0)
+		Maximum(0xFFFF)
+		Example(1)
+	})
+})
+
+var ECGI = Type("ecgi", func() {
+	mccMncMember()
+	Member("eci", Integer, "E-UTRAN Cell Identifier", func() {
+		Default(1)
+		Minimum(0)
+		Maximum(0x0FFFFFFF) // 28bit
+		Example(1)
+	})
+})
+
+var RatType = Type("ratType", func() {
+	ratTypeValueMember()
+	Attribute("ratType", String, "", func() {
+		Example("EUTRAN (WB-E-UTRAN)")
+		Default("<unkown>")
+	})
 })

@@ -25,6 +25,7 @@ type CreateGtpsessionPayload struct {
 	Apn string `form:"apn" json:"apn" xml:"apn"`
 	// EPS Bearer ID
 	Ebi  int    `form:"ebi" json:"ebi" xml:"ebi"`
+	Ecgi *Ecgi  `form:"ecgi,omitempty" json:"ecgi,omitempty" xml:"ecgi,omitempty"`
 	Imsi string `form:"imsi" json:"imsi" xml:"imsi"`
 	// Mobile Country Code
 	Mcc string `form:"mcc" json:"mcc" xml:"mcc"`
@@ -36,9 +37,10 @@ type CreateGtpsessionPayload struct {
 	// Specify when using external pseudo SGW-DATA
 	PseudoSgwDataAddr *string `form:"pseudoSgwDataAddr,omitempty" json:"pseudoSgwDataAddr,omitempty" xml:"pseudoSgwDataAddr,omitempty"`
 	// Specify when using external pseudo SGW-DATA which tunnel's TEID has already determined.
-	// When 0 is specified, TEID will be generated automatically.
+	// If 0 is specified, TEID is generated automatically.
 	// If pseudoSgwDataAddr is not specified, this attribute is ignored.
-	PseudoSgwDataTEID int `form:"pseudoSgwDataTEID" json:"pseudoSgwDataTEID" xml:"pseudoSgwDataTEID"`
+	PseudoSgwDataTEID int  `form:"pseudoSgwDataTEID" json:"pseudoSgwDataTEID" xml:"pseudoSgwDataTEID"`
+	Tai               *Tai `form:"tai,omitempty" json:"tai,omitempty" xml:"tai,omitempty"`
 }
 
 // CreateGtpsessionPath computes a request path to the create action of gtpsession.

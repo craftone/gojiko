@@ -43,10 +43,14 @@ func TestSgwCtrl_CreateSession_OK_DeleteSession_OK(t *testing.T) {
 	resCh := make(chan GsRes)
 	imsi := "440100000000000"
 	ebi := byte(5)
+	ratType := byte(6)
+	taiIe, _ := ie.NewTai("440", "10", 1)
+	ecgiIe, _ := ie.NewEcgi("440", "10", 2)
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345678", "0123456789012345",
-			"440", "10", "example.com", ebi, nil, 0,
+			"440", "10", "example.com", ebi,
+			ratType, taiIe, ecgiIe, nil, 0,
 		)
 		assert.NoError(t, err)
 		resCh <- res
@@ -129,12 +133,17 @@ func TestSgwCtrl_CreateSession_with_PseudoSgwData_OK_DeleteSession_OK(t *testing
 	resCh := make(chan GsRes)
 	imsi := "440100000000009"
 	ebi := byte(5)
+	ratType := byte(6)
+	taiIe, _ := ie.NewTai("440", "10", 1)
+	ecgiIe, _ := ie.NewEcgi("440", "10", 2)
 
 	go func() {
 		pseudoSgwDataIP := net.IPv4(2, 3, 4, 5)
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345678", "0123456789012345",
-			"440", "10", "example.com", ebi, &pseudoSgwDataIP, 0,
+			"440", "10", "example.com", ebi,
+			ratType, taiIe, ecgiIe,
+			&pseudoSgwDataIP, 0,
 		)
 		assert.NoError(t, err)
 		resCh <- res
@@ -209,12 +218,17 @@ func TestSgwCtrl_CreateSession_with_PseudoSgwData_TEID_OK_DeleteSession_OK(t *te
 	resCh := make(chan GsRes)
 	imsi := "440100000000009"
 	ebi := byte(5)
+	ratType := byte(6)
+	taiIe, _ := ie.NewTai("440", "10", 1)
+	ecgiIe, _ := ie.NewEcgi("440", "10", 2)
 
 	go func() {
 		pseudoSgwDataIP := net.IPv4(2, 3, 4, 5)
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345678", "0123456789012345",
-			"440", "10", "example.com", ebi, &pseudoSgwDataIP, 100,
+			"440", "10", "example.com", ebi,
+			ratType, taiIe, ecgiIe,
+			&pseudoSgwDataIP, 100,
 		)
 		assert.NoError(t, err)
 		resCh <- res
@@ -301,11 +315,16 @@ func TestSgwCtrl_CreateSession_RetryableNG(t *testing.T) {
 	resCh := make(chan GsRes)
 	imsi := "440100000000001"
 	ebi := byte(5)
+	ratType := byte(6)
+	taiIe, _ := ie.NewTai("440", "10", 1)
+	ecgiIe, _ := ie.NewEcgi("440", "10", 2)
 
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345671", "0123456789012345",
-			"440", "10", "example.com", ebi, nil, 0,
+			"440", "10", "example.com", ebi,
+			ratType, taiIe, ecgiIe,
+			nil, 0,
 		)
 		assert.NoError(t, err)
 		resCh <- res
@@ -351,9 +370,14 @@ func TestSgwCtrl_CreateSession_Timeout(t *testing.T) {
 	sgwCtrl := theSgwCtrlRepo.GetSgwCtrl(defaultSgwCtrlAddr)
 	imsi := "440100000000003"
 	ebi := byte(5)
+	ratType := byte(6)
+	taiIe, _ := ie.NewTai("440", "10", 1)
+	ecgiIe, _ := ie.NewEcgi("440", "10", 2)
 	res, _, _ := sgwCtrl.CreateSession(
 		imsi, "819012345679", "0123456789012345",
-		"440", "10", "example.com", ebi, nil, 0,
+		"440", "10", "example.com", ebi,
+		ratType, taiIe, ecgiIe,
+		nil, 0,
 	)
 
 	// No Create Sessin Response and the session should be timed out.
@@ -389,10 +413,15 @@ func TestSgwCtrl_CreateSessionAndDeleteBearer(t *testing.T) {
 	resCh := make(chan csResStr)
 	imsi := "440100000000004"
 	ebi := byte(5)
+	ratType := byte(6)
+	taiIe, _ := ie.NewTai("440", "10", 1)
+	ecgiIe, _ := ie.NewEcgi("440", "10", 2)
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345679", "0123456789012345",
-			"440", "10", "example.com", ebi, nil, 0,
+			"440", "10", "example.com", ebi,
+			ratType, taiIe, ecgiIe,
+			nil, 0,
 		)
 		resCh <- csResStr{res, err}
 	}()
@@ -461,10 +490,15 @@ func TestSgwCtrl_CreateSessionAndStartUdpFlow(t *testing.T) {
 	resCh := make(chan csResStr)
 	imsi := "440100000000005"
 	ebi := byte(5)
+	ratType := byte(6)
+	taiIe, _ := ie.NewTai("440", "10", 1)
+	ecgiIe, _ := ie.NewEcgi("440", "10", 2)
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345674", "0123456789012345",
-			"440", "10", "example.com", ebi, nil, 0,
+			"440", "10", "example.com", ebi,
+			ratType, taiIe, ecgiIe,
+			nil, 0,
 		)
 		resCh <- csResStr{res, err}
 	}()
@@ -607,18 +641,25 @@ func TestSgwCtrl_Create2SessionsAndStartUdpFlow(t *testing.T) {
 	msisdn1 := "819012345676"
 	msisdn2 := "819012345677"
 	ebi := byte(5)
+	ratType := byte(6)
+	taiIe, _ := ie.NewTai("440", "10", 1)
+	ecgiIe, _ := ie.NewEcgi("440", "10", 2)
 
 	go func() {
 		res1, _, err := sgwCtrl.CreateSession(
 			imsi1, msisdn1, "0123456789012345",
-			"440", "10", "example.com", ebi, nil, 0,
+			"440", "10", "example.com", ebi,
+			ratType, taiIe, ecgiIe,
+			nil, 0,
 		)
 		resCh1 <- csResStr{res1, err}
 	}()
 	go func() {
 		res2, _, err := sgwCtrl.CreateSession(
 			imsi2, msisdn2, "0123456789012345",
-			"440", "10", "example.com", ebi, nil, 0,
+			"440", "10", "example.com", ebi,
+			ratType, taiIe, ecgiIe,
+			nil, 0,
 		)
 		resCh2 <- csResStr{res2, err}
 	}()
@@ -776,10 +817,15 @@ func TestSgwCtrl_DeleteSession_Timeout(t *testing.T) {
 	resCh := make(chan GsRes)
 	imsi := "440100000000008"
 	ebi := byte(5)
+	ratType := byte(6)
+	taiIe, _ := ie.NewTai("440", "10", 1)
+	ecgiIe, _ := ie.NewEcgi("440", "10", 2)
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345678", "0123456789012345",
-			"440", "10", "example.com", ebi, nil, 0,
+			"440", "10", "example.com", ebi,
+			ratType, taiIe, ecgiIe,
+			nil, 0,
 		)
 		assert.NoError(t, err)
 		resCh <- res
@@ -841,10 +887,15 @@ func TestSgwCtrl_DeleteSession_Invalid_Status(t *testing.T) {
 	resCh := make(chan GsRes)
 	imsi := "440100000000008"
 	ebi := byte(5)
+	ratType := byte(6)
+	taiIe, _ := ie.NewTai("440", "10", 1)
+	ecgiIe, _ := ie.NewEcgi("440", "10", 2)
 	go func() {
 		res, _, err := sgwCtrl.CreateSession(
 			imsi, "819012345678", "0123456789012345",
-			"440", "10", "example.com", ebi, nil, 0,
+			"440", "10", "example.com", ebi,
+			ratType, taiIe, ecgiIe,
+			nil, 0,
 		)
 		assert.NoError(t, err)
 		// No Create Sessin Response and the session should be timed out.

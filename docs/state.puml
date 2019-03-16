@@ -1,0 +1,13 @@
+@startuml
+
+  [*] -->	Newed
+  Newed --> CSReqSending
+  CSReqSending --> CSReqSend
+  CSReqSend --> CSResReceived
+	CSResReceived --> Connected
+	Connected  --> DSReqSending
+	DSReqSending --> DSReqSend
+	DSReqSend --> DSResReceived
+	DSResReceived --> [*]
+
+@enduml

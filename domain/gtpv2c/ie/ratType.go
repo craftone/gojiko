@@ -7,10 +7,25 @@ import (
 
 type RatType struct {
 	header
-	value byte
+	value RatTypeValue
 }
 
-func NewRatType(instance byte, value byte) (*RatType, error) {
+type RatTypeValue byte
+
+const (
+	RatTypeUtran         RatTypeValue = 1
+	RatTypeGeran         RatTypeValue = 2
+	RatTypeWlan          RatTypeValue = 3
+	RatTypeGan           RatTypeValue = 4
+	RatTypeHspaEvolution RatTypeValue = 5
+	RatTypeWbEutran      RatTypeValue = 6
+	RatTypeVirtual       RatTypeValue = 7
+	RatTypeEutranNBIoT   RatTypeValue = 8
+	RatTypeLteM          RatTypeValue = 9
+	RatTypeNR            RatTypeValue = 10
+)
+
+func NewRatType(instance byte, value RatTypeValue) (*RatType, error) {
 	header, err := newHeader(ratTypeNum, 1, instance)
 	if err != nil {
 		return nil, err
@@ -22,7 +37,7 @@ func NewRatType(instance byte, value byte) (*RatType, error) {
 }
 
 func (r *RatType) Marshal() []byte {
-	body := []byte{r.value}
+	body := []byte{byte(r.value)}
 	return r.header.marshal(body)
 }
 
@@ -35,14 +50,14 @@ func unmarshalRatType(h header, buf []byte) (*RatType, error) {
 		return nil, errors.New("Invalid binary")
 	}
 
-	rec, err := NewRatType(h.instance, buf[0])
+	rec, err := NewRatType(h.instance, RatTypeValue(buf[0]))
 	if err != nil {
 		return nil, err
 	}
 	return rec, nil
 }
 
-func (r *RatType) Value() byte {
+func (r *RatType) Value() RatTypeValue {
 	return r.value
 }
 
@@ -60,9 +75,15 @@ func (r *RatType) String() string {
 	case 5:
 		str = "HSPA Evolution"
 	case 6:
-		str = "EUTRAN"
+		str = "EUTRAN (WB-E-UTRAN)"
 	case 7:
 		str = "Virtual"
+	case 8:
+		str = "EUTRAN-NB-IoT"
+	case 9:
+		str = "LTE-M"
+	case 10:
+		str = "NR"
 	default:
 		str = "<reserved>"
 	}

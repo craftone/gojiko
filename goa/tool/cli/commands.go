@@ -117,13 +117,23 @@ Payload example:
 {
    "apn": "example.com",
    "ebi": 5,
+   "ecgi": {
+      "eci": 1,
+      "mcc": "440",
+      "mnc": "10"
+   },
    "imsi": "440100123456780",
    "mcc": "440",
    "mei": "1212345612345612",
    "mnc": "10",
    "msisdn": "8101012345678",
    "pseudoSgwDataAddr": "127.0.0.1",
-   "pseudoSgwDataTEID": 1
+   "pseudoSgwDataTEID": 1,
+   "tai": {
+      "mcc": "440",
+      "mnc": "10",
+      "tac": 1
+   }
 }`,
 		RunE: func(cmd *cobra.Command, args []string) error { return tmp1.Run(c, args) },
 	}

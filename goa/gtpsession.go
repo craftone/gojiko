@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/craftone/gojiko/domain/gtpv2c/ie"
+
 	"github.com/craftone/gojiko/domain/gtp"
 
 	"github.com/craftone/gojiko/domain"
@@ -38,9 +40,18 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 		ip := net.ParseIP(*payload.PseudoSgwDataAddr)
 		sgwDataAddr = &ip
 	}
+	tai, err := ie.NewTai(payload.Tai.Mcc, payload.Tai.Mnc, uint16(payload.Tai.Tac))
+	if err != nil {
+		return ctx.BadRequest(goa.ErrBadRequest(err))
+	}
+	ecgi, err := ie.NewEcgi(payload.Ecgi.Mcc, payload.Ecgi.Mnc, uint32(payload.Ecgi.Eci))
+	if err != nil {
+		return ctx.BadRequest(goa.ErrBadRequest(err))
+	}
+
 	csRes, sess, err := sgwCtrl.CreateSession(
 		payload.Imsi, payload.Msisdn, payload.Mei, payload.Mcc, payload.Mnc,
-		payload.Apn, byte(payload.Ebi),
+		payload.Apn, byte(payload.Ebi), byte(payload.RatTypeValue), tai, ecgi,
 		sgwDataAddr, gtp.Teid(payload.PseudoSgwDataTEID))
 	if err != nil {
 		switch err.(type) {

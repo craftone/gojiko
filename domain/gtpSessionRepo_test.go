@@ -37,9 +37,13 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	paaIe, _ := ie.NewPaa(0, ie.PdnTypeIPv4, net.IPv4(0, 0, 0, 0), nil)
 	apnIe, _ := ie.NewApn(0, "apn.example.com")
 	ambrIe, _ := ie.NewAmbr(0, 4294967, 4294967)
-	ratTypeIe, _ := ie.NewRatType(0, 6)
-	servingNetworkIe, _ := ie.NewServingNetwork(0, "440", "10")
+	ratTypeIe, _ := ie.NewRatType(0, ie.RatTypeWbEutran)
+	mcc := "440"
+	mnc := "10"
+	servingNetworkIe, _ := ie.NewServingNetwork(0, mcc, mnc)
 	pdnTypeIe, _ := ie.NewPdnType(0, ie.PdnTypeIPv4)
+	taiIe, _ := ie.NewTai(mcc, mnc, 0x1111)
+	ecgiIe, _ := ie.NewEcgi(mcc, mnc, 0x01234567)
 
 	sid, err := theGtpSessionRepo.newSession(
 		sgwCtrl,
@@ -47,7 +51,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		sgwCtrlSendChan,
 		sgwCtrlFTEID, sgwDataFTEID,
 		imsi1Ie, msisdnIe, meiIe, ebi1Ie, paaIe, apnIe, ambrIe,
-		ratTypeIe, servingNetworkIe, pdnTypeIe,
+		ratTypeIe, taiIe, ecgiIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.Equal(t, SessionID(0), sid)
 	assert.NoError(t, err)
@@ -61,7 +65,13 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 	assert.Equal(t, net.IPv4(0, 0, 0, 0).To4(), session.Paa())
 	assert.Equal(t, "apn.example.com", session.Apn())
 	assert.Equal(t, "Uplink AMBR: 4294967 kbps, Downlink AMBR: 4294967 kbps", session.Ambr())
-	assert.Equal(t, "EUTRAN (6)", session.RatType())
+	assert.Equal(t, "EUTRAN (WB-E-UTRAN) (6)", session.RatType())
+	assert.Equal(t, "440", session.TaiMcc())
+	assert.Equal(t, "10", session.TaiMnc())
+	assert.Equal(t, uint16(0x1111), session.TaiTac())
+	assert.Equal(t, "440", session.EcgiMcc())
+	assert.Equal(t, "10", session.EcgiMnc())
+	assert.Equal(t, uint32(0x01234567), session.EcgiEci())
 	assert.Equal(t, "MCC: 440, MNC: 10", session.ServingNetwork())
 	assert.Equal(t, "IPv4", session.PdnType())
 
@@ -72,7 +82,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		sgwCtrlSendChan,
 		sgwCtrlFTEID, sgwDataFTEID,
 		imsi2Ie, msisdnIe, meiIe, ebi2Ie, paaIe, apnIe, ambrIe,
-		ratTypeIe, servingNetworkIe, pdnTypeIe,
+		ratTypeIe, taiIe, ecgiIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.Error(t, err)
 	assert.Equal(t, 1, theGtpSessionRepo.NumOfSessions())
@@ -88,7 +98,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		sgwCtrlSendChan,
 		sgwCtrlFTEID2, sgwDataFTEID2,
 		imsi1Ie, msisdnIe, meiIe, ebi1Ie, paaIe, apnIe, ambrIe,
-		ratTypeIe, servingNetworkIe, pdnTypeIe,
+		ratTypeIe, taiIe, ecgiIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.Error(t, err)
 	assert.Equal(t, 1, theGtpSessionRepo.NumOfSessions())
@@ -100,7 +110,7 @@ func TestGtpSessionsRepo_newSession(t *testing.T) {
 		sgwCtrlSendChan,
 		sgwCtrlFTEID2, sgwDataFTEID2,
 		imsi2Ie, msisdnIe, meiIe, ebi1Ie, paaIe, apnIe, ambrIe,
-		ratTypeIe, servingNetworkIe, pdnTypeIe,
+		ratTypeIe, taiIe, ecgiIe, servingNetworkIe, pdnTypeIe,
 	)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, theGtpSessionRepo.NumOfSessions())
