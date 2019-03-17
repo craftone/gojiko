@@ -58,7 +58,7 @@ func unmarshalBearerContextCreatedWithinCSRes(h header, buf []byte) (*BearerCont
 	}
 
 	if h.instance != 0 {
-		log.Panicf("BearerContectCreatedWithinCSRes's instance number shoub be 0 but %v", h.instance)
+		log.Panicf("BearerContectCreatedWithinCSRes's instance number should be 0 but %v", h.instance)
 	}
 
 	bcCwCSResArg := BearerContextCreatedWithinCSResArg{}

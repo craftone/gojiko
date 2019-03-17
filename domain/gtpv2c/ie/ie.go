@@ -21,6 +21,12 @@ const (
 	VersionNotSupportedIndication
 	CreateSessionRequest
 	CreateSessionResponse
+	// CreateBearerRequest
+	// CreateBearerResponse
+	// BearerResourceCommand
+	// BearerResourceFailureIndication
+	ModifyBearerRequest
+	ModifyBearerResponse
 	DeleteSessionRequest
 	DeleteSessionResponse
 	DeleteBearerRequest
@@ -158,6 +164,10 @@ func Unmarshal(buf []byte, msgType MsgType) (IE, []byte, error) {
 			msg, err = unmarshalBearerContextToBeCreatedWithinCSReq(h, body)
 		} else if msgType == CreateSessionResponse && h.instance == 0 {
 			msg, err = unmarshalBearerContextCreatedWithinCSRes(h, body)
+		} else if msgType == ModifyBearerRequest && h.instance == 0 {
+			msg, err = unmarshalBearerContextToBeModifiedWithinMBReq(h, body)
+		} else if msgType == ModifyBearerResponse && h.instance == 0 {
+			msg, err = unmarshalBearerContextToBeModifiedWithinMBRes(h, body)
 		} else {
 			return nil, tail, &UnknownIEError{h.typeNum, h.instance}
 		}
