@@ -6,7 +6,8 @@
 - ~~CreateSession API で TAC, ECGI, RAT-type を指定できるようにする~~
 - ~~APIのセッション情報にTAC, ECGI, RAT-Typeを追加する~~
 - ModifyBearerReq/Res電文作成
-- TAU (Tracking Area Update) API作成
+- TAU (Tracking Area Update) without SGW change を作成
+- TAU (Tracking Area Update) with SGW change API作成
 
 - ~~ECHO Request/Response の Marshal/Unmarshal を実装~~ @ 2017/09/03
 - ~~CSreq/res の Marshal/Unmarshal を実装~~

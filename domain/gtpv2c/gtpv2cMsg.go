@@ -17,6 +17,8 @@ const (
 	VersionNotSupportedIndicationNum MessageTypeNum = 3
 	CreateSessionRequestNum          MessageTypeNum = 32
 	CreateSessionResponseNum         MessageTypeNum = 33
+	ModifyBearerRequestNum           MessageTypeNum = 34
+	ModifyBearerResponseNum          MessageTypeNum = 35
 	DeleteSessionRequestNum          MessageTypeNum = 36
 	DeleteSessionResponseNum         MessageTypeNum = 37
 	DeleteBearerRequestNum           MessageTypeNum = 99
@@ -138,6 +140,8 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 		msg, err = unmarshalCreateSessionRequest(h, body)
 	case CreateSessionResponseNum:
 		msg, err = unmarshalCreateSessionResponse(h, body)
+	case ModifyBearerRequestNum:
+		msg, err = unmarshalModifyBearerRequest(h, body)
 	case DeleteSessionRequestNum:
 		msg, err = unmarshalDeleteSessionRequest(h, body)
 	case DeleteSessionResponseNum:

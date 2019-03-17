@@ -25,6 +25,7 @@ type IndicationArg struct {
 	MSV   bool // MS Validated
 	ISRAU bool // ISR is activated for the UE
 	CCRSI bool // CSG Change Reporting support indication
+	CLII  bool // Change Of Location Information Indication
 }
 
 type Indication struct {
@@ -47,6 +48,7 @@ type Indication struct {
 	msv   bool
 	israu bool
 	ccrsi bool
+	clii  bool
 }
 
 func NewIndication(instance byte, indicationArg IndicationArg) (*Indication, error) {
@@ -74,6 +76,7 @@ func NewIndication(instance byte, indicationArg IndicationArg) (*Indication, err
 		msv:    indicationArg.MSV,
 		israu:  indicationArg.ISRAU,
 		ccrsi:  indicationArg.CCRSI,
+		clii:   indicationArg.CLII,
 	}, nil
 }
 
@@ -99,6 +102,7 @@ func (i *Indication) Marshal() []byte {
 	body[1] = util.SetBit(body[1], 0, i.msv)
 	body[2] = util.SetBit(body[2], 1, i.israu)
 	body[2] = util.SetBit(body[2], 0, i.ccrsi)
+	body[3] = util.SetBit(body[3], 1, i.clii)
 
 	return i.header.marshal(body)
 }
@@ -132,6 +136,8 @@ func unmarshalIndication(h header, buf []byte) (*Indication, error) {
 	indicationArg.MSV = util.GetBit(buf[1], 0)
 	indicationArg.ISRAU = util.GetBit(buf[2], 1)
 	indicationArg.CCRSI = util.GetBit(buf[2], 0)
+	indicationArg.CLII = util.GetBit(buf[3], 1)
+
 	return NewIndication(h.instance, indicationArg)
 }
 
@@ -205,4 +211,8 @@ func (i *Indication) ISRAU() bool {
 
 func (i *Indication) CCRSI() bool {
 	return i.ccrsi
+}
+
+func (i *Indication) CLII() bool {
+	return i.clii
 }
