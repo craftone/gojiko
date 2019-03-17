@@ -12,8 +12,9 @@ import (
 
 func TestModifyBearerRequest_Marshal(t *testing.T) {
 	mbReqArg, err := MakeMBReqArg(
-		0x0123,      // PGW Ctrl TEID
-		"440", "10", // MCC, MNC
+		0x0123,            // PGW Ctrl TEID
+		"440101234567890", // IMSI
+		"440", "10",       // MCC, MNC
 		0x1234, 0x01234567, // TAC, ECI
 		ie.RatTypeWbEutran, ie.IndicationArg{
 			CLII: true,
@@ -28,10 +29,11 @@ func TestModifyBearerRequest_Marshal(t *testing.T) {
 	assert.Equal(t, []byte{
 		0x48,  // First octet
 		0x22,  // MBReq(34)
-		0, 81, // Length
+		0, 93, // Length
 		0, 0, 1, 0x23, // TEID
 		0x00, 0x12, 0x34, // Seq Num
-		0,              // Spare
+		0,                                                             // Spare
+		0x01, 0, 8, 0, 0x44, 0x10, 0x10, 0x32, 0x54, 0x76, 0x98, 0xf0, // IMSI
 		0x56, 0, 13, 0, // ULI header
 		0x18, 0x44, 0xf0, 0x01, 0x12, 0x34, 0x44, 0xf0, 0x1, 0x01, 0x23, 0x45, 0x67,
 		0x52, 0, 1, 0, 6, // RAT Type
@@ -48,8 +50,9 @@ func TestModifyBearerRequest_Marshal(t *testing.T) {
 
 func TestUnmarshal_ModifyBearerRequest(t *testing.T) {
 	mbReqArg, err := MakeMBReqArg(
-		0x0123,      // PGW Ctrl TEID
-		"440", "10", // MCC, MNC
+		0x0123,            // PGW Ctrl TEID
+		"440101234567890", // IMSI
+		"440", "10",       // MCC, MNC
 		0x1234, 0x01234567, // TAC, ECI
 		ie.RatTypeWbEutran, ie.IndicationArg{
 			CLII: true,

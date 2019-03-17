@@ -11,6 +11,7 @@ import (
 
 type ModifyBearerRequest struct {
 	header
+	imsi             *ie.Imsi
 	uli              *ie.Uli     // for location information change reporting
 	ratType          *ie.RatType // for RAT-change
 	indication       *ie.Indication
@@ -21,6 +22,7 @@ type ModifyBearerRequest struct {
 
 type ModifyBearerRequestArg struct {
 	PgwCtrlTeid      gtp.Teid
+	Imsi             *ie.Imsi
 	Uli              *ie.Uli
 	RatType          *ie.RatType
 	Indication       *ie.Indication
@@ -29,7 +31,7 @@ type ModifyBearerRequestArg struct {
 	Recovery         *ie.Recovery
 }
 
-func NewModifyBearerRequest(seqNum uint32, mbReqArg ModifyBearerRequestArg) (*ModifyBearerRequest, error) {
+func NewModifyBearerRequest(seqNum gtp.Teid, mbReqArg ModifyBearerRequestArg) (*ModifyBearerRequest, error) {
 	// Actually this is not necessary since MBreq has no mandatory IE.
 	// This code exists to be consistant with other implmentations of GTPv2-C messages.
 	if err := checkModifyBearerRequestArg(mbReqArg); err != nil {
@@ -37,7 +39,8 @@ func NewModifyBearerRequest(seqNum uint32, mbReqArg ModifyBearerRequestArg) (*Mo
 	}
 
 	return &ModifyBearerRequest{
-		newHeader(ModifyBearerRequestNum, false, true, mbReqArg.PgwCtrlTeid, seqNum),
+		newHeader(ModifyBearerRequestNum, false, true, mbReqArg.PgwCtrlTeid, uint32(seqNum)),
+		mbReqArg.Imsi,
 		mbReqArg.Uli,
 		mbReqArg.RatType,
 		mbReqArg.Indication,
@@ -66,6 +69,9 @@ func checkModifyBearerRequestArg(mbReqArg ModifyBearerRequestArg) error {
 func (m *ModifyBearerRequest) Marshal() []byte {
 	body := make([]byte, 0, 300)
 
+	if m.imsi != nil {
+		body = append(body, m.imsi.Marshal()...)
+	}
 	if m.uli != nil {
 		body = append(body, m.uli.Marshal()...)
 	}
@@ -111,6 +117,8 @@ func unmarshalModifyBearerRequest(h header, buf []byte) (*ModifyBearerRequest, e
 		}
 
 		switch msg := msg.(type) {
+		case *ie.Imsi:
+			mbReqArg.Imsi = msg
 		case *ie.Uli:
 			mbReqArg.Uli = msg
 		case *ie.RatType:
@@ -127,11 +135,12 @@ func unmarshalModifyBearerRequest(h header, buf []byte) (*ModifyBearerRequest, e
 			log.Printf("Unkown IE : %v", msg)
 		}
 	}
-	return NewModifyBearerRequest(h.seqNum, mbReqArg)
+	return NewModifyBearerRequest(gtp.Teid(h.seqNum), mbReqArg)
 }
 
 func MakeMBReqArg(
 	pgwCtrlTeid gtp.Teid,
+	imsi string,
 	mcc, mnc string,
 	tac uint16, eci uint32,
 	ratTypeValue ie.RatTypeValue,
@@ -139,6 +148,11 @@ func MakeMBReqArg(
 	sgwCtrlIPv4 net.IP, sgwCtrlTeid gtp.Teid,
 	sgwDataIPv4 net.IP, sgwDataTeid gtp.Teid,
 	ebi, recovery byte) (ModifyBearerRequestArg, error) {
+
+	imsiIE, err := ie.NewImsi(0, imsi)
+	if err != nil {
+		return ModifyBearerRequestArg{}, err
+	}
 
 	taiIE, err := ie.NewTai(mcc, mnc, tac)
 	if err != nil {
@@ -201,6 +215,7 @@ func MakeMBReqArg(
 
 	return ModifyBearerRequestArg{
 		PgwCtrlTeid:      pgwCtrlTeid,
+		Imsi:             imsiIE,
 		Uli:              uliIE,
 		RatType:          ratTypeIE,
 		Indication:       indicationIE,
@@ -214,6 +229,9 @@ func MakeMBReqArg(
 // Getters
 //
 
+func (m *ModifyBearerRequest) Imsi() *ie.Imsi {
+	return m.imsi
+}
 func (m *ModifyBearerRequest) Uli() *ie.Uli {
 	return m.uli
 }
