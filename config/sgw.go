@@ -25,6 +25,7 @@ func loadSgwConf() {
 	if !ok {
 		log.Panicf("Invalid SGW config : type assertion error %#v", viper.Get("sgw"))
 	}
+
 	for _, sgwMapIf := range sgwMapIfs {
 		sgwMap, ok := sgwMapIf.(map[string]interface{})
 		if !ok {

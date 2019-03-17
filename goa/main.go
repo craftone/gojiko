@@ -3,6 +3,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/craftone/gojiko/applog"
 	"github.com/craftone/gojiko/config"
 	"github.com/craftone/gojiko/domain"
@@ -14,7 +16,10 @@ import (
 
 func main() {
 	config.Init()
-	domain.Init()
+	err := domain.Init()
+	if err != nil {
+		log.Panic(err)
+	}
 
 	// Create service
 	service := goa.New("gojiko api")
