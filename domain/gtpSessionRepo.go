@@ -70,6 +70,7 @@ func (r *GtpSessionRepo) newSession(
 		mtx4status: sync.RWMutex{},
 
 		receiveCSresChan: make(chan *gtpv2c.CreateSessionResponse),
+		receiveMBresChan: make(chan *gtpv2c.ModifyBearerResponse),
 		receiveDSresChan: make(chan *gtpv2c.DeleteSessionResponse),
 
 		toSgwCtrlSenderChan:     sgwCtrlSendChan,

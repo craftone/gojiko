@@ -80,6 +80,26 @@ If pseudoSgwDataAddr is not specified, this attribute is ignored.`,
 		Response(Conflict, ErrorMedia)
 		Response(InternalServerError, ErrorMedia)
 	})
+
+	Action("trackingAreaUpdateWithoutSgwRelocation", func() {
+		Description("Update the gtp session by IMSI and EBI")
+		Routing(PUT("/imsi/:imsi/ebi/:ebi"))
+		Params(func() {
+			imsiEbiMember()
+		})
+		Payload(func() {
+			Member("tai", TAI)
+			Member("ecgi", ECGI)
+			Required("tai", "ecgi")
+		})
+		Response(OK, GtpV2CResponseMedia)
+		Response(NotFound, ErrorMedia)
+		Response(BadRequest, ErrorMedia)
+		Response(Conflict, ErrorMedia)
+		Response(InternalServerError, ErrorMedia)
+		Response(ServiceUnavailable, GtpV2CCauseMedia)
+		Response(GatewayTimeout, ErrorMedia)
+	})
 })
 
 var GtpSessionFTEIDs = Type("gtpSessionFTEIDs", func() {

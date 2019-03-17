@@ -25,6 +25,9 @@ const (
 	GssCSReqSend
 	GssCSResReceived
 	GssConnected
+	GssMBReqSending
+	GssMBReqSend
+	GssMBReqReceived
 	GssDSReqSending
 	GssDSReqSend
 	GssDSResReceived
@@ -36,6 +39,9 @@ var gssString = map[GtpSessionStatus]string{
 	GssCSReqSend:     "CSReqSend",
 	GssCSResReceived: "CSResReceived",
 	GssConnected:     "Connected",
+	GssMBReqSending:  "MBReqSending",
+	GssMBReqSend:     "MBReqSend",
+	GssMBReqReceived: "MBResReceived",
 	GssDSReqSending:  "DSReqSending",
 	GssDSReqSend:     "DSReqSend",
 	GssDSResReceived: "DSResReceived",
@@ -51,6 +57,7 @@ type GtpSession struct {
 	mtx4status sync.RWMutex
 
 	receiveCSresChan        chan *gtpv2c.CreateSessionResponse
+	receiveMBresChan        chan *gtpv2c.ModifyBearerResponse
 	receiveDSresChan        chan *gtpv2c.DeleteSessionResponse
 	toSgwCtrlSenderChan     chan UDPpacket
 	fromSgwCtrlReceiverChan chan UDPpacket
@@ -290,6 +297,103 @@ loop:
 			goto retry
 		}
 		gscResChan <- GsRes{Code: GsResTimeout, Msg: "Waiting for Create Session Response timed out and retry out"}
+	}
+}
+
+// procTAUwoSgwRelocation is for goroutine
+func (s *GtpSession) procTAUwoSgwRelocation(taiIE *ie.Tai, ecgiIE *ie.Ecgi,
+	log *logrus.Entry, gscResChan chan GsRes) {
+	log = log.WithField("SessionID", s.id)
+	log = log.WithField("routine", "procTAUwoSgwRelocation")
+
+	// Change state from CONNECTED to SENDING
+	err := s.changeState(GssConnected, GssMBReqSending)
+	if err != nil {
+		gscResChan <- GsRes{err: err}
+		return
+	}
+
+	// Prepare DeleteSessionRequest message
+	seqNum := s.sgwCtrl.nextSeqNum()
+
+	_, pgwTeid := s.PgwCtrlFTEID()
+	uliArg := ie.UliArg{
+		Tai:  taiIE,
+		Ecgi: ecgiIE,
+	}
+	uliIE, err := ie.NewUli(0, uliArg)
+	if err != nil {
+		gscResChan <- GsRes{err: err}
+		return
+	}
+
+	indicationIE, err := ie.NewIndication(0, ie.IndicationArg{
+		CLII: true,
+	})
+	if err != nil {
+		gscResChan <- GsRes{err: err}
+		return
+	}
+
+	mbReqArg := gtpv2c.ModifyBearerRequestArg{
+		Imsi:         s.imsi,
+		PgwCtrlTeid:  pgwTeid,
+		Uli:          uliIE,
+		Indication:   indicationIE,
+		SgwCtrlFteid: s.sgwCtrlFTEID,
+	}
+	mbReq, err := gtpv2c.NewModifyBearerRequest(pgwTeid, mbReqArg)
+	if err != nil {
+		gscResChan <- GsRes{err: err}
+		return
+	}
+	mbReqBin := mbReq.Marshal()
+	raddr := s.pgwCtrlAddr
+
+	// Send a Modify Bearer Request message to the PGW
+	retryCount := 0
+retry:
+	s.toSgwCtrlSenderChan <- UDPpacket{raddr, mbReqBin}
+	err = s.changeState(GssMBReqSending, GssMBReqSend)
+	if err != nil {
+		gscResChan <- GsRes{err: err}
+		return
+	}
+	timeoutChan := time.After(config.Gtpv2cTimeoutDuration())
+
+loop:
+	select {
+	case mbRes := <-s.receiveMBresChan:
+		if mbRes.SeqNum() != seqNum {
+			log.Debug("The response's sequense number is invalid")
+			goto loop
+		}
+		causeValue := mbRes.Cause().Value()
+		gsRes := GsRes{Value: causeValue, Msg: causeValue.Detail()}
+		switch gsRes.Value.Type() {
+		case ie.CauseTypeAcceptance:
+			gsRes.Code = GsResOK
+		case ie.CauseTypeRetryableRejection:
+			gsRes.Code = GsResRetryableNG
+		default:
+			gsRes.Code = GsResNG
+		}
+		gscResChan <- gsRes
+
+	case <-timeoutChan:
+		log.Info("Waiting for Modify Bearer Response is timed out")
+		err = s.changeState(GssMBReqSend, GssMBReqSending)
+		if err != nil {
+			log.Debugf("Current state is not MBReqSend ( is %s), so it seemed to received packet", s.Status().String())
+			timeoutChan = time.After(time.Second)
+			goto loop
+		}
+		retryCount++
+		if retryCount <= config.Gtpv2cRetry() {
+			log.Debugf("Waiting for Modify Bearer Response timed out and retry : %s time", humanize.Ordinal(retryCount))
+			goto retry
+		}
+		gscResChan <- GsRes{Code: GsResTimeout, Msg: "Waiting for Modify Bearer Response timed out and retry out"}
 	}
 }
 

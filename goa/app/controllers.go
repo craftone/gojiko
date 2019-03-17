@@ -38,6 +38,7 @@ type GtpsessionController interface {
 	DeleteByIMSIandEBI(*DeleteByIMSIandEBIGtpsessionContext) error
 	ShowByID(*ShowByIDGtpsessionContext) error
 	ShowByIMSIandEBI(*ShowByIMSIandEBIGtpsessionContext) error
+	TrackingAreaUpdateWithoutSgwRelocation(*TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext) error
 }
 
 // MountGtpsessionController "mounts" a Gtpsession resource controller on the given service.
@@ -110,11 +111,48 @@ func MountGtpsessionController(service *goa.Service, ctrl GtpsessionController) 
 	}
 	service.Mux.Handle("GET", "/sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi", ctrl.MuxHandler("showByIMSIandEBI", h, nil))
 	service.LogInfo("mount", "ctrl", "Gtpsession", "action", "ShowByIMSIandEBI", "route", "GET /sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi")
+
+	h = func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+		// Check if there was an error loading the request
+		if err := goa.ContextError(ctx); err != nil {
+			return err
+		}
+		// Build the context
+		rctx, err := NewTrackingAreaUpdateWithoutSgwRelocationGtpsessionContext(ctx, req, service)
+		if err != nil {
+			return err
+		}
+		// Build the payload
+		if rawPayload := goa.ContextRequest(ctx).Payload; rawPayload != nil {
+			rctx.Payload = rawPayload.(*TrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload)
+		} else {
+			return goa.MissingPayloadError()
+		}
+		return ctrl.TrackingAreaUpdateWithoutSgwRelocation(rctx)
+	}
+	service.Mux.Handle("PUT", "/sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi", ctrl.MuxHandler("trackingAreaUpdateWithoutSgwRelocation", h, unmarshalTrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload))
+	service.LogInfo("mount", "ctrl", "Gtpsession", "action", "TrackingAreaUpdateWithoutSgwRelocation", "route", "PUT /sgw/:sgwAddr/gtpsessions/imsi/:imsi/ebi/:ebi")
 }
 
 // unmarshalCreateGtpsessionPayload unmarshals the request body into the context request data Payload field.
 func unmarshalCreateGtpsessionPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
 	payload := &createGtpsessionPayload{}
+	if err := service.DecodeRequest(req, payload); err != nil {
+		return err
+	}
+	payload.Finalize()
+	if err := payload.Validate(); err != nil {
+		// Initialize payload with private data structure so it can be logged
+		goa.ContextRequest(ctx).Payload = payload
+		return err
+	}
+	goa.ContextRequest(ctx).Payload = payload.Publicize()
+	return nil
+}
+
+// unmarshalTrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload unmarshals the request body into the context request data Payload field.
+func unmarshalTrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload(ctx context.Context, service *goa.Service, req *http.Request) error {
+	payload := &trackingAreaUpdateWithoutSgwRelocationGtpsessionPayload{}
 	if err := service.DecodeRequest(req, payload); err != nil {
 		return err
 	}

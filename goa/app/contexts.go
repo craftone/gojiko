@@ -639,6 +639,216 @@ func (ctx *ShowByIMSIandEBIGtpsessionContext) NotFound(r error) error {
 	return ctx.ResponseData.Service.Send(ctx.Context, 404, r)
 }
 
+// TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext provides the gtpsession trackingAreaUpdateWithoutSgwRelocation action context.
+type TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext struct {
+	context.Context
+	*goa.ResponseData
+	*goa.RequestData
+	Ebi     int
+	Imsi    string
+	SgwAddr string
+	Payload *TrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload
+}
+
+// NewTrackingAreaUpdateWithoutSgwRelocationGtpsessionContext parses the incoming request URL and body, performs validations and creates the
+// context used by the gtpsession controller trackingAreaUpdateWithoutSgwRelocation action.
+func NewTrackingAreaUpdateWithoutSgwRelocationGtpsessionContext(ctx context.Context, r *http.Request, service *goa.Service) (*TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext, error) {
+	var err error
+	resp := goa.ContextResponse(ctx)
+	resp.Service = service
+	req := goa.ContextRequest(ctx)
+	req.Request = r
+	rctx := TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext{Context: ctx, ResponseData: resp, RequestData: req}
+	paramEbi := req.Params["ebi"]
+	if len(paramEbi) == 0 {
+		rctx.Ebi = 5
+	} else {
+		rawEbi := paramEbi[0]
+		if ebi, err2 := strconv.Atoi(rawEbi); err2 == nil {
+			rctx.Ebi = ebi
+		} else {
+			err = goa.MergeErrors(err, goa.InvalidParamTypeError("ebi", rawEbi, "integer"))
+		}
+		if rctx.Ebi < 5 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`ebi`, rctx.Ebi, 5, true))
+		}
+		if rctx.Ebi > 15 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError(`ebi`, rctx.Ebi, 15, false))
+		}
+	}
+	paramImsi := req.Params["imsi"]
+	if len(paramImsi) > 0 {
+		rawImsi := paramImsi[0]
+		rctx.Imsi = rawImsi
+		if ok := goa.ValidatePattern(`^[0-9]{14,15}$`, rctx.Imsi); !ok {
+			err = goa.MergeErrors(err, goa.InvalidPatternError(`imsi`, rctx.Imsi, `^[0-9]{14,15}$`))
+		}
+	}
+	paramSgwAddr := req.Params["sgwAddr"]
+	if len(paramSgwAddr) > 0 {
+		rawSgwAddr := paramSgwAddr[0]
+		rctx.SgwAddr = rawSgwAddr
+		if err2 := goa.ValidateFormat(goa.FormatIPv4, rctx.SgwAddr); err2 != nil {
+			err = goa.MergeErrors(err, goa.InvalidFormatError(`sgwAddr`, rctx.SgwAddr, goa.FormatIPv4, err2))
+		}
+	}
+	return &rctx, err
+}
+
+// trackingAreaUpdateWithoutSgwRelocationGtpsessionPayload is the gtpsession trackingAreaUpdateWithoutSgwRelocation action payload.
+type trackingAreaUpdateWithoutSgwRelocationGtpsessionPayload struct {
+	Ecgi *ecgi `form:"ecgi,omitempty" json:"ecgi,omitempty" xml:"ecgi,omitempty"`
+	Tai  *tai  `form:"tai,omitempty" json:"tai,omitempty" xml:"tai,omitempty"`
+}
+
+// Finalize sets the default values defined in the design.
+func (payload *trackingAreaUpdateWithoutSgwRelocationGtpsessionPayload) Finalize() {
+	if payload.Ecgi != nil {
+		var defaultEci = 1
+		if payload.Ecgi.Eci == nil {
+			payload.Ecgi.Eci = &defaultEci
+		}
+		var defaultMcc = "440"
+		if payload.Ecgi.Mcc == nil {
+			payload.Ecgi.Mcc = &defaultMcc
+		}
+		var defaultMnc = "10"
+		if payload.Ecgi.Mnc == nil {
+			payload.Ecgi.Mnc = &defaultMnc
+		}
+	}
+	if payload.Tai != nil {
+		var defaultMcc = "440"
+		if payload.Tai.Mcc == nil {
+			payload.Tai.Mcc = &defaultMcc
+		}
+		var defaultMnc = "10"
+		if payload.Tai.Mnc == nil {
+			payload.Tai.Mnc = &defaultMnc
+		}
+		var defaultTac = 1
+		if payload.Tai.Tac == nil {
+			payload.Tai.Tac = &defaultTac
+		}
+	}
+}
+
+// Validate runs the validation rules defined in the design.
+func (payload *trackingAreaUpdateWithoutSgwRelocationGtpsessionPayload) Validate() (err error) {
+	if payload.Tai == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "tai"))
+	}
+	if payload.Ecgi == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "ecgi"))
+	}
+	if payload.Ecgi != nil {
+		if err2 := payload.Ecgi.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	if payload.Tai != nil {
+		if err2 := payload.Tai.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// Publicize creates TrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload from trackingAreaUpdateWithoutSgwRelocationGtpsessionPayload
+func (payload *trackingAreaUpdateWithoutSgwRelocationGtpsessionPayload) Publicize() *TrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload {
+	var pub TrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload
+	if payload.Ecgi != nil {
+		pub.Ecgi = payload.Ecgi.Publicize()
+	}
+	if payload.Tai != nil {
+		pub.Tai = payload.Tai.Publicize()
+	}
+	return &pub
+}
+
+// TrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload is the gtpsession trackingAreaUpdateWithoutSgwRelocation action payload.
+type TrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload struct {
+	Ecgi *Ecgi `form:"ecgi" json:"ecgi" xml:"ecgi"`
+	Tai  *Tai  `form:"tai" json:"tai" xml:"tai"`
+}
+
+// Validate runs the validation rules defined in the design.
+func (payload *TrackingAreaUpdateWithoutSgwRelocationGtpsessionPayload) Validate() (err error) {
+	if payload.Tai == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "tai"))
+	}
+	if payload.Ecgi == nil {
+		err = goa.MergeErrors(err, goa.MissingAttributeError(`raw`, "ecgi"))
+	}
+	if payload.Ecgi != nil {
+		if err2 := payload.Ecgi.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	if payload.Tai != nil {
+		if err2 := payload.Tai.Validate(); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// OK sends a HTTP response with status code 200.
+func (ctx *TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext) OK(r *Gtpv2cCsres) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.gtpv2c.csres+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 200, r)
+}
+
+// BadRequest sends a HTTP response with status code 400.
+func (ctx *TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext) BadRequest(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 400, r)
+}
+
+// NotFound sends a HTTP response with status code 404.
+func (ctx *TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext) NotFound(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 404, r)
+}
+
+// Conflict sends a HTTP response with status code 409.
+func (ctx *TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext) Conflict(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 409, r)
+}
+
+// InternalServerError sends a HTTP response with status code 500.
+func (ctx *TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext) InternalServerError(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 500, r)
+}
+
+// ServiceUnavailable sends a HTTP response with status code 503.
+func (ctx *TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext) ServiceUnavailable(r *Gtpv2cCause) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.gtpv2c.cause+json")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 503, r)
+}
+
+// GatewayTimeout sends a HTTP response with status code 504.
+func (ctx *TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext) GatewayTimeout(r error) error {
+	if ctx.ResponseData.Header().Get("Content-Type") == "" {
+		ctx.ResponseData.Header().Set("Content-Type", "application/vnd.goa.error")
+	}
+	return ctx.ResponseData.Service.Send(ctx.Context, 504, r)
+}
+
 // CreateUDPEchoFlowByIMSIandEBIContext provides the udpEchoFlowByIMSIandEBI create action context.
 type CreateUDPEchoFlowByIMSIandEBIContext struct {
 	context.Context

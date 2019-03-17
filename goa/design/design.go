@@ -7,8 +7,8 @@ import (
 
 var _ = API("gojiko api", func() {
 	Title("Gojiko API")
-	Description(`Gojiko is a S5 simulator suitable for 
-	using by Japanese MVNO connected via L2 layer`)
+	Description(`Gojiko is a 3GPP S5 simulator suitable for 
+	utilizing by Japanese MVNO who is connecting to MNO on L2 layer`)
 	Scheme("http")
 	Host("localhost:8080")
 })

@@ -201,6 +201,26 @@ func (s *SgwCtrl) CreateSession(
 	return res, session, nil
 }
 
+func (s *SgwCtrl) TrackingAreaUpdateWithoutSgwRelocation(
+	imsi string, ebi byte, taiIE *ie.Tai, ecgiIE *ie.Ecgi) (GsRes, error) {
+
+	session := s.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
+	if session == nil {
+		return GsRes{}, fmt.Errorf("There is no session whose imsi is %s and ebi is %d", imsi, ebi)
+	}
+	if session.Status() != GssConnected {
+		return GsRes{}, NewInvalidGtpSessionStateError(GssConnected, session.Status())
+	}
+
+	// Send MBreq and receive MBres
+	resChan := make(chan GsRes)
+	go session.procTAUwoSgwRelocation(taiIE, ecgiIE, log, resChan)
+
+	// Receive result of the process send MBreq and receive MBres
+	res := <-resChan
+	return res, nil
+}
+
 func (s *SgwCtrl) DeleteSession(imsi string, ebi byte) (GsRes, error) {
 	session := s.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
 	if session == nil {

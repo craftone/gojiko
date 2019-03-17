@@ -139,3 +139,53 @@ func (c *GtpsessionController) ShowByIMSIandEBI(ctx *app.ShowByIMSIandEBIGtpsess
 
 	// GtpsessionController_ShowByIMSIandEBI: end_implement
 }
+
+// TrackingAreaUpdateWithoutSgwRelocation runs the showByIMSIandEBI action.
+func (c *GtpsessionController) TrackingAreaUpdateWithoutSgwRelocation(ctx *app.TrackingAreaUpdateWithoutSgwRelocationGtpsessionContext) error {
+	// GtpsessionController_TrackingAreaUpdateWithoutSgwRelocation: start_implement
+
+	sgwCtrl, err := querySgw(ctx.SgwAddr)
+	if err != nil {
+		return ctx.NotFound(goa.ErrNotFound(err))
+	}
+	sess, err := querySessionByIMSIandEBI(ctx.SgwAddr, ctx.Imsi, ctx.Ebi)
+	if err != nil {
+		return ctx.NotFound(goa.ErrNotFound(err))
+	}
+
+	plTai := ctx.Payload.Tai
+	taiIE, err := ie.NewTai(plTai.Mcc, plTai.Mnc, uint16(plTai.Tac))
+	if err != nil {
+		return ctx.BadRequest(goa.ErrBadRequest(err))
+	}
+	plEcgi := ctx.Payload.Ecgi
+	ecgiIE, err := ie.NewEcgi(plEcgi.Mcc, plEcgi.Mnc, uint32(plEcgi.Eci))
+	if err != nil {
+		return ctx.BadRequest(goa.ErrBadRequest(err))
+	}
+	gsRes, err := sgwCtrl.TrackingAreaUpdateWithoutSgwRelocation(
+		ctx.Imsi, byte(ctx.Ebi), taiIE, ecgiIE)
+	if err != nil {
+		switch err.(type) {
+		case *domain.InvalidGtpSessionStateError:
+			return ctx.Conflict(goa.NewErrorClass("conflict", 409)(err))
+		default:
+			return ctx.InternalServerError(goa.ErrInternal(err))
+		}
+	}
+
+	switch gsRes.Code {
+	case domain.GsResOK:
+		return ctx.OK(&app.Gtpv2cCsres{
+			Cause:       newCauseMedia(gsRes),
+			SessionInfo: newGtpsessionMedia(sess),
+		})
+	case domain.GsResRetryableNG:
+		return ctx.ServiceUnavailable(newCauseMedia(gsRes))
+	case domain.GsResTimeout:
+		return ctx.GatewayTimeout(goa.NewErrorClass("gateway_timeout", 504)(errors.New(gsRes.Msg)))
+	}
+	return ctx.InternalServerError(goa.ErrInternal(gsRes.Msg))
+
+	// GtpsessionController_TrackingAreaUpdateWithoutSgwRelocation: end_implement
+}
