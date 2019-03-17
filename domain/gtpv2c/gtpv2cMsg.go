@@ -142,6 +142,8 @@ func Unmarshal(buf []byte) (GtpV2cMsg, []byte, error) {
 		msg, err = unmarshalCreateSessionResponse(h, body)
 	case ModifyBearerRequestNum:
 		msg, err = unmarshalModifyBearerRequest(h, body)
+	case ModifyBearerResponseNum:
+		msg, err = unmarshalModifyBearerResponse(h, body)
 	case DeleteSessionRequestNum:
 		msg, err = unmarshalDeleteSessionRequest(h, body)
 	case DeleteSessionResponseNum:
