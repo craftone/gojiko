@@ -7,24 +7,24 @@ import (
 )
 
 type IndicationArg struct {
-	DAF   bool
-	DTF   bool
-	HI    bool
-	DFI   bool
-	OI    bool
-	ISRSI bool
-	ISRAI bool
-	SGWCI bool
-	SQCI  bool
-	UIMSI bool
-	CFSI  bool
-	CRSI  bool
-	P     bool
-	PT    bool
-	SI    bool
-	MSV   bool
-	ISRAU bool
-	CCRSI bool
+	DAF   bool // Dual Address Bearer Flag
+	DTF   bool // Direct Tunnel Flag
+	HI    bool // Handover Indication
+	DFI   bool // Direct Forwarding Indication
+	OI    bool // Operation Indication
+	ISRSI bool // Idle mode Signalling Supported Indication
+	ISRAI bool // Idle mode Signalling Activation Indication
+	SGWCI bool // SGW Change Indication
+	SQCI  bool // Subscribed QoS Change Information
+	UIMSI bool // Unauthenticated IMSI
+	CFSI  bool // Change F-TEID support indication
+	CRSI  bool // Change Reporting support indication
+	PS    bool // Piggybacking Supported
+	PT    bool // S5/S8 Protocol Type
+	SI    bool // Scode Indication
+	MSV   bool // MS Validated
+	ISRAU bool // ISR is activated for the UE
+	CCRSI bool // CSG Change Reporting support indication
 }
 
 type Indication struct {
@@ -41,7 +41,7 @@ type Indication struct {
 	uimsi bool
 	cfsi  bool
 	crsi  bool
-	p     bool
+	ps    bool
 	pt    bool
 	si    bool
 	msv   bool
@@ -68,7 +68,7 @@ func NewIndication(instance byte, indicationArg IndicationArg) (*Indication, err
 		uimsi:  indicationArg.UIMSI,
 		cfsi:   indicationArg.CFSI,
 		crsi:   indicationArg.CRSI,
-		p:      indicationArg.P,
+		ps:     indicationArg.PS,
 		pt:     indicationArg.PT,
 		si:     indicationArg.SI,
 		msv:    indicationArg.MSV,
@@ -93,7 +93,7 @@ func (i *Indication) Marshal() []byte {
 	body[1] = util.SetBit(body[1], 6, i.uimsi)
 	body[1] = util.SetBit(body[1], 5, i.cfsi)
 	body[1] = util.SetBit(body[1], 4, i.crsi)
-	body[1] = util.SetBit(body[1], 3, i.p)
+	body[1] = util.SetBit(body[1], 3, i.ps)
 	body[1] = util.SetBit(body[1], 2, i.pt)
 	body[1] = util.SetBit(body[1], 1, i.si)
 	body[1] = util.SetBit(body[1], 0, i.msv)
@@ -126,7 +126,7 @@ func unmarshalIndication(h header, buf []byte) (*Indication, error) {
 	indicationArg.UIMSI = util.GetBit(buf[1], 6)
 	indicationArg.CFSI = util.GetBit(buf[1], 5)
 	indicationArg.CRSI = util.GetBit(buf[1], 4)
-	indicationArg.P = util.GetBit(buf[1], 3)
+	indicationArg.PS = util.GetBit(buf[1], 3)
 	indicationArg.PT = util.GetBit(buf[1], 2)
 	indicationArg.SI = util.GetBit(buf[1], 1)
 	indicationArg.MSV = util.GetBit(buf[1], 0)
@@ -183,8 +183,8 @@ func (i *Indication) CRSI() bool {
 	return i.crsi
 }
 
-func (i *Indication) P() bool {
-	return i.p
+func (i *Indication) PS() bool {
+	return i.ps
 }
 
 func (i *Indication) PT() bool {

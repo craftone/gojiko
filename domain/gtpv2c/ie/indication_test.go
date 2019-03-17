@@ -60,7 +60,7 @@ func TestUnmarshal_indication(t *testing.T) {
 	assert.Equal(t, false, idc.UIMSI())
 	assert.Equal(t, true, idc.CFSI())
 	assert.Equal(t, false, idc.CRSI())
-	assert.Equal(t, true, idc.P())
+	assert.Equal(t, true, idc.PS())
 	assert.Equal(t, false, idc.PT())
 	assert.Equal(t, true, idc.SI())
 	assert.Equal(t, false, idc.MSV())
