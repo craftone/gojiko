@@ -395,6 +395,7 @@ loop:
 			// update session information
 			s.tai = taiIE
 			s.ecgi = ecgiIE
+			s.ratType = mbReqArg.RatType
 
 			gsRes.Code = GsResOK
 		case ie.CauseTypeRetryableRejection:
