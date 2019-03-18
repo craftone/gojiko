@@ -361,8 +361,7 @@ func (s *GtpSession) procTAUwoSgwRelocation(taiIE *ie.Tai, ecgiIE *ie.Ecgi,
 	retryCount := 0
 retry:
 	s.toSgwCtrlSenderChan <- UDPpacket{raddr, mbReqBin}
-	err = s.changeState(GssMBReqSending, GssMBReqSend)
-	if err != nil {
+	if err = s.changeState(GssMBReqSending, GssMBReqSend); err != nil {
 		gscResChan <- GsRes{err: err}
 		return
 	}
@@ -376,6 +375,10 @@ loop:
 			goto loop
 		}
 		causeValue := mbRes.Cause().Value()
+		if err = s.changeState(GssMBReqSend, GssConnected); err != nil {
+			gscResChan <- GsRes{err: err}
+			return
+		}
 		gsRes := GsRes{Value: causeValue, Msg: causeValue.Detail()}
 		switch gsRes.Value.Type() {
 		case ie.CauseTypeAcceptance:
@@ -389,8 +392,7 @@ loop:
 
 	case <-timeoutChan:
 		log.Info("Waiting for Modify Bearer Response is timed out")
-		err = s.changeState(GssMBReqSend, GssMBReqSending)
-		if err != nil {
+		if err = s.changeState(GssMBReqSend, GssMBReqSending); err != nil {
 			log.Debugf("Current state is not MBReqSend ( is %s), so it seemed to received packet", s.Status().String())
 			timeoutChan = time.After(time.Second)
 			goto loop
@@ -399,6 +401,10 @@ loop:
 		if retryCount <= config.Gtpv2cRetry() {
 			log.Debugf("Waiting for Modify Bearer Response timed out and retry : %s time", humanize.Ordinal(retryCount))
 			goto retry
+		}
+		if err = s.changeState(GssMBReqSend, GssConnected); err != nil {
+			gscResChan <- GsRes{err: err}
+			return
 		}
 		gscResChan <- GsRes{Code: GsResTimeout, Msg: "Waiting for Modify Bearer Response timed out and retry out"}
 	}
