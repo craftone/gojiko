@@ -27,7 +27,7 @@ const (
 	GssConnected
 	GssMBReqSending
 	GssMBReqSend
-	GssMBReqReceived
+	GssMBResReceived
 	GssDSReqSending
 	GssDSReqSend
 	GssDSResReceived
@@ -41,7 +41,7 @@ var gssString = map[GtpSessionStatus]string{
 	GssConnected:     "Connected",
 	GssMBReqSending:  "MBReqSending",
 	GssMBReqSend:     "MBReqSend",
-	GssMBReqReceived: "MBResReceived",
+	GssMBResReceived: "MBResReceived",
 	GssDSReqSending:  "DSReqSending",
 	GssDSReqSend:     "DSReqSend",
 	GssDSResReceived: "DSResReceived",
@@ -136,6 +136,13 @@ func (s *GtpSession) receiveCtrlPacketRoutine() {
 				log.Error("Received CreateSessionResponse in unexpected state")
 			} else {
 				s.receiveCSresChan <- typedMsg
+			}
+		case *gtpv2c.ModifyBearerResponse:
+			err := s.changeState(GssMBReqSend, GssMBResReceived)
+			if err != nil {
+				log.Error("Received ModifyBearerResponse in unexpected state")
+			} else {
+				s.receiveMBresChan <- typedMsg
 			}
 		case *gtpv2c.DeleteSessionResponse:
 			err := s.changeState(GssDSReqSend, GssDSResReceived)

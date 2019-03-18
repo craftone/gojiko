@@ -135,7 +135,7 @@ func unmarshalModifyBearerRequest(h header, buf []byte) (*ModifyBearerRequest, e
 			log.Printf("Unkown IE : %v", msg)
 		}
 	}
-	return NewModifyBearerRequest(gtp.Teid(h.seqNum), mbReqArg)
+	return NewModifyBearerRequest(h.seqNum, mbReqArg)
 }
 
 func MakeMBReqArg(

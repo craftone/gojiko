@@ -275,6 +275,7 @@ func (s *SgwCtrl) sgwCtrlReceiverRoutine() {
 		case gtpv2c.EchoResponseNum:
 			myLog.Error("Not yet implemented!")
 		case gtpv2c.CreateSessionResponseNum,
+			gtpv2c.ModifyBearerResponseNum,
 			gtpv2c.DeleteSessionResponseNum,
 			gtpv2c.DeleteBearerRequestNum:
 			teid := gtp.Teid(binary.BigEndian.Uint32(buf[4:8]))
