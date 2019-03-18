@@ -375,13 +375,17 @@ loop:
 			goto loop
 		}
 		causeValue := mbRes.Cause().Value()
-		if err = s.changeState(GssMBReqSend, GssConnected); err != nil {
+		if err = s.changeState(GssMBResReceived, GssConnected); err != nil {
 			gscResChan <- GsRes{err: err}
 			return
 		}
 		gsRes := GsRes{Value: causeValue, Msg: causeValue.Detail()}
 		switch gsRes.Value.Type() {
 		case ie.CauseTypeAcceptance:
+			// update session information
+			s.tai = taiIE
+			s.ecgi = ecgiIE
+
 			gsRes.Code = GsResOK
 		case ie.CauseTypeRetryableRejection:
 			gsRes.Code = GsResRetryableNG
@@ -402,7 +406,7 @@ loop:
 			log.Debugf("Waiting for Modify Bearer Response timed out and retry : %s time", humanize.Ordinal(retryCount))
 			goto retry
 		}
-		if err = s.changeState(GssMBReqSend, GssConnected); err != nil {
+		if err = s.changeState(GssMBReqSending, GssConnected); err != nil {
 			gscResChan <- GsRes{err: err}
 			return
 		}
