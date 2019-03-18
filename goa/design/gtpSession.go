@@ -90,6 +90,7 @@ If pseudoSgwDataAddr is not specified, this attribute is ignored.`,
 		Payload(func() {
 			Member("tai", TAI)
 			Member("ecgi", ECGI)
+			ratTypeValueMember()
 			Required("tai", "ecgi")
 		})
 		Response(OK, GtpV2CResponseMedia)

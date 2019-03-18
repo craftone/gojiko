@@ -202,7 +202,7 @@ func (s *SgwCtrl) CreateSession(
 }
 
 func (s *SgwCtrl) TrackingAreaUpdateWithoutSgwRelocation(
-	imsi string, ebi byte, taiIE *ie.Tai, ecgiIE *ie.Ecgi) (GsRes, error) {
+	imsi string, ebi byte, taiIE *ie.Tai, ecgiIE *ie.Ecgi, ratTypeValue ie.RatTypeValue) (GsRes, error) {
 
 	session := s.GtpSessionRepo.FindByImsiEbi(imsi, ebi)
 	if session == nil {
@@ -214,7 +214,7 @@ func (s *SgwCtrl) TrackingAreaUpdateWithoutSgwRelocation(
 
 	// Send MBreq and receive MBres
 	resChan := make(chan GsRes)
-	go session.procTAUwoSgwRelocation(taiIE, ecgiIE, log, resChan)
+	go session.procTAUwoSgwRelocation(taiIE, ecgiIE, ratTypeValue, log, resChan)
 
 	// Receive result of the process send MBreq and receive MBres
 	res := <-resChan

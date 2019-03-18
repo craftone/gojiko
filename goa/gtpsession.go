@@ -176,8 +176,9 @@ func (c *GtpsessionController) TrackingAreaUpdateWithoutSgwRelocation(ctx *app.T
 	if err != nil {
 		return ctx.BadRequest(goa.ErrBadRequest(err))
 	}
+	ratTypeValue := ctx.Payload.RatTypeValue
 	gsRes, err := sgwCtrl.TrackingAreaUpdateWithoutSgwRelocation(
-		ctx.Imsi, byte(ctx.Ebi), taiIE, ecgiIE)
+		ctx.Imsi, byte(ctx.Ebi), taiIE, ecgiIE, ie.RatTypeValue(ratTypeValue))
 	if err != nil {
 		switch err.(type) {
 		case *domain.InvalidGtpSessionStateError:

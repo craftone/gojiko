@@ -309,6 +309,7 @@ loop:
 
 // procTAUwoSgwRelocation is for goroutine
 func (s *GtpSession) procTAUwoSgwRelocation(taiIE *ie.Tai, ecgiIE *ie.Ecgi,
+	ratTypeValue ie.RatTypeValue,
 	log *logrus.Entry, gscResChan chan GsRes) {
 	log = log.WithField("SessionID", s.id)
 	log = log.WithField("routine", "procTAUwoSgwRelocation")
@@ -348,6 +349,15 @@ func (s *GtpSession) procTAUwoSgwRelocation(taiIE *ie.Tai, ecgiIE *ie.Ecgi,
 		Uli:          uliIE,
 		Indication:   indicationIE,
 		SgwCtrlFteid: s.sgwCtrlFTEID,
+	}
+	// Include RAT-TYPE IE if rat type was changed
+	if ratTypeValue != s.ratType.Value() {
+		ratTypeIE, err := ie.NewRatType(0, ratTypeValue)
+		if err != nil {
+			gscResChan <- GsRes{err: err}
+			return
+		}
+		mbReqArg.RatType = ratTypeIE
 	}
 	mbReq, err := gtpv2c.NewModifyBearerRequest(seqNum, mbReqArg)
 	if err != nil {
