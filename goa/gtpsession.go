@@ -40,13 +40,26 @@ func (c *GtpsessionController) Create(ctx *app.CreateGtpsessionContext) error {
 		ip := net.ParseIP(*payload.PseudoSgwDataAddr)
 		sgwDataAddr = &ip
 	}
-	tai, err := ie.NewTai(payload.Tai.Mcc, payload.Tai.Mnc, uint16(payload.Tai.Tac))
+
+	// default TAI
+	tai, err := ie.NewTai("440", "10", uint16(1))
 	if err != nil {
 		return ctx.BadRequest(goa.ErrBadRequest(err))
 	}
-	ecgi, err := ie.NewEcgi(payload.Ecgi.Mcc, payload.Ecgi.Mnc, uint32(payload.Ecgi.Eci))
-	if err != nil {
-		return ctx.BadRequest(goa.ErrBadRequest(err))
+	if payload.Tai != nil {
+		tai, err := ie.NewTai(payload.Tai.Mcc, payload.Tai.Mnc, uint16(payload.Tai.Tac))
+		if err != nil {
+			return ctx.BadRequest(goa.ErrBadRequest(err))
+		}
+	}
+
+	// default ECGI
+	ecgi, err := ie.NewEcgi("440", "10", uint16(1))
+	if payload.Ecgi != nil {
+		ecgi, err := ie.NewEcgi(payload.Ecgi.Mcc, payload.Ecgi.Mnc, uint32(payload.Ecgi.Eci))
+		if err != nil {
+			return ctx.BadRequest(goa.ErrBadRequest(err))
+		}
 	}
 
 	csRes, sess, err := sgwCtrl.CreateSession(
