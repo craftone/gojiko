@@ -31,7 +31,7 @@ type ModifyBearerRequestArg struct {
 	Recovery         *ie.Recovery
 }
 
-func NewModifyBearerRequest(seqNum gtp.Teid, mbReqArg ModifyBearerRequestArg) (*ModifyBearerRequest, error) {
+func NewModifyBearerRequest(seqNum uint32, mbReqArg ModifyBearerRequestArg) (*ModifyBearerRequest, error) {
 	// Actually this is not necessary since MBreq has no mandatory IE.
 	// This code exists to be consistant with other implmentations of GTPv2-C messages.
 	if err := checkModifyBearerRequestArg(mbReqArg); err != nil {

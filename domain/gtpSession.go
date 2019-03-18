@@ -342,7 +342,7 @@ func (s *GtpSession) procTAUwoSgwRelocation(taiIE *ie.Tai, ecgiIE *ie.Ecgi,
 		Indication:   indicationIE,
 		SgwCtrlFteid: s.sgwCtrlFTEID,
 	}
-	mbReq, err := gtpv2c.NewModifyBearerRequest(pgwTeid, mbReqArg)
+	mbReq, err := gtpv2c.NewModifyBearerRequest(seqNum, mbReqArg)
 	if err != nil {
 		gscResChan <- GsRes{err: err}
 		return
