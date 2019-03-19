@@ -56,9 +56,6 @@ func checkCreateSessionResponseArg(csReqArg CreateSessionResponseArg) error {
 	if csReqArg.Cause == nil {
 		errMsgs = append(errMsgs, "Cause")
 	}
-	if csReqArg.BearerContextCeated == nil {
-		errMsgs = append(errMsgs, "Bearer Context Created")
-	}
 	if len(errMsgs) > 0 {
 		return fmt.Errorf("Some mandatory IEs are missing : %v", errMsgs)
 	}
